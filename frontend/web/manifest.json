@@ -1,6 +1,6 @@
 {
-    "name": "frontend",
-    "short_name": "frontend",
+    "name": "galaxy_ai",
+    "short_name": "galaxy_ai",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

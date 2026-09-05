@@ -4,6 +4,8 @@
 /.env
 /.env*
 .env*
+.env.local
+.env.production
 
 ### IDE (Code Editor) Configurations Direcotries ###
 .idea
@@ -25,6 +27,13 @@ __pycache__
 .pycache/*
 /.pycache
 /.pycache/*
+.temp 
+.tmp
+build
+.dart_tool
+.flutter-plugins
+.flutter-plugins-dependencies
+*.log
 
 ### AI Agent Memory ###s
 memory.db
