@@ -26,8 +26,10 @@ __pycache__
 /.pycache
 /.pycache/*
 
-### AI Agent Memory
+### AI Agent Memory ###s
 memory.db
+storage
+/storage
 
 ### For Extra Safty ###
 .gitignore
