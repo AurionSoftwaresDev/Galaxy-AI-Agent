@@ -8,7 +8,7 @@ class ApiConfig {
 
     /// Default base URL for the Python FastAPI backend.
     /// Configured for local desktop communication.
-    static const String defaultBaseUrl = 'http://127.0.0.1:8080';
+    static const String defaultBaseUrl = 'http://localhost:8000';
 
     /// Current active base URL. Can be mutated if user reconfigures host.
     static String baseUrl = defaultBaseUrl;
