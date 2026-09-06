@@ -6,7 +6,7 @@ from source.tools.datetimeFetchingTool import fetchCurrentDateTimeTool
 
 ### Creating AI Agent Use Locally Ollama LLM Model Qwen3 8B LLM ###
 agent = create_agent(
-    model = llmProviders.ollamaProvider,
+    model = llmProviders.geminiProvider,
     system_prompt = systemPrompt.prompt,
     tools = [
         fetchCurrentDateTimeTool,

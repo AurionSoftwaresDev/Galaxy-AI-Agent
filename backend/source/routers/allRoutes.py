@@ -1,6 +1,7 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, WebSocket
 from source.routes.agentRoutes import agentRouter
 from source.routes.healthCheck import agentHealthChecker
+from source.routes.webSocketRoute import agentWebSocketRouter
 
 rootRouter = APIRouter()
 
@@ -11,4 +12,8 @@ rootRouter.include_router(
 
 rootRouter.include_router(
     router = agentHealthChecker
+)
+
+rootRouter.include_router(
+    router = agentWebSocketRouter
 )
