@@ -60,7 +60,7 @@ def initializeAgentMemory() -> None:
     if not MEMORY_STORE_PATH.exists():
 
         logger.info(
-            f"Creating AI Agent Memory File At: {MEMORY_STORE_PATH}"
+            f"Creating AI Agent Memory File At : { MEMORY_STORE_PATH }"
         )
 
         with sqlite3.connect(MEMORY_STORE_PATH) as connection:
@@ -92,18 +92,18 @@ def loadMessagesFromAgentMemory() -> list[dict]:
         
         initializeAgentMemory()
         
-    logger.info("Load Memory...")
+    logger.info("Loading AI Agent Memory...")
     
     with sqlite3.connect(MEMORY_STORE_PATH) as dataStoredMemoryDatabase:
         
-        rows = dataStoredMemoryDatabase.execute("""
+        rows : list[sqlite3.Cursor] = dataStoredMemoryDatabase.execute("""
                                                 
                     SELECT role, content FROM messages
                     ORDER BY id ASC
                     
         """).fetchall()
         
-        return [
+        messages : list[dict[str, str]] = [
             {
                 "role": role,
                 "content": content
@@ -111,7 +111,9 @@ def loadMessagesFromAgentMemory() -> list[dict]:
             for role, content in rows
         ]
         
-    logger.info("AI Agent Memory Loaded")
+    logger.info("AI Agent Memory Loaded.")
+
+    return messages
         
 def saveMessagesInAgentMemory(role : str, content : str) -> None:
     

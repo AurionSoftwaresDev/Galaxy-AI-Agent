@@ -3,6 +3,6 @@ from source.controllers.agentControllers.agentWebSocketController import agentWe
 
 agentWebSocketRouter = APIRouter()
 
-agentWebSocketRouter.WebSocket("/ws/assistant")(
+agentWebSocketRouter.websocket("/ws/assistant")(
     agentWebSocketController
 )

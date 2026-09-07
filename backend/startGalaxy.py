@@ -17,7 +17,7 @@ serverProcess = subprocess.Popen(
         "server:agentServer",
         "--reload",
         "--port",
-        "4000"
+        "8000"
     ],
     cwd = BACKEND_PATH
 )

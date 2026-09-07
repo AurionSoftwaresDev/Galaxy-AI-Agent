@@ -24,6 +24,7 @@ async def agentWebSocketController(webSocket : WebSocket) -> None:
             if not userPrompt:
                 
                 continue
+
             logger.info(f"User Prompt Recevied : { userPrompt }")
 
             oldHistory = loadMessagesFromAgentMemory()
@@ -56,7 +57,7 @@ async def agentWebSocketController(webSocket : WebSocket) -> None:
 
             try:
                 
-                async for token, metadata in agent.astream({ "messages" }, stream_mode = "messages"):
+                async for token, metadata in agent.astream({ "messages" : messages }, stream_mode = "messages"):
 
                     if isinstance(token, ToolMessage):
 
