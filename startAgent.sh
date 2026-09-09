@@ -1,103 +1,352 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
-plus="[+]"
-exception="[!]"
-info="[INFO]"
+set -Eeuo pipefail
 
-echo "$info Checking The Frontend OR Backend Is Exists..."
+# ============================================================
+# AI AGENT - LINUX STARTUP
+# ============================================================
 
-if [ ! -d "backend" ]; then
+echo
+echo "============================================================"
+echo "                    AI AGENT STARTUP"
+echo "============================================================"
+echo
 
-    echo "$exception Backend Not Found At 'Agent-AI/backend'"
+# ------------------------------------------------------------
+# ROOT DIRECTORY
+# ------------------------------------------------------------
 
-    exit 404
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+BACKEND="$ROOT/backend"
+FRONTEND="$ROOT/frontend"
+VENV="$BACKEND/.venv"
+VENV_PYTHON="$VENV/bin/python"
+
+echo "[INFO] Project:"
+echo "       $ROOT"
+echo
+
+# ------------------------------------------------------------
+# ERROR HANDLER
+# ------------------------------------------------------------
+
+error_exit() {
+    echo
+    echo "============================================================"
+    echo "[ERROR] $1"
+    echo "============================================================"
+    echo
+    exit 1
+}
+
+# ------------------------------------------------------------
+# CHECK FOLDERS
+# ------------------------------------------------------------
+
+[[ -d "$BACKEND" ]] || error_exit "backend folder not found."
+
+[[ -f "$BACKEND/startGalaxy.py" ]] \
+    || error_exit "backend/startGalaxy.py not found."
+
+[[ -d "$FRONTEND" ]] \
+    || error_exit "frontend folder not found."
+
+[[ -f "$FRONTEND/pubspec.yaml" ]] \
+    || error_exit "frontend/pubspec.yaml not found."
+
+# ------------------------------------------------------------
+# PYTHON
+# ------------------------------------------------------------
+
+echo "[INFO] Checking Python..."
+
+PYTHON=""
+
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON="$(command -v python3)"
+elif command -v python >/dev/null 2>&1; then
+    PYTHON="$(command -v python)"
 fi
 
-if [ ! -d "frontend" ]; then
+if [[ -z "$PYTHON" ]]; then
 
-    echo "$exception Frontend Not Found At : 'Agent-AI/frontend' "
+    echo "[WARNING] Python was not found."
+    echo
 
-    exit 404
+    if command -v apt-get >/dev/null 2>&1; then
 
+        echo "[INFO] Debian/Ubuntu detected."
+        echo "[INFO] Installing Python..."
+        echo
+
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-pip python3-venv
+
+    elif command -v pacman >/dev/null 2>&1; then
+
+        echo "[INFO] Arch Linux detected."
+        echo "[INFO] Installing Python..."
+        echo
+
+        sudo pacman -Sy --needed --noconfirm python python-pip
+
+    elif command -v dnf >/dev/null 2>&1; then
+
+        echo "[INFO] Fedora/RHEL detected."
+        echo "[INFO] Installing Python..."
+        echo
+
+        sudo dnf install -y python3 python3-pip
+
+    elif command -v zypper >/dev/null 2>&1; then
+
+        echo "[INFO] openSUSE detected."
+        echo "[INFO] Installing Python..."
+        echo
+
+        sudo zypper install -y python3 python3-pip
+
+    else
+        error_exit "Python is missing and your Linux package manager could not be detected."
+    fi
+
+    if command -v python3 >/dev/null 2>&1; then
+        PYTHON="$(command -v python3)"
+    elif command -v python >/dev/null 2>&1; then
+        PYTHON="$(command -v python)"
+    else
+        error_exit "Python installation completed but Python could not be detected."
+    fi
 fi
 
-echo "$plus Project Is Fine Exists The Backend & Frontend."
+echo "[OK] Python detected:"
+"$PYTHON" --version
+echo
 
+# ------------------------------------------------------------
+# CREATE VENV
+# ------------------------------------------------------------
 
-echo "$plus Checking Python Is Installed?..."
+if [[ ! -f "$VENV_PYTHON" ]]; then
 
-if ! command -v python3  &> /dev/null; then
+    echo "[INFO] Creating Linux Python virtual environment..."
+    echo "[INFO] Location:"
+    echo "       $VENV"
+    echo
 
-    echo "$exception Python Is Not Installed. Go And Installed Python First"
+    if ! "$PYTHON" -m venv "$VENV"; then
 
-    exit 404
+        echo
+        echo "[WARNING] python3-venv may be missing."
+        echo
 
-fi
+        if command -v apt-get >/dev/null 2>&1; then
 
-echo "$plus Python Is Installed!"
+            echo "[INFO] Installing python3-venv..."
+            sudo apt-get update
+            sudo apt-get install -y python3-venv
 
-echo "$plus Checking FLutter Is Installed?..."
+        elif command -v pacman >/dev/null 2>&1; then
 
-if ! command -v flutter &> /dev/null; then
+            echo "[INFO] Installing Python venv dependencies..."
+            sudo pacman -Sy --needed --noconfirm python
 
-    echo "$exception Flutter Is Not Installed. Go First And Installed Flutter"
+        elif command -v dnf >/dev/null 2>&1; then
 
-    exit 404
+            echo "[INFO] Installing Python venv dependencies..."
+            sudo dnf install -y python3
 
-fi
+        fi
 
-echo "$plus Flutter Is Installed!"
+        rm -rf "$VENV"
 
-echo "$info Creating Python Virtual Enviroment(.venv) In Backend"
+        "$PYTHON" -m venv "$VENV" \
+            || error_exit "Failed to create Python virtual environment."
+    fi
 
-python -m venv "/backend/.venv"
-
-if [ $? -eq 0 ]; then
-
-    echo "$plus Python Virtual Enviroment Created!"
+    echo "[OK] Linux virtual environment created."
+    echo
 
 else
+    echo "[OK] Existing Linux virtual environment found."
+    echo
+fi
 
-    echo "$exception Failed To Create Python Virtual Enviromet."
+[[ -x "$VENV_PYTHON" ]] \
+    || error_exit "Virtual environment Python is missing."
+
+# ------------------------------------------------------------
+# PIP
+# ------------------------------------------------------------
+
+echo "[INFO] Updating pip..."
+
+"$VENV_PYTHON" -m pip install --upgrade pip \
+    || error_exit "Failed to update pip."
+
+echo
+echo "[OK] pip ready."
+echo
+
+# ------------------------------------------------------------
+# REQUIREMENTS
+# ------------------------------------------------------------
+
+REQUIREMENTS=""
+
+if [[ -f "$BACKEND/requirements.txt" ]]; then
+    REQUIREMENTS="$BACKEND/requirements.txt"
+elif [[ -f "$BACKEND/requirement.txt" ]]; then
+    REQUIREMENTS="$BACKEND/requirement.txt"
+fi
+
+if [[ -n "$REQUIREMENTS" ]]; then
+
+    echo "[INFO] Installing backend dependencies..."
+    echo "       $REQUIREMENTS"
+    echo
+
+    "$VENV_PYTHON" -m pip install -r "$REQUIREMENTS" \
+        || error_exit "Failed to install Python dependencies."
+
+    echo
+    echo "[OK] Backend dependencies ready."
+    echo
+
+else
+    echo "[WARNING] No requirements.txt found."
+    echo "[WARNING] Skipping Python dependency installation."
+    echo
+fi
+
+# ------------------------------------------------------------
+# FLUTTER
+# ------------------------------------------------------------
+
+echo "[INFO] Checking Flutter..."
+
+if ! command -v flutter >/dev/null 2>&1; then
+
+    echo
+    echo "[ERROR] Flutter was not found."
+    echo
+    echo "Please install Flutter for your Linux distribution."
+    echo "Then run this script again."
+    echo
 
     exit 1
-
 fi
 
-echo "$info Activating Python Virtual Enviroment..."
+echo "[OK] Flutter detected."
+flutter --version
+echo
 
-if [ ! -f "backend/.venv/Scripts/activate" ]; then
+# ------------------------------------------------------------
+# FLUTTER DEPENDENCIES
+# ------------------------------------------------------------
 
-    ACTIVE_SCRIPT="\backend\.venv\Scripts\activate"
+echo "[INFO] Preparing Flutter dependencies..."
 
-else
+cd "$FRONTEND"
 
-    ACTIVE_SCRIPT="backend/.venv/bin/activate"
+flutter pub get \
+    || error_exit "Flutter dependency installation failed."
 
+echo
+echo "[OK] Flutter dependencies ready."
+echo
+
+# ------------------------------------------------------------
+# BACKEND LOGS
+# ------------------------------------------------------------
+
+BACKEND_LOG="$BACKEND/backend.log"
+BACKEND_ERROR_LOG="$BACKEND/backend-error.log"
+
+rm -f "$BACKEND_LOG" "$BACKEND_ERROR_LOG"
+
+# ------------------------------------------------------------
+# START BACKEND
+# ------------------------------------------------------------
+
+echo "[INFO] Starting AI Agent backend..."
+echo
+
+cd "$BACKEND"
+
+"$VENV_PYTHON" -u "$BACKEND/startGalaxy.py" \
+    >"$BACKEND_LOG" \
+    2>"$BACKEND_ERROR_LOG" &
+
+BACKEND_PID=$!
+
+echo "$BACKEND_PID" > "$BACKEND/backend.pid"
+
+echo "[OK] Backend started."
+echo "[INFO] Backend PID: $BACKEND_PID"
+echo
+
+# ------------------------------------------------------------
+# CHECK BACKEND
+# ------------------------------------------------------------
+
+sleep 3
+
+if ! kill -0 "$BACKEND_PID" 2>/dev/null; then
+
+    echo "[WARNING] Backend stopped unexpectedly."
+    echo
+    echo "Backend log:"
+    echo "  $BACKEND_LOG"
+    echo
+    echo "Backend error log:"
+    echo "  $BACKEND_ERROR_LOG"
+    echo
+
+    exit 1
 fi
 
-if [[ "$OSTYPE" == "msys" || "$OSTYPE" == "cygwin" || "$OSTYPE" == "win32" ]]; then
+echo "[OK] Backend process is running."
+echo
 
-    . "$ACTIVE_SCRIPT"
+# ------------------------------------------------------------
+# CLEANUP
+# ------------------------------------------------------------
 
-else
+cleanup() {
 
-    source "$ACTIVE_SCRIPT"
+    echo
+    echo "============================================================"
+    echo "                    SHUTTING DOWN"
+    echo "============================================================"
+    echo
 
-fi
+    if kill -0 "$BACKEND_PID" 2>/dev/null; then
+        echo "[INFO] Stopping backend..."
+        kill "$BACKEND_PID" 2>/dev/null || true
+        wait "$BACKEND_PID" 2>/dev/null || true
+        echo "[OK] Backend stopped."
+    fi
 
-echo "$info Python Virutal Enviroment Is Activated!"
+    rm -f "$BACKEND/backend.pid"
+}
 
-echo "$info Installing Python Dependencies..."
+trap cleanup EXIT INT TERM
 
-pip install -r "backend/requirement.txt"
+# ------------------------------------------------------------
+# START FLUTTER
+# ------------------------------------------------------------
 
-echo "$info Starting Backend..."
+echo "============================================================"
+echo "                 STARTING AI AGENT APP"
+echo "============================================================"
+echo
 
-python backend/startAgent.py
+cd "$FRONTEND"
 
-echo "$plus Backend Started. Backend Running Or Agent Server"
+flutter run
 
-echo "$info Starting Frontend...."
+FLUTTER_EXIT=$?
 
-flutter run -d windows -t frontend
+exit "$FLUTTER_EXIT"

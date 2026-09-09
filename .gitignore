@@ -39,6 +39,3 @@ build
 memory.db
 storage
 /storage
-
-### For Extra Safty ###
-.gitignore
