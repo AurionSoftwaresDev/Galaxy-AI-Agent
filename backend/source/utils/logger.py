@@ -20,10 +20,6 @@ if not logger.handlers:
     
 fileHandler.setLevel(logging.DEBUG)
 
-consoleHandler = logging.StreamHandler()
-
-consoleHandler.setLevel(logging.INFO)
-
 formatter : logging.Formatter = logging.Formatter(
     "%(asctime)s | %(levelname)s | %(name)s | %(message)s",
     datefmt="%d-%m-%Y %H:%M:%S"
@@ -31,8 +27,5 @@ formatter : logging.Formatter = logging.Formatter(
 
 fileHandler.setFormatter(formatter)
 
-consoleHandler.setFormatter(formatter)
-
 logger.addHandler(fileHandler)
 
-logger.addHandler(consoleHandler)

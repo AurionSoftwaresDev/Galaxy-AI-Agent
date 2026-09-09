@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 import '../models/backend_event.dart';
@@ -37,6 +38,9 @@ abstract class BackendClient {
 
     /// Dispatch event to backend.
     Future<void> sendEvent(BackendEvent event);
+
+    /// Sending agent message to user
+    Future<void> sendMessage(String content);
 
     /// Clean up network streams and sockets.
     void dispose();
@@ -195,5 +199,22 @@ class FastApiBackendClient implements BackendClient {
         _channel?.sink.close();
         _statusController.close();
         _eventController.close();
+    }
+
+    @override
+    Future<void> sendMessage(String content) async {
+
+      if (_channel != null && _status == ConnectionStatus.connected) {
+        try {
+          
+          _channel?.sink.add(
+            jsonEncode(<String, dynamic>{
+              "content" : content
+            })
+          );
+        } catch (Error) {
+          _handleConnectionFailure("Failed To Transmit Message : ${Error.toString()}");
+        }
+      }
     }
 }

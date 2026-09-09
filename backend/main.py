@@ -1,5 +1,4 @@
 import platform
-from fastapi import FastAPI
 from source.utils.logger import logger
 from source.utils.helper import sleep, clearTerminalScreen
 from source.chat.memory.agentMemory import initializeAgentMemory 
@@ -19,12 +18,14 @@ def mainAgentHandler() -> None:
     sleep(1, 5)
     
     logger.info("Staring Agent....")
+
+    clearTerminalScreen(operatingSystem = platform.system())
     
     startAgent()
     
 if __name__ == "__main__":
      
-    clearTerminalScreen(platform.system())
+    clearTerminalScreen(operatingSystem = platform.system())
     
     logger.info("Agent Applicaion Starting...")
     

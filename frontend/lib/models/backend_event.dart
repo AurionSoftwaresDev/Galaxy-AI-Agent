@@ -11,6 +11,13 @@ class BackendEvent {
         this.payload = const <String, dynamic>{},
     });
 
+    factory BackendEvent.message(String content) => BackendEvent(
+      type: "message",
+      payload: <String, dynamic>{
+        "content": content
+      }
+    );
+
     /// Factory to parse incoming JSON WebSocket message from FastAPI backend.
     factory BackendEvent.fromJson(String rawJson) {
         try {
