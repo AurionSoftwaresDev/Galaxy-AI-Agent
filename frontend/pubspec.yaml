@@ -25,6 +25,9 @@ flutter:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
+  windows:
+    generate: true
+    image: "assets/images/app_icon.png"
   image_path: "assets/images/app_icon.png"
   # Optional: Handle Android adaptive background color/image if needed
   adaptive_icon_background: "#FFFFFF"
