@@ -1,32 +1,57 @@
-import resend
-from source.config.configs import getResendFromAgentEmail, getResendAPIKey
+import smtplib
+from source.config.configs import(
+     getSMTPPORT, 
+     getSMTPSenderEmail,
+     getSMTPSenderPassword,
+     getSMTPServerHost
+
+)
+from email.message import EmailMessage
 from source.utils.logger import logger
 
 def sendEmail(to : str, subject : str, body : str) -> list[dict[str, str | None]]:
 
+    FROM_EMAIL : str = str(getSMTPSenderEmail())
+
+    SMTP_PORT : str = str(getSMTPPORT())
+    SMTP_SERVER_HOST : str = str(getSMTPServerHost())
+    SMTP_SENDER_PASSWORD : str = str(getSMTPSenderPassword())
+
     logger.info(f'Galaxy AI Agent Sending Email To: "{to}"')
 
-    from_email = getResendFromAgentEmail()
-
     try:
-        resend.api_key = getResendAPIKey()
 
-        mail_content = {
-            "from": f"Galaxy AI Agent <{from_email}>",
-            "to": to,
-            "subject": subject,
-            "html": body,
-        }
+        mail = EmailMessage()
 
-        resend.Emails.send(params=mail_content)
+        mail["Subject"] = subject
+        mail["To"] = to
+        mail["From"] = FROM_EMAIL
 
-        logger.info(f'Email Sent Successfully To: "{to}"')
+        mail.set_content(body)
+
+        logger.info("Connecting To SMTP Server For Sending Email...")
+
+        server = smtplib.SMTP(host = SMTP_SERVER_HOST, port = SMTP_PORT)
+
+        server.ehlo() 
+        
+        server.starttls()
+
+        server.ehlo()  
+
+        logger.info("AI Agent Logging In To User Account To Send Email...")
+
+        server.login(user = FROM_EMAIL, password = SMTP_SENDER_PASSWORD)
+        
+        server.send_message(mail)
+        
+        logger.info(f'Galaxy AI Agent Sended Email Successfully To: "{to}"')
 
         return [
             {
-                "status": "sent",
+                "status": "Sended",
                 "subject": subject,
-                "from": from_email,
+                "from": FROM_EMAIL,
                 "to": to,
                 "body": body,
             }
@@ -43,9 +68,10 @@ def sendEmail(to : str, subject : str, body : str) -> list[dict[str, str | None]
             {
                 "status": "failed",
                 "subject": subject,
-                "from": from_email,
+                "from": FROM_EMAIL,
                 "to": to,
                 "body": body,
             }
         ]
 
+print(sendEmail("silentbracketroot@gmail.com", "Testing Devlopment State", "Hey This Mail From Galaxy AI Agent"))

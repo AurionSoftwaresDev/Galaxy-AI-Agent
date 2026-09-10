@@ -4,18 +4,26 @@ from dotenv import load_dotenv
 ### Load Variables From The .env File In The System Variable ###
 load_dotenv()
 
-def getProviderAPIKey() -> (str | None):
+def getGeminiAPIKey() -> (str | None):
     
-    return os.getenv("GOOGLE_AI_API_KEY") 
+    return os.getenv("GOOGLE_API_KEY") 
 
 def getMistralAPIKey() -> (str | None):
     
     return os.getenv("MISTRAL_API_KEY")
 
-def getResendAPIKey() -> (str | None):
+def getSMTPSenderEmail() -> (str | None):
 
-    return os.getenv("RESEND_API_KEY")
+    return os.getenv("SMTP_SENDER_EMAIL")
 
-def getResendFromAgentEmail() -> (str | None):
+def getSMTPPORT() -> (str | None):
 
-    return os.getenv("RESEND_FROM_AGENT_EMAIL")
+    return os.getenv("SMTP_PORT")
+
+def getSMTPServerHost() -> (str | None):
+
+    return os.getenv("SMTP_SERVER_HOST")
+
+def getSMTPSenderPassword() -> (str | None):
+
+    return os.getenv("SMTP_SENDER_PASSWORD")

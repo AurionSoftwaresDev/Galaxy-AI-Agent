@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from source.utils.helper import getCurrentDate
+from source.utils.getCurrentDateTime import getCurrentDate
 
 LOGS_PATH : Path = (Path(__file__).resolve().parents[2] / "storage" / "logs" )
 

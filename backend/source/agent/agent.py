@@ -8,9 +8,12 @@ from source.tools.openBrowser import openBrowserTool
 from source.tools.TypingTool import typingTool
 from source.tools.inspectUserSystemTool import inspectUserSystemTool
 
+### LLM Provider Model ###
+llmProviderModel = llmProviders.geminiProvider
+
 ### Creating AI Agent Use Locally Ollama LLM Model Qwen3 8B LLM ###
 agent = create_agent(
-    model = llmProviders.geminiProvider,
+    model = llmProviderModel,
     system_prompt = systemPrompt.prompt,
     tools = [
         fetchCurrentDateTimeTool,
@@ -21,4 +24,3 @@ agent = create_agent(
         inspectUserSystemTool
     ],
 )
-        
