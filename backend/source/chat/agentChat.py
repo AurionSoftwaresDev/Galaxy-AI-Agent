@@ -4,22 +4,93 @@ from source.chat.memory.agentMemory import (
     saveMessagesInAgentMemory
 )
 from source.utils.logger import logger
-from langchain.messages import HumanMessage, AIMessageChunk, ToolMessage
+from langchain.messages import (
+    HumanMessage,
+    AIMessageChunk,
+    ToolMessage
+)
+
+def extractTextFromContent(content) -> str:
+
+    """
+    Extracts readable text from LangChain message content.
+
+    LangChain can return AIMessageChunk.content as either:
+
+        str
+            "Hello, how are you?"
+
+    or:
+
+        list[dict]
+            [
+                {
+                    "type": "text",
+                    "text": "Hello, how are you?",
+                    "index": 0
+                }
+            ]
+
+    This function normalizes both formats into a plain string.
+    """
+
+    if isinstance(content, str):
+
+        return content
+
+    if isinstance(content, list):
+
+        textParts: list[str] = []
+
+        for block in content:
+
+            if not isinstance(block, dict):
+
+                continue
+
+            if block.get("type") != "text":
+
+                continue
+
+            text = block.get("text", "")
+
+            if isinstance(text, str) and text:
+
+                textParts.append(text)
+
+
+        return "".join(textParts)
+
+    return ""
 
 async def chat() -> bool:
-    
-    userPrompt : str = input("You : ")
-        
+
+    userPrompt : str
+
+    while True:
+
+        userPrompt = input("User : ")
+
+        if userPrompt.strip() == "":
+
+            print("[Exception] Your Prompt Is Please Write Right Prompt.")
+
+            continue
+
+        break
+
     if userPrompt.strip() == "quit-agent":
-        
+
         print("[+] Agent Shutdown...")
-        
+
         logger.info("User Shutdown The AI Agent")
-        
+
         return False
-    
-    oldHistory : list[dict[str, str]] = loadMessagesFromAgentMemory()
-    
+
+    oldHistory: list[dict[str, str]] = (
+        loadMessagesFromAgentMemory()
+    )
+
     messages = [
         {
             "role": message["role"],
@@ -27,59 +98,53 @@ async def chat() -> bool:
         }
         for message in oldHistory
     ]
-    
+
     messages.append(
         HumanMessage(
             content=userPrompt
         )
     )
-    
-    finalAgentResponse : str = ""
-    
-    print("\nAI : ", end = "", flush = True)
-    
+
+    finalAgentResponse: str = ""
+
+    print("\nAI Agent : ",end = "", flush = True)
+
     try:
-        
-        async for token, metadata in agent.astream({ "messages" : messages }, stream_mode = "messages"):
+
+        async for token, metadata in agent.astream(
+            {
+                "messages": messages
+            },
+            stream_mode="messages"
+        ):
+
+            if isinstance(token, ToolMessage):
+
+                continue
+
+            if isinstance(token, AIMessageChunk):
+
+                content = token.content
+
+                logger.info(f"AI Response Metadata : { metadata } ")
+
+                text = extractTextFromContent(content)
+
+                if text:
             
-           if isinstance(token, ToolMessage):
-               
-               continue
-            
-           if isinstance(token, AIMessageChunk):
-               content = token.content
-                       
-               logger.info(f"AI Response Metadata : {metadata}")
-                
-               if isinstance(content, str):
-                    
-                    print(content, end = "", flush = True)
-                    
-                    finalAgentResponse += content
-                    
-               elif isinstance(content, list):
-                    
-                   for block in content:
-                        
-                       if isinstance(block, dict) and block.get("type") == "text":
-                            
-                            text = block.get("text", "")
-                            
-                            if text:
-                                
-                                print(content, end = "", flush = True)
-                            
-                                finalAgentResponse += text
-                
-                                                
+                    print(text, end = "", flush = True)
+
+                    finalAgentResponse += text
+
     except Exception as Error:
-        
-        logger.exception(f"AI Agent Streaming Failed. Exception: {Error}")    
-    
+
+        logger.exception(f"AI Agent Streaming Failed. Exception: {Error}")
+
     print()
-    
-    saveMessagesInAgentMemory("user", userPrompt)
-    saveMessagesInAgentMemory("assistant", finalAgentResponse)
-    
+
+    saveMessagesInAgentMemory(role = "user",content = userPrompt)
+
+    saveMessagesInAgentMemory(role ="assistant",content = finalAgentResponse)
+
     return True
-        
+
