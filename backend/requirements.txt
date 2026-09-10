@@ -1,23 +1,84 @@
+# ==============================
+# FastAPI Backend / API Server
+# ==============================
 
+# FastAPI web framework for building the AI Agent API
 fastapi==0.141.1
+
+# ASGI server used to run the FastAPI application
 uvicorn==0.52.4
 
 
-resend=2.43.0
+# ==============================
+# Configuration & Environment
+# ==============================
 
+# Loads environment variables from .env files
 python-dotenv==1.2.3
+
+# Data validation and settings management
 pydantic==2.13.5
 
+
+# ==============================
+# LangChain / AI Models
+# ==============================
+
+# Main LangChain framework
 langchain==1.3.18
+
+# Core LangChain abstractions and interfaces
 langchain-core==1.6.1
+
+# Ollama integration for running local LLMs
 langchain-ollama==1.1.0
+
+# Google Gemini integration for LangChain
 langchain-google-genai==4.4.0
+
+# Mistral AI integration for LangChain
 langchain-mistralai==1.1.6
 
+
+# ==============================
+# Direct AI Model SDKs
+# ==============================
+
+# Official Ollama Python client
 ollama==0.6.2
+
+# Google Gemini / Generative AI SDK
 google-genai==2.22.0
 
+
+# ==============================
+# Email
+# ==============================
+
+# Resend API client for sending emails
+resend==2.43.0
+
+
+# ==============================
+# News / Internet Data
+# ==============================
+
+# Google News scraping/search library
 gnews==0.8.2
+
+
+# ==============================
+# Desktop GUI / Automation
+# ==============================
+
+# Qt6 framework for the desktop GUI
+PyQt6==6.11.0
+
+# Global keyboard event handling
 keyboard==0.13.5
+
+# HTTP client for making asynchronous/synchronous HTTP requests
 httpx==0.28.1
-pyautogui=0.9.54
+
+# Mouse and keyboard automation / desktop control
+pyautogui==0.9.54

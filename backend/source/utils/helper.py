@@ -1,5 +1,10 @@
-import time, random, os, datetime
-import source.config.configs as Configs
+import platform
+import time, random, os, sys
+from source.utils.logger import logger
+from source.config.EnviromentKeys import ENVRIOMENTAL_KEYS
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import QLoggingCategory
+from source.gui.widgets.DialogBox import NeonPremiumDialog
 
 def sleep(startRange : int, endRange : int) -> int:
     
@@ -33,24 +38,16 @@ def clearTerminalScreen(operatingSystem : str):
 
 def validateUserEnviromentVariables():
 
-    from source.utils.logger import logger
+    QLoggingCategory.setFilterRules("*debug=false\n*.info=false\n*.warning=false")
+
+    app = QApplication(sys.argv)
 
     logger.info("AI Agent Checking Enviroment Variables Key...")
-
-    keys = {
-
-        "geminiAPIKey": Configs.getGeminiAPIKey(),
-        "mistralAPIKey": Configs.getMistralAPIKey(),
-        "smtpPort" : Configs.getSMTPPORT(),
-        "smtpSenderEmail": Configs.getSMTPSenderEmail(),
-        "smtpSenderPassword": Configs.getSMTPSenderPassword(),
-        "smtpHost": Configs.getSMTPServerHost()
-    }
 
     foundedEmptyKeys : dict[str, bool] = {}  
     avaliableAPIKeys : dict[str, bool] = {}
 
-    for key, keyValue in keys.items():
+    for key, keyValue in ENVRIOMENTAL_KEYS.items():
 
         if keyValue == "" or keyValue == None:
 
@@ -60,13 +57,29 @@ def validateUserEnviromentVariables():
 
             avaliableAPIKeys[key] = True
 
-    if keys["geminiAPIKey"] in foundedEmptyKeys:
 
-        logger.exception(
-            "AI Agent Provider Keys Not Found 1 Key Is IMPORTANT Your Choose In This Keys \"GOOGLE_API_KEY\" OR \"MISTRAL_API_KEY\" " \
-        ) 
+    mistral = foundedEmptyKeys["mistralAPIKey"]
+    gemini = foundedEmptyKeys["geminiAPIKey"]
+
+    
+    if foundedEmptyKeys["geminiAPIKey"] and foundedEmptyKeys["mistralAPIKey"]:
+
+        logger.exception("AI Agent Provider Keys Not Found 1 Key Is IMPORTANT Your Choose In This Keys \"GOOGLE_API_KEY\" OR \"MISTRAL_API_KEY\" ") 
+
+        print("[Exception] Providers Keys Not Found Check Logs.")
+
+        dialog = NeonPremiumDialog(
+            title_text="CRTICAL AI Agent Error", 
+            error_text="Your Environment Variables Are Missing Both \"GOOGLE_API_KEY\" Ad \"MISTRAL_API_KEY\". At Least One Of These API Keys Must Be Configured To Continue"
+        )
+
+        dialog.show()
+        
+        dialog.exec()
 
         os._exit(404)
+
+    clearTerminalScreen(operatingSystem = platform.system())
 
     logger.info(f"Empty OR Not Added API Keys : { foundedEmptyKeys } ")
     logger.info(f"Avaliable API Keys : { avaliableAPIKeys } ")

@@ -4,6 +4,7 @@ import subprocess
 import sys
 from pathlib import Path
 from source.utils.logger import logger
+from source.utils.helper import validateUserEnviromentVariables
 from source.chat.memory.agentMemory import initializeAgentMemory
 
 helpingMenu = """
@@ -265,8 +266,11 @@ def mainHandler():
 
     arguments = getArguments()
 
+    logger.info("Initializing Agent Memory...")
+
     initializeAgentMemory()
 
+    logger.info("Memory Initialized Successfully")
 
     if arguments["server"]:
 
@@ -299,5 +303,7 @@ def mainHandler():
         )
 
 if __name__ == "__main__":
+
+    validateUserEnviromentVariables()
 
     mainHandler()

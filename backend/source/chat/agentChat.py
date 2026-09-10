@@ -73,7 +73,7 @@ async def chat() -> bool:
 
         if userPrompt.strip() == "":
 
-            print("[Exception] Your Prompt Is Please Write Right Prompt.")
+            print("[Exception] Your Prompt Is Empty. Please Write Right Prompt.")
 
             continue
 

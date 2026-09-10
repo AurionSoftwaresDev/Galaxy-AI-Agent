@@ -7,10 +7,6 @@ from source.agent.runAgent import startAgent
 
 def mainAgentHandler() -> None:
     
-    logger.info("Initializing Agent Memory...")
-    
-    initializeAgentMemory()
-    
     logger.info("Starting Keyboard Mapping Shortcut Thread...")
     
     startKeyboardMappingThread()

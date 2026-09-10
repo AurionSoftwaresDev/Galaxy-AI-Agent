@@ -35,7 +35,13 @@ build
 .flutter-plugins-dependencies
 *.log
 
-### AI Agent Memory ###s
+### AI Agent Memory ###
 memory.db
 storage
 /storage
+
+### Testing Directories ###
+test
+/test
+test.py
+testing.py

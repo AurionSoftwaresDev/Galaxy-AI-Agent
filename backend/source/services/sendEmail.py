@@ -60,8 +60,8 @@ def sendEmail(to : str, subject : str, body : str) -> list[dict[str, str | None]
     except Exception as exception:
 
         logger.exception(
-            f'AI Agent Failed To Send Email: To: "{to}" '
-            f"Exception: {exception}"
+            f'AI Agent Failed To Send Email: To: " { to }" '
+            f"Exception: { exception } "
         )
 
         return [
@@ -73,5 +73,3 @@ def sendEmail(to : str, subject : str, body : str) -> list[dict[str, str | None]
                 "body": body,
             }
         ]
-
-print(sendEmail("silentbracketroot@gmail.com", "Testing Devlopment State", "Hey This Mail From Galaxy AI Agent"))
