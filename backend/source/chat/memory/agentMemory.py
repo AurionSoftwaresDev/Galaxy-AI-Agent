@@ -122,8 +122,13 @@ def saveMessagesInAgentMemory(role : str, content : str) -> None:
     if checkMemoryIsNoCorrupted(connection) == False:
         
         initializeAgentMemory()
-    
-    logger.info("AI Agent Memory Saving....")
+
+    if role == "user":
+
+        logger.info("AI Agent Saving User Message In Galaxy AI Agent Memory")
+
+    else:
+        logger.info("AI Agent Memory Saving....")
     
     with sqlite3.connect(MEMORY_STORE_PATH) as memory:
         

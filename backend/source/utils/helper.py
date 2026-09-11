@@ -57,29 +57,28 @@ def validateUserEnviromentVariables():
 
             avaliableAPIKeys[key] = True
 
-
-    mistral = foundedEmptyKeys["mistralAPIKey"]
-    gemini = foundedEmptyKeys["geminiAPIKey"]
-
+    try:
     
-    if foundedEmptyKeys["geminiAPIKey"] and foundedEmptyKeys["mistralAPIKey"]:
+        if foundedEmptyKeys["geminiAPIKey"] and foundedEmptyKeys["mistralAPIKey"]:
 
-        logger.exception("AI Agent Provider Keys Not Found 1 Key Is IMPORTANT Your Choose In This Keys \"GOOGLE_API_KEY\" OR \"MISTRAL_API_KEY\" ") 
+            logger.exception("AI Agent Provider Keys Not Found 1 Key Is IMPORTANT Your Choose In This Keys \"GOOGLE_API_KEY\" OR \"MISTRAL_API_KEY\" ") 
 
-        print("[Exception] Providers Keys Not Found Check Logs.")
+            print("[Exception] Providers Keys Not Found Check Logs.")
 
-        dialog = NeonPremiumDialog(
-            title_text="CRTICAL AI Agent Error", 
-            error_text="Your Environment Variables Are Missing Both \"GOOGLE_API_KEY\" Ad \"MISTRAL_API_KEY\". At Least One Of These API Keys Must Be Configured To Continue"
-        )
+            dialog = NeonPremiumDialog(
+                title_text="CRTICAL AI Agent Error", 
+                error_text="Your Environment Variables Are Missing Both \"GOOGLE_API_KEY\" And \"MISTRAL_API_KEY\". At Least One Of These API Keys Must Be Configured To Continue"
+            )
 
-        dialog.show()
-        
-        dialog.exec()
+            dialog.show()
+            
+            dialog.exec()
 
-        os._exit(404)
+            os._exit(404)
 
-    clearTerminalScreen(operatingSystem = platform.system())
+    except KeyError:
 
-    logger.info(f"Empty OR Not Added API Keys : { foundedEmptyKeys } ")
-    logger.info(f"Avaliable API Keys : { avaliableAPIKeys } ")
+        clearTerminalScreen(operatingSystem = platform.system())
+
+        logger.info(f"Empty OR Not Added API Keys : { foundedEmptyKeys } ")
+        logger.info(f"Avaliable API Keys : { avaliableAPIKeys } ")
