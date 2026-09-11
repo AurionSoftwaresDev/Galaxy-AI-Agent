@@ -6,10 +6,20 @@ from source.utils.logger import logger
 @tool(
     args_schema = TypingModel,
     description = """
-        Type text into user's web browser.description=
-        
-        Use this tool then the user asks to type, enter, or write text. into the browser, such as 
-        entering a search query or filling in text
+        Type the provided text using the keyboard computer keyboard.
+
+        Use this tool when the user asks you to type, enter, or write text into the
+        currently active application or input field.
+
+        The tool receives the exact text that should be typed.
+
+        After receving the text, it waits for 3 second to allow the target application or input field
+        to become text Using PyAutoGUI.
+
+        Type the text exactly as provided. Do not modify, summarize, translate, or rewrite the text
+        unless the user explicitly asks for a modification.
+
+        The 3-second delay is handled internally by the tool
     """,
     name_or_callable = "typing_text"
 )

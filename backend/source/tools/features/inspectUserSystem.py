@@ -1,17 +1,20 @@
 import platform, psutil, getpass, os, subprocess, json
 from datetime import datetime
 from source.utils.logger import logger
+from source.utils.agentUtils.getHardwareInformation import getHardwareInformation
 
 def inspectUserSystem():
 
     logger.info("AI Agent Called inspect_user_system Tool")
 
     uname : platform.uname_result = platform.uname()
+
     bootTimeTimeStamp : float = psutil.boot_time()
+
     bootTime : datetime = datetime.fromtimestamp(bootTimeTimeStamp)
 
     virtualMemory = psutil.virtual_memory()
-    cpuFrequency  = psutil.cpu_freq()
+
     users = psutil.users()
 
     activeSessions = []
@@ -74,29 +77,24 @@ def inspectUserSystem():
         import pwd
 
         allRegisteredAccounts = [user.pw_name for user in pwd.getpwall()]
+
+    hardwareInformation = getHardwareInformation()
     
     inspectedUserSystemData = {
-        "System Details" : {
+        "System Informations" : {
             "Operating System" : f"{uname.system} {uname.release}",
             "Operating System Version" : f"{uname.version}",
             "Machine Node" : f"{uname.node}",
             "Architecture" : f"{uname.machine} ({platform.architecture()[0]})",
             "Boot Time" : f"{bootTime.year}/{bootTime.month}/{bootTime.day} {bootTime.hour}:{bootTime.minute}:{bootTime.second}",
 
-            "Ram Details" : {
+            "Ram Informations" : {
                 "Total Memory" : f"{virtualMemory.total / (1024**3):.2f} GB",
                 "Available Memory" : f"{virtualMemory.available / (1024**3):.2f} GB"
             }
         },
-        "CPU Cores Details" : {
-            "Processor/CPU" :  f"{uname.processor}",
-            "Physical Cores" :  f"{psutil.cpu_count(logical=False)}",
-            "Logical Cores" :  f"{psutil.cpu_count(logical=True)}",
-            "Max Frequency MHZ": cpuFrequency.max if cpuFrequency else None,
-            "Current Frequency MHZ": cpuFrequency.current if cpuFrequency else None,
-            "Current CPU Usage Percent": psutil.cpu_percent(interval=0.5)
-        },
-        "Users Details": {
+        "Hardware Information" : hardwareInformation,
+        "Users Informations" : {
             "Current User" : f"{getpass.getuser()}",
             "User Home Directory" : f"{os.path.expanduser('~')}",
             "Current Session User": getpass.getuser(),
@@ -110,3 +108,5 @@ def inspectUserSystem():
     logger.info("AI Agent Successfully Fetched User System Details")
 
     return jsonInspectedUserSystemData
+
+print(inspectUserSystem())
