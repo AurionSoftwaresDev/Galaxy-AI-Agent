@@ -17,7 +17,7 @@ from langchain_core.tools import tool
         The tool returns the current system date and time, timezone, and related time information from the system clock.
     """
 )
-def fetchCurrentDateTimeTool() -> list[dict[str, (str | timedelta | None)]]:
+def fetchCurrentDateTimeTool() -> str:
     
     return getCurrentDateTime()
     

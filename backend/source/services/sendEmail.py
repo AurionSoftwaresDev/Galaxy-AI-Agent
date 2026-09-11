@@ -1,4 +1,5 @@
 import smtplib
+import json
 from source.config.configs import(
      getSMTPPORT, 
      getSMTPSenderEmail,
@@ -9,7 +10,9 @@ from source.config.configs import(
 from email.message import EmailMessage
 from source.utils.logger import logger
 
-def sendEmail(to : str, subject : str, body : str) -> list[dict[str, str | None]]:
+def sendEmail(to : str, subject : str, html : str) -> str:
+
+    logger.info("AI Agent Called send_email Tool...")
 
     FROM_EMAIL : str = str(getSMTPSenderEmail())
 
@@ -27,7 +30,9 @@ def sendEmail(to : str, subject : str, body : str) -> list[dict[str, str | None]
         mail["To"] = to
         mail["From"] = FROM_EMAIL
 
-        mail.set_content(body)
+        mail.set_content("This Email Contains HTML Content...")
+
+        mail.add_alternative(html, subtype="html")
 
         logger.info("Connecting To SMTP Server For Sending Email...")
 
@@ -47,29 +52,26 @@ def sendEmail(to : str, subject : str, body : str) -> list[dict[str, str | None]
         
         logger.info(f'Galaxy AI Agent Sended Email Successfully To: "{to}"')
 
-        return [
+        return json.dumps([
             {
                 "status": "Sended",
                 "subject": subject,
                 "from": FROM_EMAIL,
                 "to": to,
-                "body": body,
+                "body": html
             }
-        ]
+        ], indent = 4)
 
     except Exception as exception:
 
-        logger.exception(
-            f'AI Agent Failed To Send Email: To: " { to }" '
-            f"Exception: { exception } "
-        )
+        logger.exception(f"AI Agent Failed To Send Email: To : \" { to } \" Exception: { exception } ")
 
-        return [
+        return json.dumps([
             {
-                "status": "failed",
+                "status": "Failed",
                 "subject": subject,
                 "from": FROM_EMAIL,
                 "to": to,
-                "body": body,
+                "body": html,
             }
-        ]
+        ], indent = 4)

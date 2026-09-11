@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta
+import json
 from source.utils.logger import logger
 
-def getCurrentDateTime() -> list[dict[str, (str | timedelta | None)]]:
+def getCurrentDateTime() -> str:
 
     logger.info("AI Agent Feteching Date And Time Infos...")
 
@@ -20,4 +21,4 @@ def getCurrentDateTime() -> list[dict[str, (str | timedelta | None)]]:
 
     logger.info("AI Agent Successfully Fetched Date Time Informations")
 
-    return data
+    return json.dumps(data, indent = 4)

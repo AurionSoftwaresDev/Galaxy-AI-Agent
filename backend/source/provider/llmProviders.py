@@ -7,14 +7,14 @@ from langchain_mistralai import ChatMistralAI
 class llmProviders:
     
     # Gemini Model 
-    geminiModel = "gemini-3.6-flash"
+    geminiModel = "gemini-3.5-flash"
     
     # Ollama Model
     ollamaModel = "qwen3:8b"
     
     # Mistral Model
-    mistralModel = "mistral-small-latest"
-    
+    mistralModel = "mistral-small-latest" 
+
     # Gemini Provider IMPORTANT NOTE: Please Add Your "GOOGLE_API_KEY" In Enviorment
     geminiProvider = ChatGoogleGenerativeAI(
         model = geminiModel,
@@ -28,6 +28,6 @@ class llmProviders:
     
     # Mistral Provider IMPORTANT NOTE: Please Add Your "MISTRAL_API_KEY" In Enviorment
     mistralProvider = ChatMistralAI(
-        model = mistralModel,
+        name = mistralModel,
         api_key = getMistralAPIKey()
     )

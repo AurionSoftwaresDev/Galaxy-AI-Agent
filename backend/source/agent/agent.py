@@ -9,9 +9,13 @@ from source.tools.TypingTool import typingTool
 from source.tools.inspectUserSystemTool import inspectUserSystemTool
 
 ### LLM Provider Model ###
+'''
+Your Provider It's Depend You What Are You Choose :) In Gemini, Mistral And Ollama Go And Add 
+Your Provider In /backendsource/providers/llmProvider.py And Use "llmProvider.<yourProviderName>" 
+'''
 llmProviderModel = llmProviders.geminiProvider
 
-### Creating AI Agent Use Locally Ollama LLM Model Qwen3 8B LLM ###
+### Creating AI Agent Use Locally Ollama LLM Model 'llmProviderModel' Variable ###
 agent = create_agent(
     model = llmProviderModel,
     system_prompt = systemPrompt.prompt,

@@ -1,7 +1,7 @@
 from langchain_core.tools import tool
 import webbrowser
 from source.models.openBrowserModel import OpenBrowserModel
-
+from source.utils.logger import logger
 
 @tool(
         name_or_callable = "open_browser",
@@ -15,4 +15,8 @@ from source.models.openBrowserModel import OpenBrowserModel
 )
 def openBrowserTool(url : str):
 
+    logger.info("AI Agent Called open_browser Tool...")
+
     webbrowser.open(url)
+
+    logger.info(f"AI Agent Opening In Browser : { url }")

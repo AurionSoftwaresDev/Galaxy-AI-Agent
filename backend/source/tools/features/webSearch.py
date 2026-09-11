@@ -3,6 +3,8 @@ from langchain.tools import tool
 from source.utils.logger import logger
 
 def webSearch(query : str, language : str, country : str, max_results : int = 10) -> str:
+
+    logger.info("AI Agent Called fetching_news Tool...")
     
     logger.info("AI Agent Information Fetching From Internet Using GNews")
     

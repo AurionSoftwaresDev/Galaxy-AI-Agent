@@ -138,7 +138,9 @@ async def chat() -> bool:
 
     except Exception as Error:
 
-        logger.exception(f"AI Agent Streaming Failed. Exception: {Error}")
+        logger.exception(f"AI Agent Streaming Failed. Exception : { Error }")
+
+        return False
 
     print()
 
