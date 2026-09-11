@@ -10,6 +10,7 @@ uvicorn==0.52.4
 
 psutil==7.2.2
 gputil==1.4.0
+setuptools==84.0.0
 # ==============================
 # Configuration & Environment
 # ==============================
