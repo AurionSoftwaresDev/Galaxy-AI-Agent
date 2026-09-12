@@ -16,10 +16,15 @@ Description :
 agentTerminalModeShorcuts = """
 AI Agent Shortcuts:
 
-    CTRL/CMD + ALT + R For Recognization System
-    CTRL/CMD + ALT + S For Stop Recognization System
-    CTRL/CMD + ALT + SHIFT + C For Chat Message System
-    CTRL/CMD + ALT + Q For Stopped AI Agent
-    CTRL/CMD + SHIFT + L For Clear Screen
+    Modes:
+
+       - CTRL/CMD + ALT + R For Recognization System
+       - CTRL/CMD + ALT + S For Stop Recognization System
+       - CTRL/CMD + ALT + SHIFT + C For Chat Message System
+    
+    Optional:
+
+       - CTRL/CMD + ALT + Q For Stopped AI Agent
+       - CTRL/CMD + SHIFT + L For Clear Screen
     
 """
