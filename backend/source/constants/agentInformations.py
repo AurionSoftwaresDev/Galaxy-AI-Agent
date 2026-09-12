@@ -3,9 +3,9 @@ agentName = "Galaxy AI Agent"
 
 agentinformations = f"""
     
-Name : { agentName }
-Version : { agentVersion }
-Description :
+Name: { agentName }
+Version: { agentVersion }
+Description:
 
     An evloving intelligent system build to understand, reason, and act on bahalf of its user.
 

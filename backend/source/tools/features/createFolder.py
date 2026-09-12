@@ -18,7 +18,7 @@ def createFolder(path : str, folderName : str, parents : bool = True):
             }
         ], indent = 4)
 
-    path.mkdir(parents = parents, exists_ok = True)
+    path.mkdir(parents = parents, exist_ok = True)
     
     return json.dumps(obj = [
         {

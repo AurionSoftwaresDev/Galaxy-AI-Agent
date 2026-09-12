@@ -66,11 +66,23 @@ def getHardwareInformation() -> dict[str, str]:
             continue
 
     try:
+        
         if systemOS == "Windows":
-            
-            mbVendor = subprocess.check_output("wmic baseboard get manufacturer", shell=True).decode().split('\n')[1].strip()
-            mbProduct = subprocess.check_output("wmic baseboard get product", shell=True).decode().split('\n')[1].strip()
-            biosVersion = subprocess.check_output("wmic bios get smbiosbiosversion", shell=True).decode().split('\n')[1].strip()
+
+            mbVendor = subprocess.check_output(
+                args = 'powershell -NoProfile -Command "(Get-CimInstance Win32_BaseBoard).Manufacturer"',
+                shell=True
+            ).decode().strip()
+
+            mbProduct = subprocess.check_output(
+                'powershell -NoProfile -Command "(Get-CimInstance Win32_BaseBoard).Product"',
+                shell=True
+            ).decode().strip()
+
+            biosVersion = subprocess.check_output(
+                'powershell -NoProfile -Command "(Get-CimInstance Win32_BIOS).SMBIOSBIOSVersion"',
+                shell=True
+            ).decode().strip()
             
             motherboard["Manufacturer"] = mbVendor
             motherboard["Product"] = mbProduct
