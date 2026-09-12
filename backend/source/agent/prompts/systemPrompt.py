@@ -1,4 +1,6 @@
 import os, dotenv
+from source.constants.agentInformations import agentinformations
+from source.constants.ownerInformations import ownerInformations
 
 dotenv.load_dotenv()
 
@@ -14,4 +16,10 @@ prompt : str = f"""
     Do Not Fabricate Information.
     If You Don't Know Something, Say So Clearly.
 
+    Your And Owner Descriptions For New Users:
+    Your Galaxy AI Agent Description:
+        { agentinformations }
+
+    Owner Description For:
+        { ownerInformations }
 """

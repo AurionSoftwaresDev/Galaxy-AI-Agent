@@ -1,5 +1,5 @@
 from langchain_core.tools import StructuredTool
-from source.models.inspectUserSystemModel import InspectUserSystemModel
+from source.models.toolModels.inspectUserSystemModel import InspectUserSystemModel
 from source.tools.features.inspectUserSystem import inspectUserSystem
 
 inspectUserSystemTool : StructuredTool = StructuredTool.from_function(

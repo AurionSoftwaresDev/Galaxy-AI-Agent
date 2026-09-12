@@ -27,13 +27,13 @@ def clearTerminalScreen(operatingSystem : str):
     if operatingSystem == "Windows":
         
         os.system("cls")
-        
+
     elif operatingSystem == "Linux" or operatingSystem == "Darwin":
         
         os.system("clear")
-        
+
     else:
-        
+
         os._exit(1)
 
 def validateUserEnviromentVariables():

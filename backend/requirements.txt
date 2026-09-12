@@ -8,9 +8,25 @@ fastapi==0.141.1
 # ASGI server used to run the FastAPI application
 uvicorn==0.52.4
 
+# ==============================
+# Terminal Styling
+# ==============================
+pyfiglet==1.0.4
+rich==15.0.0
+
+# ==============================
+# Hardware(CPU + GPU) / System Informations/All Users Informations Gathering
+# ==============================
+
+# CPU Informations
 psutil==7.2.2
+
+# GPU Informations
 gputil==1.4.0
+
+# Setup Tools For Fixing Complex OS Compatibility Modules Like gputil
 setuptools==84.0.0
+
 # ==============================
 # Configuration & Environment
 # ==============================
@@ -21,7 +37,7 @@ python-dotenv==1.2.3
 # Data validation and settings management
 pydantic==2.13.5
 
-
+python-dotenv==1.2.3
 # ==============================
 # LangChain / AI Models
 # ==============================
@@ -51,15 +67,6 @@ ollama==0.6.2
 
 # Google Gemini / Generative AI SDK
 google-genai==2.22.0
-
-
-# ==============================
-# Email
-# ==============================
-
-# Resend API client for sending emails
-resend==2.43.0
-
 
 # ==============================
 # News / Internet Data

@@ -1,6 +1,6 @@
 from langchain_core.tools import tool
 import webbrowser
-from source.models.openBrowserModel import OpenBrowserModel
+from source.models.toolModels.openBrowserModel import OpenBrowserModel
 from source.utils.logger import logger
 
 @tool(

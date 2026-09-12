@@ -1,6 +1,6 @@
 from langchain_core.tools import StructuredTool
 from source.services.sendEmail import sendEmail
-from source.models.sendEmailModel import sendEmailModel
+from source.models.toolModels.sendEmailModel import sendEmailModel
 
 sendEmailTool : StructuredTool = StructuredTool.from_function(
     func = sendEmail,

@@ -4,4 +4,5 @@ from source.controllers.keyboardMapping.keyboardController import handleAllShort
 def startKeyboardMappingThread():
     
     thread = threading.Thread(target = handleAllShortcutsAndKeyBinds, daemon = True)
+    
     thread.start()

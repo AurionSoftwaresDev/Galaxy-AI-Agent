@@ -1,9 +1,8 @@
-import platform
+import platform, time
 from source.utils.logger import logger
 from source.utils.helper import sleep, clearTerminalScreen
-from source.chat.memory.agentMemory import initializeAgentMemory 
 from source.controllers.keyboardThread.startKeyboardMapping import startKeyboardMappingThread
-from source.agent.runAgent import startAgent
+from source.utils.agentUtils.startupUtils.agentStartupTerminal import galaxyAIAgentStartupTerminal
 
 def mainAgentHandler() -> None:
     
@@ -11,20 +10,26 @@ def mainAgentHandler() -> None:
     
     startKeyboardMappingThread()
     
-    sleep(1, 5)
+    sleep(1, 4)
     
     logger.info("Staring Agent....")
 
     clearTerminalScreen(operatingSystem = platform.system())
-    
-    startAgent()
+
+    galaxyAIAgentStartupTerminal()
+
+    while True:
+
+        time.sleep(1)
     
 if __name__ == "__main__":
      
     clearTerminalScreen(operatingSystem = platform.system())
     
     logger.info("Agent Applicaion Starting...")
-    
-    mainAgentHandler()
-    
+
+    sleep(1, 3)
+
     logger.info("Agent Application Successfully Started!")
+
+    mainAgentHandler()

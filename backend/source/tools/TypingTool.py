@@ -1,6 +1,6 @@
 import pyautogui, time
 from langchain_core.tools import tool
-from source.models.TypingModel import TypingModel
+from source.models.toolModels.TypingModel import TypingModel
 from source.utils.logger import logger
 
 @tool(

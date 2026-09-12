@@ -7,7 +7,7 @@ from source.chat.memory.agentMemory import (
     loadMessagesFromAgentMemory,
     saveMessagesInAgentMemory
 )
-from source.models.agentRequestModel import AgentRequestModel
+from backend.source.models.toolModels.agentRequestModel import AgentRequestModel
 from source.agent.agent import agent
 
 async def agentRequestResponse(userRequest : AgentRequestModel, response : Response):

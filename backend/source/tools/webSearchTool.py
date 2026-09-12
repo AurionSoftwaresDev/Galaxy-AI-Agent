@@ -1,6 +1,6 @@
 from langchain_core.tools import StructuredTool
 from source.tools.features.webSearch import webSearch
-from source.models.webSearchModel import WebSearchSchema
+from source.models.toolModels.webSearchModel import WebSearchSchema
 
 webSearchTool : StructuredTool = StructuredTool.from_function(
     func = webSearch,

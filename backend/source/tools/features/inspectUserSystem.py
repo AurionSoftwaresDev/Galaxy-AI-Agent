@@ -1,7 +1,7 @@
 import platform, psutil, getpass, os, subprocess, json
 from datetime import datetime
 from source.utils.logger import logger
-from source.utils.agentUtils.getHardwareInformation import getHardwareInformation
+from source.utils.agentUtils.core.getHardwareInformation import getHardwareInformation
 
 def inspectUserSystem():
 
@@ -103,10 +103,8 @@ def inspectUserSystem():
         }
     }
 
-    jsonInspectedUserSystemData : str = json.dumps(inspectedUserSystemData, indent = 4)
+    jsonInspectedUserSystemData : str = json.dumps(obj = inspectedUserSystemData, indent = 4)
 
     logger.info("AI Agent Successfully Fetched User System Details")
 
     return jsonInspectedUserSystemData
-
-print(inspectUserSystem())
