@@ -1,4 +1,4 @@
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter
 from source.controllers.agentControllers.agentWebSocketController import agentWebSocketController
 
 agentWebSocketRouter = APIRouter()

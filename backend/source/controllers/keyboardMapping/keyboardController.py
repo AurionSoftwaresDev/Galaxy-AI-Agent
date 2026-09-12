@@ -1,7 +1,7 @@
 import os, platform, keyboard, threading
 from source.utils.helper import clearTerminalScreen
 from source.constants.keyboardShortcuts import ( 
-    clearScreenShortCuts, 
+    clearScreenShortCut, 
     agentShortCuts
 )
 from source.utils.logger import logger
@@ -14,9 +14,7 @@ def handleAllShortcutsAndKeyBinds():
     
     currentOperatingSystem : str = platform.system()
 
-    for clearScreenShortcut in clearScreenShortCuts:
-                    
-        keyboard.add_hotkey(hotkey = clearScreenShortcut, callback = clearTerminalScreen, args=(currentOperatingSystem,))
+    keyboard.add_hotkey(hotkey = clearScreenShortCut, callback = clearTerminalScreen, args=(currentOperatingSystem,))
     
     for agentShortcut in agentShortCuts:
 

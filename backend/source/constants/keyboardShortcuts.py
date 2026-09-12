@@ -8,7 +8,7 @@ if userCurrentOs == "Darwin": KEY_MODIFIER = "cmd"
 if userCurrentOs == "Windows": KEY_MODIFIER = "ctrl"
 else : KEY_MODIFIER = "ctrl"
 
-clearScreenShortCuts : str = f"{KEY_MODIFIER}+l"
+clearScreenShortCut : str = f"{KEY_MODIFIER}+shift+l"
 
 agentShortCuts : list[str] = [
 

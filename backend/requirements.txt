@@ -75,7 +75,6 @@ google-genai==2.22.0
 # Google News scraping/search library
 gnews==0.8.2
 
-
 # ==============================
 # Desktop GUI / Automation
 # ==============================

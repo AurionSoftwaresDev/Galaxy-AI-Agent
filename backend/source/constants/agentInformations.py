@@ -20,6 +20,6 @@ AI Agent Shortcuts:
     CTRL/CMD + ALT + S For Stop Recognization System
     CTRL/CMD + ALT + SHIFT + C For Chat Message System
     CTRL/CMD + ALT + Q For Stopped AI Agent
-    CTRL/CMD + L For Clear Screen
+    CTRL/CMD + SHIFT + L For Clear Screen
     
 """
