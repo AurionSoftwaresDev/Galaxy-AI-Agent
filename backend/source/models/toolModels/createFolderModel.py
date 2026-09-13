@@ -1,25 +1,20 @@
 from pydantic import BaseModel, Field
 
-class DeleteFolderModel(BaseModel):
 
-    folderPath : str = Field(
+class CreateFolderModel(BaseModel):
+
+    path: str = Field(
+        description="The parent directory where the folder should be created."
+    )
+
+    folderName: str = Field(
+        description="The name of the folder to create."
+    )
+
+    parents: bool = Field(
+        default=True,
         description=(
-            "The parent directory containing the folder that needs to be deleted."
+            "Whether to automatically create missing parent directories. "
+            "Set to True when the required parent directories may not exist."
         )
     )
-
-    folderName : str = Field(
-        description=(
-            "The name of the folder that needs to be deleted."
-        )
-    )
-
-    recursive : bool = Field(
-        default = False,
-        description = (
-            "Whether to recursively delete the folder and all files and "
-            "subfolders inside it. Keep False when deleting an empty folder. "
-            "Set True only when the complete folder contents should be removed."
-        )
-    )
-
