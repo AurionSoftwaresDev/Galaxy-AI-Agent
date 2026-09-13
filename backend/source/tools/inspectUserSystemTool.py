@@ -1,11 +1,9 @@
 from langchain_core.tools import StructuredTool
-from source.models.toolModels.inspectUserSystemModel import InspectUserSystemModel
 from source.tools.features.inspectUserSystem import inspectUserSystem
 
 inspectUserSystemTool : StructuredTool = StructuredTool.from_function(
     func = inspectUserSystem,
     name = "inspect_user_system",
-    args_schema = InspectUserSystemModel,
     description = """
         Inspect the current system and return detailed information about the
         user's computer and active user session.

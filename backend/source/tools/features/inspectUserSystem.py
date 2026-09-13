@@ -3,7 +3,7 @@ from datetime import datetime
 from source.utils.logger import logger
 from source.utils.agentUtils.core.getHardwareInformation import getHardwareInformation
 
-def inspectUserSystem():
+def inspectUserSystem() -> str:
 
     logger.info("AI Agent Called inspect_user_system Tool")
 

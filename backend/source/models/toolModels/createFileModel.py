@@ -3,7 +3,7 @@ from typing import Literal
 
 class CreateFileModel(BaseModel):
 
-    path: str = Field(
+    path : str = Field(
         description = "The directory path where the file should be created."
     )
 
@@ -19,18 +19,12 @@ class CreateFileModel(BaseModel):
         "w",
         "a",
         "x",
-        "r+",
-        "x+",
-        "w+"
     ] = Field(
         description = (
             "The file opening mode. "
             "Use 'w' to create or overwrite, "
             "'a' to append, "
             "'x' to create only if the file does not exist, "
-            "'r+' to read and write, "
-            "'x+' to create and read/write, "
-            "or 'w+' to overwrite and read/write."
         )
     )
 

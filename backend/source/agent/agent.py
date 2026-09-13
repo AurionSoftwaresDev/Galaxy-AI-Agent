@@ -7,8 +7,11 @@ from source.tools.sendEmaillTool import sendEmailTool
 from source.tools.openBrowserTool import openBrowserTool
 from source.tools.TypingTool import typingTool
 from source.tools.inspectUserSystemTool import inspectUserSystemTool
-# from source.tools.createFileTool import createFileTool
-# from source.tools.createFolderTool import createFolderTool
+from source.tools.createFileTool import createFileTool
+from source.tools.readFileTool import readFileTool
+from source.tools.deleteFileTool import deleteFileTool
+from source.tools.createFolderTool import createFolderTool
+from source.tools.deleteFolderTool import deleteFolderTool
 
 ### LLM Provider Model ###
 '''
@@ -28,7 +31,10 @@ agent = create_agent(
         openBrowserTool,
         typingTool,
         inspectUserSystemTool,
-        # createFileTool,
-        # createFolderTool
+        createFolderTool,
+        deleteFolderTool,
+        createFileTool,
+        readFileTool,
+        deleteFileTool
     ],
 )

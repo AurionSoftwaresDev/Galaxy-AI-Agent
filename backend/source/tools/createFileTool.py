@@ -32,9 +32,6 @@ createFileTool : StructuredTool = StructuredTool.from_function(
                 - "w": Create a new file or overwrite an existing file.
                 - "a": Append content to an existing file or create it if missing.
                 - "x": Create a new file and fail if the file already exists.
-                - "r+": Open an existing file for reading and writing.
-                - "x+": Create a new file for reading and writing.
-                - "w+": Create or overwrite a file for reading and writing.
 
         Important:
             Always provide the correct file path, file name, content, and mode.

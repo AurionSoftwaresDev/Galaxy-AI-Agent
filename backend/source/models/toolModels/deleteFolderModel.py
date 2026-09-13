@@ -13,13 +13,3 @@ class DeleteFolderModel(BaseModel):
             "The name of the folder that needs to be deleted."
         )
     )
-
-    recursive : bool = Field(
-        default = False,
-        description = (
-            "Whether to recursively delete the folder and all files and "
-            "subfolders inside it. Keep False when deleting an empty folder. "
-            "Set True only when the complete folder contents should be removed."
-        )
-    )
-
