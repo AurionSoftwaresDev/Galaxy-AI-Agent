@@ -15,6 +15,8 @@ def readFile(filePath : str, fileName : str) -> str:
 
     try:
 
+        logger.info(f"AI Agent Reading \"{ fileName } \"File At : \"{ fullPath }\"")
+
         stringBuffer = io.StringIO()
 
         with open(fullPath, "r") as file:
@@ -33,7 +35,7 @@ def readFile(filePath : str, fileName : str) -> str:
 
     except FileNotFoundError:
 
-        logger.info(f"AI Agent Not Found The File At : \"{ fullPath }\"")
+        logger.info(f"AI Agent Can't Read File Becase File Not Found The File At : \"{ fullPath }\"")
 
         return json.dumps(obj = [
             {

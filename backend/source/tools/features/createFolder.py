@@ -10,6 +10,8 @@ def createFolder(path : str, folderName : str, parents : bool = True):
 
     if path.exists():
 
+        logger.info(f"AI Agent Can't Create Folder At \"{ path }\" Because It's Already Exists")
+
         return json.dumps(obj = [
             {
                 "Status": "Already Exits",
@@ -19,6 +21,8 @@ def createFolder(path : str, folderName : str, parents : bool = True):
         ], indent = 4)
 
     path.mkdir(parents = parents, exist_ok = True)
+
+    logger.info(f"AI Agent Successfully Created Folder At : \" { path }\"")
     
     return json.dumps(obj = [
         {

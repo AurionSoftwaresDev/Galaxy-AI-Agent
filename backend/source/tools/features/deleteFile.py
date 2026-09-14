@@ -1,13 +1,18 @@
 import json
 from pathlib import Path
+from source.utils.logger import logger
 
 def deleteFile(filePath : str, fileName : str) -> str:
+
+    logger.info("AI Agent Called delete_file Tool..")
 
     try:
 
         path = Path(f"{filePath}/{fileName}")
 
         path.unlink()
+        
+        logger.info(f"AI Agent Successfully Delete The File At : \"{ path }\"")
 
         return json.dumps(obj = [
             {
@@ -19,6 +24,8 @@ def deleteFile(filePath : str, fileName : str) -> str:
 
     except FileNotFoundError:
 
+        logger.exception("AI Agent Not Found File To Delete")
+
         return json.dumps(obj = [
             {
                 "Status": "File Not Found",
@@ -28,6 +35,8 @@ def deleteFile(filePath : str, fileName : str) -> str:
         ], indent = 4)
 
     except PermissionError:
+
+        logger.info("AI Agent Permission Deind To Delete File")
 
         return json.dumps(obj = [
             {
@@ -39,6 +48,8 @@ def deleteFile(filePath : str, fileName : str) -> str:
 
     except IsADirectoryError:
 
+        logger.info("AI Agent Can't Delete File Because It's Folder")
+
         return json.dumps(obj = [
             {
                 "Status": "Its Directory. Not A File",
@@ -49,6 +60,8 @@ def deleteFile(filePath : str, fileName : str) -> str:
 
     except OSError:
 
+        logger.info("AI Agent Can't Delete File Operating System Issue")
+
         return json.dumps(obj = [
             {
                 "Status": "OS Error To Delete File",
@@ -58,6 +71,8 @@ def deleteFile(filePath : str, fileName : str) -> str:
         ], indent = 4)
 
     except Exception:
+
+        logger.info("AI Agent Unexpected Error To Deleting File")
 
         return json.dumps(obj = [
             {

@@ -1,6 +1,7 @@
 import json
 import shutil
 from pathlib import Path
+from source.utils.logger import logger
 
 def deleteFolder(
     folderPath: str,
@@ -8,11 +9,15 @@ def deleteFolder(
     recursive: bool = False
 ) -> str:
 
+    logger.info("AI Agent Called delete_folder Tool...")
+
     path = Path(folderPath) / folderName
 
     try:
 
         if not path.exists():
+
+            logger.info(f"AI Agent Say The Folder \"{ path }\" Already Exists At : \"{ path }\"")
 
             return json.dumps(
                 obj=[
@@ -26,6 +31,8 @@ def deleteFolder(
             )
 
         if not path.is_dir():
+
+            logger.info(f"AI Agent Say The Folder \"{ path }\" Is Not A Folder It's File")
 
             return json.dumps(
                 obj=[
@@ -46,6 +53,8 @@ def deleteFolder(
 
             path.rmdir()
 
+        logger.info(f"AI Agent Successfully Deleted The Folder At : \"{ path }\"")
+
         return json.dumps(
             obj=[
                 {
@@ -60,8 +69,10 @@ def deleteFolder(
 
     except OSError as exception:
 
+        logger.info(f"AI Agent Failed To Delete Folder Because Operating System Issue. Exception : { exception }")
+
         return json.dumps(
-            obj=[
+            obj = [
                 {
                     "Status": "OS Error To Delete Folder",
                     "Path": str(path),
@@ -70,13 +81,15 @@ def deleteFolder(
                     "Error": str(exception)
                 }
             ],
-            indent=4
+            indent = 4
         )
 
     except Exception as exception:
 
+        logger.info(f"AI Agent Unexpected Exception To Deleting Folder. Exception : { exception }")
+
         return json.dumps(
-            obj=[
+            obj = [
                 {
                     "Status": "Unexpected Error",
                     "Path": str(path),
@@ -85,5 +98,5 @@ def deleteFolder(
                     "Error": str(exception)
                 }
             ],
-            indent=4
+            indent = 4
         )

@@ -2,6 +2,7 @@ import platform, psutil, getpass, os, subprocess, json
 from datetime import datetime
 from source.utils.logger import logger
 from source.utils.agentUtils.core.getHardwareInformation import getHardwareInformation
+from source.utils.agentUtils.core.getKernalInformation import KernelMetricsEngine
 
 def inspectUserSystem() -> str:
 
@@ -39,6 +40,10 @@ def inspectUserSystem() -> str:
         })
 
     allRegisteredAccounts = []
+
+    engine = KernelMetricsEngine()
+        
+    kernalInformation = engine.collect()
 
     if platform.system() == "Windows":
        
@@ -93,6 +98,7 @@ def inspectUserSystem() -> str:
                 "Available Memory" : f"{virtualMemory.available / (1024**3):.2f} GB"
             }
         },
+        "Karnel Informations": kernalInformation,
         "Hardware Information" : hardwareInformation,
         "Users Informations" : {
             "Current User" : f"{getpass.getuser()}",

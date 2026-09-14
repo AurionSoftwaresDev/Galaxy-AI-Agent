@@ -12,6 +12,7 @@ from source.tools.readFileTool import readFileTool
 from source.tools.deleteFileTool import deleteFileTool
 from source.tools.createFolderTool import createFolderTool
 from source.tools.deleteFolderTool import deleteFolderTool
+from source.tools.launchDesktopApplicationTool import launchApplicationTool
 
 ### LLM Provider Model ###
 '''
@@ -35,6 +36,7 @@ agent = create_agent(
         deleteFolderTool,
         createFileTool,
         readFileTool,
-        deleteFileTool
+        deleteFileTool,
+        launchApplicationTool
     ],
 )
