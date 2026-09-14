@@ -128,7 +128,7 @@ class LinuxApplicationLauncher(BaseApplicationLauncher):
 
         return self._findFromDesktopFiles(appName)
 
-    def linuxApplicationLauncher(self, application: Path | str, appName: str) -> str:
+    def launch(self, application: Path | str, appName: str) -> str:
 
         application = Path(application)
 

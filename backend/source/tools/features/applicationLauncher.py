@@ -29,5 +29,3 @@ def launchApplication(appName: str) -> str:
     """
 
     return applicationLauncher.launchApplication(appName)
-
-print(launchApplication("Visual Studio Code"))
