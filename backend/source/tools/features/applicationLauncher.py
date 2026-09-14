@@ -1,3 +1,4 @@
+from source.desktop.applicationLauncher.macOS.macOSLauncher import logger
 from source.desktop.core.applicationFactory import ApplicationLauncherFactory
 
 # ============================================================
@@ -27,5 +28,7 @@ def launchApplication(appName: str) -> str:
             Firefox
             Notepad
     """
+
+    logger.info("AI Agent Called launch_application Tool...")
 
     return applicationLauncher.launchApplication(appName)
