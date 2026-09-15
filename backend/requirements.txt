@@ -90,3 +90,5 @@ httpx==0.28.1
 
 # Mouse and keyboard automation / desktop control
 pyautogui==0.9.54
+
+pyzipper==0.4.0

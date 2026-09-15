@@ -13,6 +13,7 @@ from source.tools.deleteFileTool import deleteFileTool
 from source.tools.createFolderTool import createFolderTool
 from source.tools.deleteFolderTool import deleteFolderTool
 from source.tools.launchDesktopApplicationTool import launchApplicationTool
+from source.tools.archiveCompressorTool import archiveCompressorTool
 
 ### LLM Provider Model ###
 '''
@@ -37,6 +38,7 @@ agent = create_agent(
         createFileTool,
         readFileTool,
         deleteFileTool,
-        launchApplicationTool
+        launchApplicationTool,
+        archiveCompressorTool
     ],
 )
