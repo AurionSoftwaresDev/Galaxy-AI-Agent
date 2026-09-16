@@ -102,7 +102,7 @@ class ArchiveCompressor():
             obj = [
                 {   
                     "Status": f"Failed To Create {format} Archive",
-                    "Source Paths To Create Archive": sources,
+                    "Source Paths To Create Archive": str(sources),
                     "Output Archive Name": outputName,
                     "Reason Why It's Failed": archiveValidationData
                 }
