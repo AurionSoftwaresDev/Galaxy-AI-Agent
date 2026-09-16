@@ -1,5 +1,5 @@
-from source.models.toolModels.readFileModel import ReadFileModel
-from source.tools.features.readFile import readFile
+from source.models.toolModels.fileSystemModels.readFileModel import ReadFileModel
+from source.tools.features.fileSystemFeatures.readFile import readFile
 from langchain_core.tools import StructuredTool
 
 readFileTool : StructuredTool = StructuredTool.from_function(

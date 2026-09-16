@@ -7,11 +7,12 @@ from source.tools.sendEmaillTool import sendEmailTool
 from source.tools.openBrowserTool import openBrowserTool
 from source.tools.TypingTool import typingTool
 from source.tools.inspectUserSystemTool import inspectUserSystemTool
-from source.tools.createFileTool import createFileTool
-from source.tools.readFileTool import readFileTool
-from source.tools.deleteFileTool import deleteFileTool
-from source.tools.createFolderTool import createFolderTool
-from source.tools.deleteFolderTool import deleteFolderTool
+from source.tools.fileSystem.createFileTool import createFileTool
+from source.tools.fileSystem.readFileTool import readFileTool
+from source.tools.fileSystem.deleteFileTool import deleteFileTool
+from source.tools.fileSystem.createFolderTool import createFolderTool
+from source.tools.fileSystem.deleteFolderTool import deleteFolderTool
+from source.tools.fileSystem.buildFileSystemTreeTool import buildFileSystemTreeTool
 from source.tools.launchDesktopApplicationTool import launchApplicationTool
 from source.tools.archiveCompressorTool import archiveCompressorTool
 
@@ -38,6 +39,7 @@ agent = create_agent(
         createFileTool,
         readFileTool,
         deleteFileTool,
+        buildFileSystemTreeTool,
         launchApplicationTool,
         archiveCompressorTool
     ],
