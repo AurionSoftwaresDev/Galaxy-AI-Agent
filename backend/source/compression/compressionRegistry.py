@@ -3,7 +3,6 @@ from source.compression.compressors.functions import (
     tarCompressor,
     ZzCompressor,
     rarCompressor,
-    gZipCompressor
 )
 
 ARCHIVE_HANDLERS = {
@@ -11,6 +10,5 @@ ARCHIVE_HANDLERS = {
     ".tar": tarCompressor,
     ".7z": ZzCompressor,
     ".rar": rarCompressor,
-    ".gz": gZipCompressor,
 }
 

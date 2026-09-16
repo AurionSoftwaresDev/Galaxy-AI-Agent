@@ -61,5 +61,18 @@ archiveCompressorTool : StructuredTool = StructuredTool.from_function(
             - Do not omit valid files or directories from the requested sources.
             - Do not invent or modify paths.
             - Use the user's requested output name and output directory.
+
+        Important Note:
+            Archives created by this tool may use strong password-based
+            encryption and may not be supported by the default Windows
+            archive extractor.
+
+            If a password-protected archive cannot be opened or extracted
+            using the system's default extractor, use a compatible archive
+            utility such as WinRAR, 7-Zip, or another extractor that supports
+            the archive's encryption format.
+
+            If the user reports extraction or password-related problems,
+            explain this limitation and suggest using a compatible extractor.
     """
 )
