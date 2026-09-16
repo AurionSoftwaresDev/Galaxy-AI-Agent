@@ -273,14 +273,3 @@ def rarCompressor(
             ], indent = 4
         )
     
-print(rarCompressor(
-    sources = [
-        "C:/Users/dell/desktop/Test"
-    ],
-    passwordProtected = {
-        "Password": "Password",
-        "Protected": True
-    },
-    outputName = "Archive.7z",
-    outputPath = "C:/Users/dell/desktop/Testing.zip"
-))

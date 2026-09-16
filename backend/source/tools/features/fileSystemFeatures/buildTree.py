@@ -5,14 +5,17 @@ from typing import Literal
 from source.utils.logger import logger
 
 def _createDictTree(
-        path: Path,
+        path: str,
         depth: int = 0,
         counter: list[int] | None = None,
     ) -> dict[str, str | bool | list[str]]:
 
     MAX_ENTRIES = 200
 
+    rootPath = Path(path)
+
     if counter is None:
+
         counter = [0]
 
     if counter[0] >= MAX_ENTRIES:
@@ -22,24 +25,28 @@ def _createDictTree(
 
     counter[0] += 1
 
-    if path.is_file():
+    if rootPath.is_file():
+
         return {
-            "name": path.name,
-            "path": str(path),
+            "name": rootPath.name,
+            "rootPath": str(rootPath),
             "type": "file"
         }
 
-    if path.is_dir():
+    if rootPath.is_dir():
+
         children = []
 
         try:
-            for item in path.iterdir():
+
+            for item in rootPath.iterdir():
 
                 if counter[0] >= MAX_ENTRIES:
+
                     break
 
                 children.append(
-                    buildTree(
+                    _createDictTree(
                         item,
                         depth + 1,
                         counter
@@ -47,29 +54,32 @@ def _createDictTree(
                 )
 
         except PermissionError:
+
             return {
-                "name": path.name,
-                "path": str(path),
+                "name": rootPath.name,
+                "path": str(rootPath),
                 "type": "directory",
                 "children": [],
                 "error": "Permission denied"
             }
 
         return {
-            "name": path.name,
-            "path": str(path),
+            "name": rootPath.name,
+            "rootPath": str(rootPath),
             "type": "directory",
             "children": children
         }
 
     return {
-        "name": path.name,
-        "path": str(path),
+        "name": rootPath.name,
+        "rootPath": str(rootPath),
         "type": "unknown"
     }
 
 
-def _createRealTree(rootPath : str):
+def _createRealTree(path : Path):
+
+    rootPath = Path(path)
 
     if sys.platform == "win32":
 
@@ -119,7 +129,7 @@ def _createRealTree(rootPath : str):
 def buildTree(
         depth: int = 0,
         counter: list[int] | None = None,
-        path: str = Path.home(),
+        path: Path = Path.home(),
         type : Literal["COMMAND", "JSON"] = "JSON"
     ) -> str:
 
@@ -150,7 +160,7 @@ def buildTree(
 
     elif type.lower() == "command":
 
-        commandRealTreeResponse : str = _createRealTree(rootPath = path)
+        commandRealTreeResponse : str = _createRealTree(path = path)
 
         return commandRealTreeResponse
 
@@ -165,3 +175,5 @@ def buildTree(
             }
         ], indent = 4
     )
+
+_createDictTree("C:/Users/dell/desktop/Agent-AI/backend/source")
