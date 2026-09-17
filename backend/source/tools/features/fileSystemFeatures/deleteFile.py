@@ -1,10 +1,30 @@
 import json
 from pathlib import Path
 from source.utils.logger import logger
+from source.security.permissionManager import PermissionManager
 
 def deleteFile(filePath : str, fileName : str) -> str:
 
     logger.info("AI Agent Called delete_file Tool..")
+
+    permissionManager = PermissionManager(
+        data = {
+            "tool_name": "delete_file",
+            "title": "Agent Wants To Delete A File :",
+            "details": f"\"{ filePath }/{ fileName }\""
+        }
+    )
+
+    userPermission : bool | dict[str, str | bool] = permissionManager.askPermission()
+
+    if isinstance(userPermission, dict):
+
+        if not userPermission["Success"]:
+
+            return json.dumps(
+                obj = userPermission,
+                indent = 4
+            )
 
     try:
 

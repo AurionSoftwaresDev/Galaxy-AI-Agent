@@ -14,6 +14,9 @@ uvicorn==0.52.4
 pyfiglet==1.0.4
 rich==15.0.0
 
+# Interactive terminal prompts and arrow-key selection
+questionary==2.1.1
+
 # ==============================
 # Hardware(CPU + GPU) / System Informations/All Users Informations Gathering
 # ==============================
@@ -37,7 +40,6 @@ python-dotenv==1.2.3
 # Data validation and settings management
 pydantic==2.13.5
 
-python-dotenv==1.2.3
 # ==============================
 # LangChain / AI Models
 # ==============================
@@ -91,8 +93,15 @@ httpx==0.28.1
 # Mouse and keyboard automation / desktop control
 pyautogui==0.9.54
 
+# ==============================
+# Compression / Archive Handling
+# ==============================
+
+# Password-protected ZIP archive creation
 pyzipper==0.4.0
 
+# Cryptographic primitives used for archive encryption
 cryptography==50.0.1
 
+# 7-Zip archive creation and extraction
 py7zr==1.1.3

@@ -2,6 +2,7 @@ import json
 import shutil
 from pathlib import Path
 from source.utils.logger import logger
+from source.security.permissionManager import PermissionManager
 
 def deleteFolder(
     folderPath: str,
@@ -10,6 +11,25 @@ def deleteFolder(
 ) -> str:
 
     logger.info("AI Agent Called delete_folder Tool...")
+
+    permissionManager = PermissionManager(
+        data = {
+            "tool_name": "delete_file",
+            "title": "Agent Wants To Delete A Folder :",
+            "details": f"\"{ folderPath }/{ folderName }\""
+        }
+    )
+
+    userPermission : bool | dict[str, str | bool] = permissionManager.askPermission()
+
+    if isinstance(userPermission, dict):
+
+        if not userPermission["Success"]:
+
+            return json.dumps(
+                obj = userPermission,
+                indent = 4
+            )
 
     path = Path(folderPath) / folderName
 
