@@ -3,15 +3,15 @@ import os
 from pathlib import Path
 from source.utils.logger import logger
 from source.constants.archiveCompressorAllowedFormats import ARCHIVE_SUPPORTED_FORMATS
-from source.compression.compressionRegistry import ARCHIVE_HANDLERS
+from source.tools.features.fileSystemFeatures.archive.compression.compressionRegistry import COMPRESSORS_HANDLERS
 
 class ArchiveCompressor():
 
     def __init__(self) -> None:
 
-        logger.info("AI Agent Created New Archive Compressor...")
+        logger.info("AI Agent Created New Archive Compressor")
 
-    def validateArchiveGivenData(
+    def __validateArchiveGivenData(
             self,
             sources : list[Path],
             format : str,
@@ -66,7 +66,7 @@ class ArchiveCompressor():
                 
             except KeyError as keyException:   
 
-                return f"Key Not Found In Your \"passwordProtected\" Object. Exception : {keyException}"
+                return f"Key Not Found In Your \"passwordProtected\" Object. Exception : { keyException }"
 
         return f"Your { format } Archive Format Doesn't Supported"
 
@@ -79,7 +79,7 @@ class ArchiveCompressor():
             outputPath : Path = None
         ) -> str:
 
-        archiveValidationData = self.validateArchiveGivenData(
+        archiveValidationData = self.__validateArchiveGivenData(
             sources     =       sources,
             format      =       format,
             outputName  =       outputName,
@@ -88,7 +88,7 @@ class ArchiveCompressor():
 
         if archiveValidationData == True and isinstance(archiveValidationData, str) != True:
 
-            compressor = ARCHIVE_HANDLERS[format]
+            compressor = COMPRESSORS_HANDLERS[format]
 
             return compressor(
 
