@@ -1,5 +1,5 @@
 from source.models.toolModels.fileSystemModels.deleteFolderModel import DeleteFolderModel
-from source.tools.features.fileSystemFeatures.deleteFolder import deleteFolder
+from source.tools.features.fileSystemFeatures.fileSystem.deleteFolder import deleteFolder
 from langchain_core.tools import StructuredTool
 
 

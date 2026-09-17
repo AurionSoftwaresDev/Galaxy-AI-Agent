@@ -1,5 +1,5 @@
 from source.models.toolModels.fileSystemModels.buildFileSystemTreeModel import BuildFileSystemTreeModel
-from source.tools.features.fileSystemFeatures.buildTree import buildTree
+from source.tools.features.fileSystemFeatures.path.buildTree import buildTree
 from langchain_core.tools import StructuredTool
 
 buildFileSystemTreeTool : StructuredTool = StructuredTool.from_function(
