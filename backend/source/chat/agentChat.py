@@ -12,6 +12,11 @@ from langchain.messages import (
 )
 from source.utils.TerminalUI import TerminalUI
 from rich.console import Console
+from source.cli.cli import CLI
+
+terminalUI : TerminalUI     =   TerminalUI()
+console : Console           =   Console()
+cli : CLI                   =   CLI()
 
 def extractTextFromContent(content) -> str:
 
@@ -67,10 +72,6 @@ def extractTextFromContent(content) -> str:
 
 async def chat() -> bool:
 
-    terminalUI : TerminalUI = TerminalUI()
-
-    console : Console = Console()
-
     userPrompt : str
 
     while True:
@@ -86,6 +87,10 @@ async def chat() -> bool:
             continue
 
         break
+
+    userCommands : list[str] = cli.extractCommandFromUserPrompt(userPrompt)
+
+    cli.executeCLICommands(commands = userCommands)
 
     if userPrompt.strip() == "quit-agent":
 
