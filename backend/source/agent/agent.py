@@ -13,8 +13,9 @@ from source.tools.fileSystem.deleteFileTool import deleteFileTool
 from source.tools.fileSystem.createFolderTool import createFolderTool
 from source.tools.fileSystem.deleteFolderTool import deleteFolderTool
 from source.tools.fileSystem.buildFileSystemTreeTool import buildFileSystemTreeTool
+from source.tools.fileSystem.archive.archiveCompressorTool import archiveCompressorTool
+from source.tools.fileSystem.archive.archiveExtractorTool import archiveExtractorTool
 from source.tools.launchDesktopApplicationTool import launchApplicationTool
-from source.tools.archiveCompressorTool import archiveCompressorTool
 
 ### LLM Provider Model ###
 '''
@@ -34,13 +35,16 @@ agent = create_agent(
         openBrowserTool,
         typingTool,
         inspectUserSystemTool,
+
         createFolderTool,
         deleteFolderTool,
         createFileTool,
         readFileTool,
         deleteFileTool,
         buildFileSystemTreeTool,
+        archiveCompressorTool,
+        archiveExtractorTool,
+        
         launchApplicationTool,
-        archiveCompressorTool
     ],
 )

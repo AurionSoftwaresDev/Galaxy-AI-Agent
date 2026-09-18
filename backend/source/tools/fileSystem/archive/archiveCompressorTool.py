@@ -1,4 +1,4 @@
-from source.models.toolModels.archiveCompressorModel import ArchiveCompressInputModel
+from source.models.toolModels.fileSystemModels.archiveCompressorModel import ArchiveCompressInputModel
 from source.tools.features.archiveCompressors import archiveCompressor
 from langchain_core.tools import StructuredTool
 
@@ -13,11 +13,13 @@ archiveCompressorTool : StructuredTool = StructuredTool.from_function(
         bundle, or combine files and directories into an archive.
 
         The tool supports the following archive formats:
-        - ZIP
-        - TAR
-        - 7Z
-        - RAR
+            - .zip
+            - .tar
+            - .7z
+            - .rar
 
+            Note: Provide format with add "." dot Exmaple: format = ".rar"
+        
         Arguments:
 
         sources:
