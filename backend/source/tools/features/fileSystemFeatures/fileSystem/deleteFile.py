@@ -2,17 +2,22 @@ import json
 from pathlib import Path
 from source.utils.logger import logger
 from source.security.permissionManager import PermissionManager
+from source.utils.TerminalUI import TerminalUI
 
 def deleteFile(filePath : str, fileName : str) -> str:
 
     logger.info("AI Agent Called delete_file Tool..")
+
+    terminalUI : TerminalUI = TerminalUI()
 
     permissionManager = PermissionManager(
         data = {
             "tool_name": "delete_file",
             "title": "Agent Wants To Delete A File :",
             "details": f"\"{ filePath }/{ fileName }\""
-        }
+        },
+        beforePrompt = terminalUI.pause,
+        afterPrompt  = terminalUI.resume
     )
 
     userPermission : bool | dict[str, str | bool] = permissionManager.askPermission()

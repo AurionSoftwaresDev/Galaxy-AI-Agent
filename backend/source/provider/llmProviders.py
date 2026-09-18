@@ -7,6 +7,7 @@ from langchain_mistralai import ChatMistralAI
 class llmProviders:
     
     # Gemini Model 
+    # geminiModel = "gemini-3.5-flash" # My Debugging Model
     geminiModel = "gemini-3.6-flash"
     
     # Ollama Model

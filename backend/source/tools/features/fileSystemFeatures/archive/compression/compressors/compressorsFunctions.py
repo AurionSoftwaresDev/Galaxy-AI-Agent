@@ -7,7 +7,7 @@ from pathlib import Path
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.fernet import Fernet
 from source.utils.logger import logger
-from backend.source.utils.archiveUtils import (
+from source.utils.archiveUtils import (
     extractPasswordData,
     validatePathLastName,
     findCompressorRarEngine

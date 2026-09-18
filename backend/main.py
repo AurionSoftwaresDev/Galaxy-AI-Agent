@@ -5,18 +5,24 @@ from source.controllers.keyboardThread.startKeyboardMapping import startKeyboard
 from source.utils.agentUtils.startupUtils.agentStartupTerminal import galaxyAIAgentStartupTerminal
 
 def mainAgentHandler() -> None:
-    
-    logger.info("Starting Keyboard Mapping Shortcut Thread...")
-    
-    startKeyboardMappingThread()
-    
-    sleep(1, 4)
-    
-    logger.info("Staring Agent....")
 
-    clearTerminalScreen(operatingSystem = platform.system())
+    try:
+    
+        logger.info("Starting Keyboard Mapping Shortcut Thread...")
+        
+        startKeyboardMappingThread()
+        
+        sleep(1, 4)
+        
+        logger.info("Staring Agent....")
 
-    galaxyAIAgentStartupTerminal()
+        clearTerminalScreen(operatingSystem = platform.system())
+
+        galaxyAIAgentStartupTerminal()
+
+    except KeyboardInterrupt:
+
+        return mainAgentHandler()
 
     while True:
 

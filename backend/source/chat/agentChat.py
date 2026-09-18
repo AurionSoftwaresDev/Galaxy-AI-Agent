@@ -1,3 +1,4 @@
+from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
 from source.agent.agent import agent
 from source.chat.memory.agentMemory import (
     loadMessagesFromAgentMemory,
@@ -9,29 +10,31 @@ from langchain.messages import (
     AIMessageChunk,
     ToolMessage
 )
+from source.utils.TerminalUI import TerminalUI
+from rich.console import Console
 
 def extractTextFromContent(content) -> str:
 
     """
-    Extracts readable text from LangChain message content.
+        Extracts readable text from LangChain message content.
 
-    LangChain can return AIMessageChunk.content as either:
+        LangChain can return AIMessageChunk.content as either:
 
-        str
-            "Hello, how are you?"
+            str
+                "Hello, how are you?"
 
-    or:
+        or:
 
-        list[dict]
-            [
-                {
-                    "type": "text",
-                    "text": "Hello, how are you?",
-                    "index": 0
-                }
-            ]
+            list[dict]
+                [
+                    {
+                        "type": "text",
+                        "text": "Hello, how are you?",
+                        "index": 0
+                    }
+                ]
 
-    This function normalizes both formats into a plain string.
+        This function normalizes both formats into a plain string.
     """
 
     if isinstance(content, str):
@@ -58,22 +61,27 @@ def extractTextFromContent(content) -> str:
 
                 textParts.append(text)
 
-
         return "".join(textParts)
 
     return ""
 
 async def chat() -> bool:
 
+    terminalUI : TerminalUI = TerminalUI()
+
+    console : Console = Console()
+
     userPrompt : str
 
     while True:
 
-        userPrompt = input("User : ")
+        console.print(f"{"__" * 80}", style = "dim")
+
+        console.print("User : ", end = "", style = "bold cyan")
+
+        userPrompt = input()
 
         if userPrompt.strip() == "":
-
-            print("[Exception] Your Prompt Is Empty. Please Write Right Prompt.")
 
             continue
 
@@ -81,7 +89,7 @@ async def chat() -> bool:
 
     if userPrompt.strip() == "quit-agent":
 
-        print("[+] Agent Shutdown...")
+        typingTextOnTerminal("[+] Agent Shutdown...", speed = 0.03)
 
         logger.info("User Shutdown The AI Agent")
 
@@ -105,11 +113,12 @@ async def chat() -> bool:
         )
     )
 
-    finalAgentResponse: str = ""
-
-    print("\nAI Agent : ",end = "", flush = True)
+    finalAgentResponse : str = ""
 
     try:
+
+        terminalUI.start()
+        terminalUI.thinking()
 
         async for token, metadata in agent.astream(
             {
@@ -120,33 +129,61 @@ async def chat() -> bool:
 
             if isinstance(token, ToolMessage):
 
+                logger.debug(f"TOOL MESSAGE : { token }")
+
+                terminalUI.toolCompleted()
+
                 continue
 
             if isinstance(token, AIMessageChunk):
 
-                content = token.content
+                logger.debug(f"AI Chunk Message : { token }")
 
                 logger.info(f"AI Response Metadata : { metadata } ")
 
-                text = extractTextFromContent(content)
+                toolCallChunks = token.tool_call_chunks
+
+                if toolCallChunks:
+
+                    toolName = toolCallChunks[0].get("name")
+
+                    if toolName:
+
+                        terminalUI.toolStarted(toolName = toolName)
+
+                    continue
+
+                text = extractTextFromContent(content = token.content)
 
                 if text:
-            
-                    print(text, end = "", flush = True)
+
+                    terminalUI.printResponseChunk(
+                        text = text
+                    )
 
                     finalAgentResponse += text
 
+        terminalUI.finishResponse()
+
     except Exception as Error:
+
+        terminalUI.error()
 
         logger.exception(f"AI Agent Streaming Failed. Exception : { Error }")
 
         return False
 
+    finally:
+
+        terminalUI.finish()
+
+        console.print(f"{"__" * 80}", style = "dim")
+
     print()
 
-    saveMessagesInAgentMemory(role = "user",content = userPrompt)
+    saveMessagesInAgentMemory(role = "user", content = userPrompt)
 
-    saveMessagesInAgentMemory(role ="assistant",content = finalAgentResponse)
+    saveMessagesInAgentMemory(role = "assistant", content = finalAgentResponse)
 
     return True
 

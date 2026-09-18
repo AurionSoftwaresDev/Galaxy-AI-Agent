@@ -6,26 +6,37 @@ from source.utils.logger import logger
 
 class PermissionManager():
 
-    def __init__(self, data : dict[str, str]):
+    def __init__(
+            self, data : dict[str, str],
+            beforePrompt : function = None,
+            afterPrompt : function = None
+        ):
 
         self.userChoiceOptions : list = [
             "Allow",
             "Deny"
         ]
 
-        self.ToolName : str = data["tool_name"]
-        self.title : str = data["title"]
-        self.details : str = data["details"]
+        self.beforePrompt       =   self.beforePrompt
+        self.afterPrompt        =   self.afterPrompt
 
-        self.content = Text()
+        self.ToolName : str     =   data["tool_name"]
+        self.title : str        =   data["title"]
+        self.details : str      =   data["details"]
+
+        self.content : Text     =   Text()
+
+        self.console : Console  =   Console()
 
         self.content.append(text = f"AI Agent Permission Required For \"{ self.ToolName }\" Tool\n", style = "bold")
         self.content.append(text = f"{self.title}\n")
         self.content.append(text = f"{self.details}\n\n",style = "dim")
 
-        self.console = Console()
-
     def askPermission(self) -> bool | dict[str, str | bool]:
+
+        if self.beforePrompt:
+
+            self.beforePrompt()
 
         logger.info(f"AI Agent Ask Permission For \"{ self.ToolName }\" Tool Execution")
 
@@ -43,6 +54,10 @@ class PermissionManager():
             choices = self.userChoiceOptions,
             pointer = ">"
         ).ask()
+
+        if self.afterPrompt:
+
+            self.afterPrompt()
 
         if userPermission.lower() == "allow":
 

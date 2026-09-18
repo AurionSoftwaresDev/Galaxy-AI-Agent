@@ -3,6 +3,7 @@ import shutil
 from pathlib import Path
 from source.utils.logger import logger
 from source.security.permissionManager import PermissionManager
+from source.utils.TerminalUI import TerminalUI
 
 def deleteFolder(
     folderPath: str,
@@ -12,12 +13,16 @@ def deleteFolder(
 
     logger.info("AI Agent Called delete_folder Tool...")
 
+    terminalUI : TerminalUI = TerminalUI()
+
     permissionManager = PermissionManager(
         data = {
             "tool_name": "delete_file",
             "title": "Agent Wants To Delete A Folder :",
             "details": f"\"{ folderPath }/{ folderName }\""
-        }
+        },
+        beforePrompt = terminalUI.pause,
+        afterPrompt  = terminalUI.resume
     )
 
     userPermission : bool | dict[str, str | bool] = permissionManager.askPermission()
