@@ -26,3 +26,10 @@ def archiveExtractor(
 
     return extractorJSONResponse
 
+
+print(archiveExtractor(
+    format                      =      ".zip",
+    archiveSourceFullPath       =      "C:/Users/dell/desktop/Arr.zip",
+    archiveExtractOutputPath    =      "C:/Users/dell/desktop",
+    archivePassword             =      "Password"
+))

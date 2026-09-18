@@ -7,10 +7,10 @@ from pathlib import Path
 from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
 from cryptography.fernet import Fernet
 from source.utils.logger import logger
-from source.utils.compressorUtils import (
+from backend.source.utils.archiveUtils import (
     extractPasswordData,
     validatePathLastName,
-    validateRarEngine
+    findCompressorRarEngine
 )
 
 def zipCompressor(
@@ -202,7 +202,7 @@ def rarCompressor(
         passwordProtectedObject = passwordProtected
     )
 
-    rarExecutable = validateRarEngine()
+    rarExecutable = findCompressorRarEngine()
 
     if rarExecutable:
 
