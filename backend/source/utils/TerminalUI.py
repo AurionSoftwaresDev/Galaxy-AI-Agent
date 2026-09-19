@@ -2,12 +2,13 @@ from rich.console import Console
 from rich.live import Live
 from rich.spinner import Spinner
 from rich.text import Text
+from rich.table import Table
 
 class TerminalUI:
 
     def __init__(self) -> None:
 
-        self.console = Console()
+        self.console : Console = Console()
 
         self.currentState     =     "idle"
         self.currentTool      =     None
@@ -183,3 +184,4 @@ class TerminalUI:
         self.stop()
         
         self.currentState = "idle"
+

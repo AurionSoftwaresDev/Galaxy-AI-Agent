@@ -90,105 +90,112 @@ async def chat() -> bool:
 
     userCommands : list[str] = cli.extractCommandFromUserPrompt(userPrompt)
 
-    cli.executeCLICommands(commands = userCommands)
+    if userCommands:
 
-    if userPrompt.strip() == "quit-agent":
+        cli.executeCLICommands(commands = userCommands)
 
-        typingTextOnTerminal("[+] Agent Shutdown...", speed = 0.03)
+        return True
 
-        logger.info("User Shutdown The AI Agent")
+    else:
 
-        return False
+        if userPrompt.strip() == "quit-agent":
 
-    oldHistory: list[dict[str, str]] = (
-        loadMessagesFromAgentMemory()
-    )
+            typingTextOnTerminal("[+] Agent Shutdown...", speed = 0.03)
 
-    messages = [
-        {
-            "role": message["role"],
-            "content": message["content"]
-        }
-        for message in oldHistory
-    ]
+            logger.info("User Shutdown The AI Agent")
 
-    messages.append(
-        HumanMessage(
-            content=userPrompt
+            return False
+
+        oldHistory: list[dict[str, str]] = (
+            loadMessagesFromAgentMemory()
         )
-    )
 
-    finalAgentResponse : str = ""
-
-    try:
-
-        terminalUI.start()
-        terminalUI.thinking()
-
-        async for token, metadata in agent.astream(
+        messages = [
             {
-                "messages": messages
-            },
-            stream_mode="messages"
-        ):
+                "role": message["role"],
+                "content": message["content"]
+            }
+            for message in oldHistory
+        ]
 
-            if isinstance(token, ToolMessage):
+        messages.append(
+            HumanMessage(
+                content=userPrompt
+            )
+        )
 
-                logger.debug(f"TOOL MESSAGE : { token }")
+        finalAgentResponse : str = ""
 
-                terminalUI.toolCompleted()
+        try:
 
-                continue
+            terminalUI.start()
+            terminalUI.thinking()
 
-            if isinstance(token, AIMessageChunk):
+            async for token, metadata in agent.astream(
+                {
+                    "messages": messages
+                },
+                stream_mode="messages"
+            ):
 
-                logger.debug(f"AI Chunk Message : { token }")
+                if isinstance(token, ToolMessage):
 
-                logger.info(f"AI Response Metadata : { metadata } ")
+                    logger.debug(f"TOOL MESSAGE : { token }")
 
-                toolCallChunks = token.tool_call_chunks
-
-                if toolCallChunks:
-
-                    toolName = toolCallChunks[0].get("name")
-
-                    if toolName:
-
-                        terminalUI.toolStarted(toolName = toolName)
+                    terminalUI.toolCompleted()
 
                     continue
 
-                text = extractTextFromContent(content = token.content)
+                if isinstance(token, AIMessageChunk):
 
-                if text:
+                    logger.debug(f"AI Chunk Message : { token }")
 
-                    terminalUI.printResponseChunk(
-                        text = text
-                    )
+                    logger.info(f"AI Response Metadata : { metadata } ")
 
-                    finalAgentResponse += text
+                    toolCallChunks = token.tool_call_chunks
 
-        terminalUI.finishResponse()
+                    if toolCallChunks:
 
-    except Exception as Error:
+                        toolName = toolCallChunks[0].get("name")
 
-        terminalUI.error()
+                        if toolName:
 
-        logger.exception(f"AI Agent Streaming Failed. Exception : { Error }")
+                            terminalUI.toolStarted(toolName = toolName)
 
-        return False
+                        continue
 
-    finally:
+                    text = extractTextFromContent(content = token.content)
 
-        terminalUI.finish()
+                    if text:
 
-        console.print(f"{"__" * 80}", style = "dim")
+                        terminalUI.printResponseChunk(
+                            text = text
+                        )
 
-    print()
+                        finalAgentResponse += text
 
-    saveMessagesInAgentMemory(role = "user", content = userPrompt)
+            terminalUI.finishResponse()
 
-    saveMessagesInAgentMemory(role = "assistant", content = finalAgentResponse)
+        except Exception as Error:
 
-    return True
+            terminalUI.error()
 
+            logger.exception(f"AI Agent Streaming Failed. Exception : { Error }")
+
+            return False
+
+        finally:
+
+            terminalUI.finish()
+
+            console.print(f"{"__" * 80}", style = "dim")
+
+        print()
+
+        saveMessagesInAgentMemory(role = "user", content = userPrompt)
+
+        saveMessagesInAgentMemory(role = "assistant", content = finalAgentResponse)
+
+        return True
+
+    

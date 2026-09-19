@@ -25,7 +25,7 @@ class BuildFileSystemTreeModel(BaseModel):
             - Do not invent a path.
             - If the user provides a path explicitly, use that exact path.
             - Windows paths are supported, for example:
-            "C:\\Users\<username>\\Desktop\\project"
+            "C:\\Users\\<username>\\Desktop\\project"
             - Linux/macOS paths are supported, for example:
             "/home/user/project"
             "/Users/user/project"
