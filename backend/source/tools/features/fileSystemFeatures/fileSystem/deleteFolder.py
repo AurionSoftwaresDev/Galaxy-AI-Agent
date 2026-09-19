@@ -29,12 +29,10 @@ def deleteFolder(
 
     if isinstance(userPermission, dict):
 
-        if not userPermission["Success"]:
-
-            return json.dumps(
-                obj = userPermission,
-                indent = 4
-            )
+        return json.dumps(
+            obj = userPermission,
+            indent = 4
+        )
 
     path = Path(folderPath) / folderName
 

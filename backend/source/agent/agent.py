@@ -1,6 +1,8 @@
 import source.agent.prompts.systemPrompt as systemPrompt
+
 from source.provider.llmProviders import llmProviders
 from langchain.agents import create_agent
+
 from source.tools.webSearchTool import webSearchTool
 from source.tools.datetimeFetchingTool import fetchCurrentDateTimeTool
 from source.tools.sendEmaillTool import sendEmailTool
@@ -16,6 +18,7 @@ from source.tools.fileSystem.buildFileSystemTreeTool import buildFileSystemTreeT
 from source.tools.fileSystem.archive.archiveCompressorTool import archiveCompressorTool
 from source.tools.fileSystem.archive.archiveExtractorTool import archiveExtractorTool
 from source.tools.launchDesktopApplicationTool import launchApplicationTool
+from source.tools.commandsExecutorTool import commandsExecutorTool
 
 ### LLM Provider Model ###
 '''
@@ -46,5 +49,6 @@ agent = create_agent(
         archiveExtractorTool,
         
         launchApplicationTool,
+        commandsExecutorTool
     ],
 )
