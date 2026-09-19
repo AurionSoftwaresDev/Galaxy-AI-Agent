@@ -1,7 +1,7 @@
 import os
 from rich.console import Console
 
-def exit():
+def exit() -> None:
 
     console : Console = Console()
 

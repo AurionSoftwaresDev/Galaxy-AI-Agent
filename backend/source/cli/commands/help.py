@@ -1,4 +1,12 @@
-def help() -> str:
+from rich.console import Console
 
+def help() -> None:
 
-    return "Helping"
+    console : Console = Console()
+
+    console.print(
+        """
+            
+
+        """
+    )
