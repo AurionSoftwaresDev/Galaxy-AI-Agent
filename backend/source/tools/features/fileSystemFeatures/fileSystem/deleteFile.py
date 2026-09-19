@@ -2,13 +2,11 @@ import json
 from pathlib import Path
 from source.utils.logger import logger
 from source.security.permissionManager import PermissionManager
-from source.utils.TerminalUI import TerminalUI
+from backend.source.utils.Terminal.TerminalContextShared import terminalUI
 
 def deleteFile(filePath : str, fileName : str) -> str:
 
     logger.info("AI Agent Called delete_file Tool..")
-
-    terminalUI : TerminalUI = TerminalUI()
 
     permissionManager = PermissionManager(
         data = {

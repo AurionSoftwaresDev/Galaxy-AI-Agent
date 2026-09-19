@@ -8,8 +8,8 @@ class PermissionManager():
 
     def __init__(
             self, data : dict[str, str],
-            beforePrompt : function = None,
-            afterPrompt : function = None
+            beforePrompt = None,
+            afterPrompt = None
         ):
 
         self.userChoiceOptions : list = [
@@ -17,8 +17,8 @@ class PermissionManager():
             "Deny"
         ]
 
-        self.beforePrompt       =   self.beforePrompt
-        self.afterPrompt        =   self.afterPrompt
+        self.beforePrompt       =   beforePrompt
+        self.afterPrompt        =   afterPrompt
 
         self.ToolName : str     =   data["tool_name"]
         self.title : str        =   data["title"]
@@ -40,42 +40,51 @@ class PermissionManager():
 
         logger.info(f"AI Agent Ask Permission For \"{ self.ToolName }\" Tool Execution")
 
-        self.console.print(
-            Panel(
-                renderable = self.content,
-                border_style = "cyan",
-                padding = (1, 2),
-                expand = False
+        try:
+
+            self.console.print(
+                Panel(
+                    renderable = self.content,
+                    border_style = "cyan",
+                    padding = (1, 2),
+                    expand = False
+                )
             )
-        )
 
-        userPermission = questionary.select(
-            "Allow This Operation?",
-            choices = self.userChoiceOptions,
-            pointer = ">"
-        ).ask()
+            userPermission = questionary.select(
+                "Allow This Operation?",
+                choices = self.userChoiceOptions,
+                pointer = ">"
+            ).ask()
 
-        if self.afterPrompt:
+            if self.afterPrompt:
 
-            self.afterPrompt()
+                self.afterPrompt()
 
-        if userPermission.lower() == "allow":
+            if userPermission.lower() == "allow":
 
-            logger.info(f"""User \"Allowed\" To Execute \"{ self.ToolName }\" Tool
-                                          ^^^^^^^^^
+                logger.info(f"""User \"Allowed\" To Execute \"{ self.ToolName }\" Tool
+                                            ^^^^^^^^^
+                    """
+                )
+
+                return True
+
+            logger.info(f"""User \"Deny\" To Execute \"{ self.ToolName }\" Tool
+                                            ^^^^^^
                 """
             )
+            
+            return {
+                "Success": False,
+                "Status": "Permission Denied!",
+                "Tool Name": self.ToolName,
+                "Information": f"User Denied For This { self.ToolName } Tool Operation"
+            }
 
-            return True
+        finally: 
 
-        logger.info(f"""User \"Deny\" To Execute \"{ self.ToolName }\" Tool
-                                          ^^^^^^
-            """
-        )
-        
-        return {
-            "Success": False,
-            "Status": "Permission Denied!",
-            "Tool Name": self.ToolName,
-            "Information": f"User Denied For This { self.ToolName } Tool Operation"
-        }
+            if self.afterPrompt:
+                
+                self.afterPrompt()
+    

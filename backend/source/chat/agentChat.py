@@ -10,11 +10,10 @@ from langchain.messages import (
     AIMessageChunk,
     ToolMessage
 )
-from source.utils.TerminalUI import TerminalUI
+from backend.source.utils.Terminal.TerminalContextShared import terminalUI
 from rich.console import Console
 from source.cli.cli import CLI
 
-terminalUI : TerminalUI     =   TerminalUI()
 console : Console           =   Console()
 cli : CLI                   =   CLI()
 
@@ -143,8 +142,6 @@ async def chat() -> bool:
                     logger.debug(f"TOOL MESSAGE : { token }")
 
                     terminalUI.toolCompleted()
-
-                    continue
 
                 if isinstance(token, AIMessageChunk):
 

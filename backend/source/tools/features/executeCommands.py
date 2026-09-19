@@ -6,7 +6,7 @@ import uuid
 
 from source.utils.logger import logger
 from source.security.permissionManager import PermissionManager
-from source.utils.TerminalUI import TerminalUI
+from backend.source.utils.Terminal.TerminalContextShared import terminalUI
 
 class CommandExecutor:
 
@@ -265,8 +265,6 @@ class CommandExecutor:
 
 
 def commandsExecutor(commands : list[str]):
-
-    terminalUI = TerminalUI()
 
     permissionManager = PermissionManager(
         data = {

@@ -53,6 +53,11 @@ class TerminalUI:
 
     # UI Lifecycle
     def start(self) -> None:
+
+        if self.live is not None:
+
+            return
+
         self.live = Live(
             renderable = Spinner(
                 name = "dots",
