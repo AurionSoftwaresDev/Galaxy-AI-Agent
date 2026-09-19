@@ -28,11 +28,11 @@ class CLI():
 
                 if command.lower() == registryCommand.lower():
 
-                    registryCommandExecuteFunction = COMMAND_REGISTRY[command]
-
-                    commandResponse = registryCommandExecuteFunction()                    
+                    registryCommandExecuteFunction = COMMAND_REGISTRY[command]              
 
                     if len(commands) > 1:
+
+                        commandResponse = registryCommandExecuteFunction()      
 
                         commandsOutput[command] = commandResponse
 

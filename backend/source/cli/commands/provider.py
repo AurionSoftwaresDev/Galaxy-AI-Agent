@@ -26,7 +26,7 @@ def provider():
         style = "green", 
         justify = "center"
     )
-    
+
     gridTable.add_column(
         header = "Available Models", 
         style = "blue", 
@@ -54,8 +54,8 @@ def provider():
             activeModelList[i]
         )
 
-    console: Console = Console()
+    console : Console = Console()
 
-    console.print("\n")
+    console.print("")
 
     console.print(gridTable)

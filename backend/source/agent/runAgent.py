@@ -22,7 +22,7 @@ async def main(mode : Literal["chatMode", "speakMode"]) -> None:
         
         successMessage = capture.get().replace("\n", "\0")
 
-        typingTextOnTerminal(text = f"{successMessage} You Are Switch To Chat Mode!\n", )
+        typingTextOnTerminal(text = f"{successMessage} You Are Switch To Chat Mode!\n", speed = 0.03)
 
         while agent_running:
             

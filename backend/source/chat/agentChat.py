@@ -76,7 +76,7 @@ async def chat() -> bool:
 
     while True:
 
-        console.print(f"{"__" * 80}", style = "dim")
+        console.print(f"{"__" * 65}", style = "dim")
 
         console.print("User : ", end = "", style = "bold cyan")
 
@@ -188,7 +188,7 @@ async def chat() -> bool:
 
             terminalUI.finish()
 
-            console.print(f"{"__" * 80}", style = "dim")
+            console.print(f"{"__" * 65}", style = "dim")
 
         print()
 

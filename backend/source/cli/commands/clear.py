@@ -1,3 +1,8 @@
+import platform
+from source.utils.helper import clearTerminalScreen
+
 def clear():
 
-    return "Clear"
+    return clearTerminalScreen(operatingSystem = platform.system())
+
+    

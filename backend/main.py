@@ -7,18 +7,18 @@ from source.utils.agentUtils.startupUtils.agentStartupTerminal import galaxyAIAg
 def mainAgentHandler() -> None:
 
     try:
-    
-        logger.info("Starting Keyboard Mapping Shortcut Thread...")
-        
-        startKeyboardMappingThread()
-        
-        sleep(1, 4)
         
         logger.info("Staring Agent....")
 
         clearTerminalScreen(operatingSystem = platform.system())
 
         galaxyAIAgentStartupTerminal()
+
+        logger.info("Starting Keyboard Mapping Shortcut Thread...")
+                
+        startKeyboardMappingThread()
+        
+        sleep(1, 4)
 
     except KeyboardInterrupt:
 
