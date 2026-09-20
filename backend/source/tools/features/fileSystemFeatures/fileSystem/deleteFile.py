@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from source.utils.logger import logger
 from source.security.permissionManager import PermissionManager
-from backend.source.utils.Terminal.TerminalContextShared import terminalUI
+from source.utils.Terminal.TerminalContextShared import terminalUI
 
 def deleteFile(filePath : str, fileName : str) -> str:
 

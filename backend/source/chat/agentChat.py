@@ -10,7 +10,7 @@ from langchain.messages import (
     AIMessageChunk,
     ToolMessage
 )
-from backend.source.utils.Terminal.TerminalContextShared import terminalUI
+from source.utils.Terminal.TerminalContextShared import terminalUI
 from rich.console import Console
 from source.cli.cli import CLI
 
@@ -130,6 +130,18 @@ async def chat() -> bool:
             terminalUI.start()
             terminalUI.thinking()
 
+            chunk = [
+                {
+                    "name": "tool_exection"
+                }
+            ]
+
+            toolName = chunk[0].get("name")
+
+            if toolName:
+
+                terminalUI.toolStarted(toolName = toolName)
+            
             async for token, metadata in agent.astream(
                 {
                     "messages": messages
@@ -153,13 +165,11 @@ async def chat() -> bool:
 
                     if toolCallChunks:
 
-                        toolName = toolCallChunks[0].get("name")
+                        toolName = toolCallChunks[0]["name"]
 
                         if toolName:
 
                             terminalUI.toolStarted(toolName = toolName)
-
-                        continue
 
                     text = extractTextFromContent(content = token.content)
 

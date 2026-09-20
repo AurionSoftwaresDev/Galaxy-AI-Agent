@@ -2,7 +2,6 @@ from rich.console import Console
 from rich.live import Live
 from rich.spinner import Spinner
 from rich.text import Text
-from rich.table import Table
 
 class TerminalUI:
 
@@ -31,7 +30,7 @@ class TerminalUI:
         if self.currentState == "tool":
 
             return Text(
-                text  = f"AI Agent Using {self.currentTool}...",
+                text  = f"AI Agent Using { self.currentTool }...",
                 style = "yellow"
             )
 
@@ -87,7 +86,8 @@ class TerminalUI:
             renderable = Spinner(
                 name = "dots",
                 text = self._buildStatus()
-            )
+            ),
+            refresh = True
         )
 
     
