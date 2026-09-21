@@ -130,23 +130,11 @@ async def chat() -> bool:
             terminalUI.start()
             terminalUI.thinking()
 
-            chunk = [
-                {
-                    "name": "tool_exection"
-                }
-            ]
-
-            toolName = chunk[0].get("name")
-
-            if toolName:
-
-                terminalUI.toolStarted(toolName = toolName)
-            
             async for token, metadata in agent.astream(
                 {
                     "messages": messages
                 },
-                stream_mode="messages"
+                stream_mode = "messages"
             ):
 
                 if isinstance(token, ToolMessage):
@@ -188,6 +176,8 @@ async def chat() -> bool:
             terminalUI.error()
 
             logger.exception(f"AI Agent Streaming Failed. Exception : { Error }")
+
+            console.print(f"Error: { str(object = Error) }")
 
             return False
 

@@ -18,9 +18,7 @@ class CLI():
     
     def executeCLICommands(self, commands : list[str]) -> str | dict[str, str]:
 
-        if len(commands) > 1:
-
-            commandsOutput : dict[str, str] = {}
+        commandsOutput : dict[str, str] = {}
 
         for registryCommand in COMMAND_REGISTRY:
 

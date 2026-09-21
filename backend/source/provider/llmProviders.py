@@ -10,7 +10,8 @@ class llmProviders:
     # Gemini Provider IMPORTANT NOTE: Please Add Your "GOOGLE_API_KEY" In Enviorment
     geminiProvider = ChatGoogleGenerativeAI(
         model = models[0],
-        api_key = getGeminiAPIKey()
+        api_key = getGeminiAPIKey(),
+        temperature = 0.2
     )
     
     # Ollama Provider

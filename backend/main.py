@@ -1,8 +1,18 @@
-import platform, time
+import platform, time, os
+from rich.console import Console
+from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
 from source.utils.logger import logger
 from source.utils.helper import sleep, clearTerminalScreen
 from source.controllers.keyboardThread.startKeyboardMapping import startKeyboardMappingThread
 from source.utils.agentUtils.startupUtils.agentStartupTerminal import galaxyAIAgentStartupTerminal
+
+console : Console = Console()
+
+with console.capture() as capture:
+
+    console.print(f"You Are Pressed CTRL + C AI Agent Stoped.")
+
+keyboardInterruptErrorMessage = capture.get()
 
 def mainAgentHandler() -> None:
 
@@ -26,7 +36,15 @@ def mainAgentHandler() -> None:
 
     while True:
 
-        time.sleep(1)
+        try:
+
+            time.sleep(1)
+
+        except KeyboardInterrupt:
+
+            typingTextOnTerminal(keyboardInterruptErrorMessage, speed = 0.05)
+
+            os._exit(0)
     
 if __name__ == "__main__":
      

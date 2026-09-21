@@ -8,5 +8,5 @@ def version() -> None:
     console.print(
         f"[bold cyan]AI Agent[/bold cyan] "
         f"[bold white]Version :[/bold white] "
-        f"[bold green]v{agentVersion}[/bold green]"
+        f"[bold green]{agentVersion}[/bold green]"
     )

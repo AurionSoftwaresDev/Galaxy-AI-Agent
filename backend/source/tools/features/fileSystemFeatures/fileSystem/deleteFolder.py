@@ -41,14 +41,14 @@ def deleteFolder(
             logger.info(f"AI Agent Say The Folder \"{ path }\" Already Exists At : \"{ path }\"")
 
             return json.dumps(
-                obj=[
+                obj = [
                     {
                         "Status": "Folder Not Found",
                         "Path": str(path),
                         "Folder Name": folderName
                     }
                 ],
-                indent=4
+                indent = 4
             )
 
         if not path.is_dir():

@@ -12,9 +12,9 @@ def typingTextOnTerminal(text : str, speed : float = 0.09) -> str:
 
             time.sleep(speed)
 
-        except KeyboardInterrupt as exception:
+        except KeyboardInterrupt:
 
-            print("[Exception] You Are Stopped Agent Startuo")
+            print("[Exception] You Are Stopped Agent Startup")
 
             return char
 
