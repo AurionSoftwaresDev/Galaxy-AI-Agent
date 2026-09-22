@@ -9,9 +9,11 @@ llmProviderModel = provider.createGeminiLLMProvider()
 ### Creating AI Agent Use Locally Ollama LLM Model 'llmProviderModel' Variable ###
 agent = createNewAgent(llmProviderModel = llmProviderModel)
 
-def setNewAgent(agent) -> None:
+def setNewAgent(newAgent) -> None:
 
-    agent = agent
+    global agent
+
+    agent = newAgent
 
 def setNewAgentProvider(newAgentProvider) -> None:
 
