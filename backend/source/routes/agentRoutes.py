@@ -3,6 +3,7 @@ from source.controllers.agentControllers.agentResponse import agentRequestRespon
 
 agentRouter = APIRouter()
 
-agentRouter.post("/generate")(
+agentRouter.post("/generate") (
+
     agentRequestResponse
 )

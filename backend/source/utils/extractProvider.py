@@ -1,4 +1,4 @@
-def extractProvider(agent, llmProviderModel : str) -> list[str]:
+def extractProvider(agent, llmProviderModel) -> list:
 
     target = llmProviderModel if llmProviderModel is not None else agent
         

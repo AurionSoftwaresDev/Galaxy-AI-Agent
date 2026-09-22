@@ -77,7 +77,7 @@ def deleteFolder(
         logger.info(f"AI Agent Successfully Deleted The Folder At : \"{ path }\"")
 
         return json.dumps(
-            obj=[
+            obj = [
                 {
                     "Status": "Folder Deleted",
                     "Path": str(path),
@@ -85,7 +85,7 @@ def deleteFolder(
                     "Recursive": recursive
                 }
             ],
-            indent=4
+            indent = 4
         )
 
     except OSError as exception:

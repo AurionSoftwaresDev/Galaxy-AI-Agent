@@ -1,16 +1,22 @@
-from source.provider.models import models
+from typing import Callable
 from source.agent.agent import agent
 from source.utils.extractProvider import extractProvider
 from source.provider.llmProviders import llmProviders
 
 providers : list[str] = []
 
-provider, _ = extractProvider(agent = agent, llmProviderModel = llmProviders.geminiProvider)
-providers.append(provider)
+functionsProvider = llmProviders()
 
-provider, _ = extractProvider(agent = agent, llmProviderModel = llmProviders.ollamaProvider)
-providers.append(provider)
+providerFunctions : dict[str, Callable] = {}
 
-provider, _ = extractProvider(agent = agent, llmProviderModel = llmProviders.mistralProvider)
+provider, _ = extractProvider(agent = agent, llmProviderModel = llmProviders.TemplateLLMs.geminiLLMProvider)
 providers.append(provider)
+providerFunctions[provider] = functionsProvider.createGeminiLLMProvider
 
+provider, _ = extractProvider(agent = agent, llmProviderModel = llmProviders.TemplateLLMs.ollamaLLMProvider)
+providers.append(provider)
+providerFunctions[provider] = functionsProvider.createOllamaLLMProvider
+
+provider, _ = extractProvider(agent = agent, llmProviderModel = llmProviders.TemplateLLMs.mistralLLMProvider)
+providers.append(provider)
+providerFunctions[provider] = functionsProvider.createMistralLLMProvider
