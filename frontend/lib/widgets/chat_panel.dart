@@ -1,36 +1,23 @@
 import 'package:flutter/material.dart';
-import '../models/assistant_state.dart';
-import '../models/chat_message.dart';
-import '../models/user_profile.dart';
-import 'chat/chat_active_banner.dart';
-import 'chat/chat_empty_state.dart';
-import 'chat/chat_header.dart';
-import 'chat/chat_input_bar.dart';
-import 'chat/chat_message_bubble.dart';
-import 'chat/chat_quick_suggestions.dart';
 
-/// Right panel for Galaxy AI showing conversational history, reasoning chains,
-/// tool executions, and interactive prompt input.
+import '../models/assistant_state.dart';
+
+/// Left-side desktop chat panel for conversing with Galaxy AI via
+/// `WS /ws/assistant` (`{"content": prompt}`) and `POST /agent/generate`.
 class ChatPanel extends StatefulWidget {
     final List<ChatMessage> messages;
-    final AssistantState state;
-    final UserProfile userProfile;
-    final void Function(String) onSendMessage;
-    final VoidCallback onClearMessages;
-    final VoidCallback onClose;
-    final VoidCallback onToggleMic;
-    final bool isMuted;
+    final AssistantState assistantState;
+    final ValueChanged<String> onSendMessage;
+    final VoidCallback onClearHistory;
+    final VoidCallback onClosePanel;
 
     const ChatPanel({
         super.key,
         required this.messages,
-        required this.state,
-        required this.userProfile,
+        required this.assistantState,
         required this.onSendMessage,
-        required this.onClearMessages,
-        required this.onClose,
-        required this.onToggleMic,
-        required this.isMuted,
+        required this.onClearHistory,
+        required this.onClosePanel,
     });
 
     @override
@@ -38,15 +25,23 @@ class ChatPanel extends StatefulWidget {
 }
 
 class _ChatPanelState extends State<ChatPanel> {
-    final TextEditingController _textController = TextEditingController();
+    final TextEditingController _inputController = TextEditingController();
     final ScrollController _scrollController = ScrollController();
     final FocusNode _inputFocusNode = FocusNode();
+
+    static const List<String> _quickPrompts = [
+        'Inspect my system hardware and CPU',
+        'What is the current date and time?',
+        'Fetch the latest technology news',
+    ];
 
     @override
     void didUpdateWidget(covariant ChatPanel oldWidget) {
         super.didUpdateWidget(oldWidget);
-        if (oldWidget.messages.length != widget.messages.length ||
-            oldWidget.state != widget.state) {
+        if (widget.messages.length != oldWidget.messages.length ||
+            (widget.messages.isNotEmpty &&
+                oldWidget.messages.isNotEmpty &&
+                widget.messages.last.content != oldWidget.messages.last.content)) {
             _scrollToBottom();
         }
     }
@@ -56,32 +51,24 @@ class _ChatPanelState extends State<ChatPanel> {
             if (_scrollController.hasClients) {
                 _scrollController.animateTo(
                     _scrollController.position.maxScrollExtent,
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOut,
+                    duration: const Duration(milliseconds: 180),
+                    curve: Curves.easeOutCubic,
                 );
             }
         });
     }
 
-    void _handleSend() {
-        final text = _textController.text.trim();
+    void _handleSubmit() {
+        final text = _inputController.text.trim();
         if (text.isEmpty) return;
-        _textController.clear();
+        _inputController.clear();
         widget.onSendMessage(text);
-        _scrollToBottom();
-    }
-
-    void _handleSelectSuggestion(String suggestion) {
-        _textController.text = suggestion;
-        _textController.selection = TextSelection.fromPosition(
-            TextPosition(offset: suggestion.length),
-        );
         _inputFocusNode.requestFocus();
     }
 
     @override
     void dispose() {
-        _textController.dispose();
+        _inputController.dispose();
         _scrollController.dispose();
         _inputFocusNode.dispose();
         super.dispose();
@@ -90,70 +77,324 @@ class _ChatPanelState extends State<ChatPanel> {
     @override
     Widget build(BuildContext context) {
         return Container(
-            width: 380,
-            decoration: BoxDecoration(
-                color: const Color(0xFF090D1C).withValues(alpha: 0.94),
-                border: const Border(
-                    left: BorderSide(
+            width: 360,
+            decoration: const BoxDecoration(
+                color: Color(0xFF0A0D16),
+                border: Border(
+                    right: BorderSide(
                         color: Color(0xFF1E293B),
-                        width: 1.2,
+                        width: 1,
                     ),
                 ),
-                boxShadow: [
-                    BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.4),
-                        blurRadius: 18,
-                        offset: const Offset(-4, 0),
-                    ),
-                ],
             ),
             child: Column(
                 children: [
-                    // Panel Header
-                    ChatHeader(
-                        messageCount: widget.messages.length,
-                        hasMessages: widget.messages.isNotEmpty,
-                        onClearMessages: widget.onClearMessages,
-                        onClose: widget.onClose,
+                    // 1. Panel Header
+                    Container(
+                        height: 58,
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        decoration: const BoxDecoration(
+                            border: Border(
+                                bottom: BorderSide(
+                                    color: Color(0xFF1E293B),
+                                    width: 1,
+                                ),
+                            ),
+                        ),
+                        child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                                const Row(
+                                    children: [
+                                        Icon(
+                                            Icons.chat_bubble_outline_rounded,
+                                            size: 15,
+                                            color: Color(0xFF22D3EE),
+                                        ),
+                                        SizedBox(width: 8),
+                                        Text(
+                                            'Chat',
+                                            style: TextStyle(
+                                                fontSize: 13.5,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 0.3,
+                                                color: Color(0xFFF1F5F9),
+                                            ),
+                                        ),
+                                    ],
+                                ),
+                                Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                        if (widget.messages.isNotEmpty)
+                                            IconButton(
+                                                onPressed: widget.onClearHistory,
+                                                tooltip: 'Clear chat history',
+                                                icon: const Icon(
+                                                    Icons.delete_sweep_outlined,
+                                                    size: 17,
+                                                    color: Color(0xFF64748B),
+                                                ),
+                                                constraints: const BoxConstraints(
+                                                    minWidth: 28,
+                                                    minHeight: 28,
+                                                ),
+                                                padding: EdgeInsets.zero,
+                                            ),
+                                        const SizedBox(width: 4),
+                                        IconButton(
+                                            onPressed: widget.onClosePanel,
+                                            tooltip: 'Collapse chat panel',
+                                            icon: const Icon(
+                                                Icons.chevron_left_rounded,
+                                                size: 20,
+                                                color: Color(0xFF64748B),
+                                            ),
+                                            constraints: const BoxConstraints(
+                                                minWidth: 28,
+                                                minHeight: 28,
+                                            ),
+                                            padding: EdgeInsets.zero,
+                                        ),
+                                    ],
+                                ),
+                            ],
+                        ),
                     ),
 
-                    // Conversation Message Stream
+                    // 2. Message List or Empty Prompt Starters
                     Expanded(
                         child: widget.messages.isEmpty
-                            ? const ChatEmptyState()
-                            : ListView.builder(
-                                controller: _scrollController,
-                                padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 12.0),
-                                itemCount: widget.messages.length,
-                                itemBuilder: (context, index) {
-                                    final message = widget.messages[index];
-                                    return ChatMessageBubble(
-                                        message: message,
-                                        userProfile: widget.userProfile,
-                                    );
-                                },
+                            ? _buildEmptyState()
+                            : ListView.separated(
+                                  controller: _scrollController,
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 18,
+                                  ),
+                                  itemCount: widget.messages.length,
+                                  separatorBuilder: (_, __) =>
+                                      const SizedBox(height: 14),
+                                  itemBuilder: (context, index) {
+                                      final msg = widget.messages[index];
+                                      return _ChatBubble(message: msg);
+                                  },
+                              ),
+                    ),
+
+                    // 3. Bottom Composer Input Bar
+                    Container(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 14, 16),
+                        decoration: const BoxDecoration(
+                            color: Color(0xFF0B0E17),
+                            border: Border(
+                                top: BorderSide(
+                                    color: Color(0xFF1E293B),
+                                    width: 1,
+                                ),
                             ),
-                    ),
-
-                    // Live State Indicator Bar (when thinking or executing tool)
-                    if (widget.state.isActive)
-                        ChatActiveBanner(state: widget.state),
-
-                    // Quick Prompt Suggestion Chips
-                    ChatQuickSuggestions(
-                        onSelectSuggestion: _handleSelectSuggestion,
-                    ),
-
-                    // Bottom Input Area
-                    ChatInputBar(
-                        controller: _textController,
-                        focusNode: _inputFocusNode,
-                        isMuted: widget.isMuted,
-                        onToggleMic: widget.onToggleMic,
-                        onSend: _handleSend,
+                        ),
+                        child: Row(
+                            children: [
+                                Expanded(
+                                    child: TextField(
+                                        controller: _inputController,
+                                        focusNode: _inputFocusNode,
+                                        onSubmitted: (_) => _handleSubmit(),
+                                        style: const TextStyle(
+                                            fontSize: 13,
+                                            color: Color(0xFFF1F5F9),
+                                        ),
+                                        decoration: InputDecoration(
+                                            isDense: true,
+                                            hintText: 'Message Galaxy AI...',
+                                            hintStyle: const TextStyle(
+                                                fontSize: 12.5,
+                                                color: Color(0xFF475569),
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                horizontal: 14,
+                                                vertical: 11,
+                                            ),
+                                            filled: true,
+                                            fillColor: const Color(0xFF111827),
+                                            enabledBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                    color: Color(0xFF1E293B),
+                                                ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                                borderSide: const BorderSide(
+                                                    color: Color(0xFF06B6D4),
+                                                ),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                                const SizedBox(width: 8),
+                                Material(
+                                    color: const Color(0xFF06B6D4),
+                                    borderRadius: BorderRadius.circular(10),
+                                    child: InkWell(
+                                        onTap: _handleSubmit,
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: const SizedBox(
+                                            width: 38,
+                                            height: 38,
+                                            child: Icon(
+                                                Icons.arrow_upward_rounded,
+                                                size: 18,
+                                                color: Color(0xFF07090E),
+                                            ),
+                                        ),
+                                    ),
+                                ),
+                            ],
+                        ),
                     ),
                 ],
             ),
+        );
+    }
+
+    Widget _buildEmptyState() {
+        return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                    const Text(
+                        'Direct Agent Channel',
+                        style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFE2E8F0),
+                        ),
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                        'Send messages over /ws/assistant or use voice mode simultaneously.',
+                        style: TextStyle(
+                            fontSize: 12,
+                            height: 1.5,
+                            color: Color(0xFF64748B),
+                        ),
+                    ),
+                    const SizedBox(height: 18),
+                    ..._quickPrompts.map(
+                        (prompt) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: InkWell(
+                                onTap: () => widget.onSendMessage(prompt),
+                                borderRadius: BorderRadius.circular(8),
+                                child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                    ),
+                                    decoration: BoxDecoration(
+                                        color: const Color(0xFF111827),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                            color: const Color(0xFF1E293B),
+                                        ),
+                                    ),
+                                    child: Text(
+                                        prompt,
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            color: Color(0xFFCBD5E1),
+                                        ),
+                                    ),
+                                ),
+                            ),
+                        ),
+                    ),
+                ],
+            ),
+        );
+    }
+}
+
+class _ChatBubble extends StatelessWidget {
+    final ChatMessage message;
+
+    const _ChatBubble({required this.message});
+
+    @override
+    Widget build(BuildContext context) {
+        final isUser = message.role == ChatRole.user;
+
+        return Column(
+            crossAxisAlignment:
+                isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            children: [
+                Padding(
+                    padding: const EdgeInsets.only(bottom: 4),
+                    child: Text(
+                        isUser ? 'You' : 'Galaxy AI',
+                        style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: isUser
+                                ? const Color(0xFF64748B)
+                                : const Color(0xFF22D3EE),
+                        ),
+                    ),
+                ),
+                Container(
+                    constraints: const BoxConstraints(maxWidth: 295),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 13,
+                        vertical: 10,
+                    ),
+                    decoration: BoxDecoration(
+                        color: isUser
+                            ? const Color(0xFF0E7490).withValues(alpha: 0.28)
+                            : const Color(0xFF111827),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                            color: message.isError
+                                ? const Color(0xFFF43F5E).withValues(alpha: 0.45)
+                                : isUser
+                                    ? const Color(0xFF06B6D4)
+                                        .withValues(alpha: 0.35)
+                                    : const Color(0xFF1E293B),
+                        ),
+                    ),
+                    child: message.content.isEmpty && message.isStreaming
+                        ? const SizedBox(
+                              height: 18,
+                              width: 36,
+                              child: Center(
+                                  child: LinearProgressIndicator(
+                                      minHeight: 2,
+                                      backgroundColor: Color(0xFF1E293B),
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                          Color(0xFF22D3EE),
+                                      ),
+                                  ),
+                              ),
+                          )
+                        : Text(
+                              message.content,
+                              style: TextStyle(
+                                  fontSize: 12.5,
+                                  height: 1.48,
+                                  color: message.isError
+                                      ? const Color(0xFFFDA4AF)
+                                      : const Color(0xFFE2E8F0),
+                              ),
+                          ),
+                ),
+            ],
         );
     }
 }

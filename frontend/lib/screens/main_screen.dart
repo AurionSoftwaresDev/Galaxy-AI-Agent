@@ -1,26 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
 import '../models/assistant_state.dart';
 import '../state/assistant_controller.dart';
 import '../widgets/ai_orb.dart';
-import '../widgets/ambient_orbs_background.dart';
-import '../widgets/automation_sidebar.dart';
 import '../widgets/chat_panel.dart';
-import '../widgets/controls_bar.dart';
-import '../widgets/settings_window.dart';
-import '../widgets/status_bar.dart';
-import '../widgets/top_bar.dart';
+import '../widgets/error_banner.dart';
+import '../widgets/microphone_control.dart';
+import '../widgets/settings_dialog.dart';
+import '../widgets/status_indicator.dart';
+import '../widgets/tool_activity_indicator.dart';
 import '../widgets/waveform_visualizer.dart';
 
-/// Primary desktop screen for Galaxy AI.
-///
-/// Implements responsive desktop window layout with:
-/// - Dynamic Ambient Floating Neon Orbs background
-/// - Top Navbar with Agent State & User Profile (Initials fallback)
-/// - Left Sidebar for Basic Tasks Automation
-/// - Center Agent Canvas with Neon Small Dots Swarm & Particle Constellation
-/// - Right Collapsible Chat Panel for multi-state agent interaction
-/// - In-Window Movable & Resizable Floating Settings Window
+/// Primary desktop screen for Galaxy AI Agent featuring a collapsible
+/// left-side Chat Panel alongside the central Voice Interaction stage.
 class MainScreen extends StatefulWidget {
     final AssistantController controller;
 
@@ -36,10 +29,6 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
     final FocusNode _keyboardFocusNode = FocusNode();
 
-    bool _isSidebarExpanded = false;
-    bool _isChatPanelOpen = true;
-    bool _isSettingsOpen = false;
-
     @override
     void initState() {
         super.initState();
@@ -54,42 +43,42 @@ class _MainScreenState extends State<MainScreen> {
         super.dispose();
     }
 
-    /// Handles desktop keyboard shortcuts
     KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-        if (event is KeyDownEvent) {
-            // Check if any text input (chat input, settings fields) currently has focus
-            final primaryFocus = FocusManager.instance.primaryFocus;
-            final isTextInputFocused = primaryFocus != null &&
-                (primaryFocus.context?.widget is EditableText ||
-                 primaryFocus.context?.findAncestorWidgetOfExactType<EditableText>() != null);
-
-            if (isTextInputFocused) {
-                // Pass through all keystrokes naturally to the text input
-                return KeyEventResult.ignored;
-            }
-
-            // Space: Toggle Mic (only when not typing in a text field)
-            if (event.logicalKey == LogicalKeyboardKey.space && !_isSettingsOpen) {
-                widget.controller.toggleMicrophone();
-                return KeyEventResult.handled;
-            } else if (event.logicalKey == LogicalKeyboardKey.escape) {
-                if (_isSettingsOpen) {
-                    setState(() => _isSettingsOpen = false);
-                    return KeyEventResult.handled;
-                }
-                widget.controller.interruptSpeaking();
-                return KeyEventResult.handled;
-            } else if (event.logicalKey == LogicalKeyboardKey.comma &&
-                       (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
-                setState(() => _isSettingsOpen = !_isSettingsOpen);
-                return KeyEventResult.handled;
-            } else if (event.logicalKey == LogicalKeyboardKey.keyR &&
-                       (HardwareKeyboard.instance.isControlPressed || HardwareKeyboard.instance.isMetaPressed)) {
-                widget.controller.retryConnection();
-                return KeyEventResult.handled;
-            }
+        if (event is! KeyDownEvent) {
+            return KeyEventResult.ignored;
         }
+
+        // Ignore global shortcuts when typing inside a TextField
+        final primaryFocus = FocusManager.instance.primaryFocus;
+        if (primaryFocus?.context?.widget is EditableText) {
+            return KeyEventResult.ignored;
+        }
+
+        if (event.logicalKey == LogicalKeyboardKey.space) {
+            widget.controller.toggleVoiceInteraction();
+            return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.keyM) {
+            widget.controller.toggleMute();
+            return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.escape) {
+            widget.controller.interruptAssistant();
+            return KeyEventResult.handled;
+        }
+        if (event.logicalKey == LogicalKeyboardKey.keyR) {
+            widget.controller.reconnect();
+            return KeyEventResult.handled;
+        }
+
         return KeyEventResult.ignored;
+    }
+
+    void _openSettingsDialog() {
+        showDialog<void>(
+            context: context,
+            builder: (_) => SettingsDialog(controller: widget.controller),
+        );
     }
 
     @override
@@ -98,189 +87,404 @@ class _MainScreenState extends State<MainScreen> {
             focusNode: _keyboardFocusNode,
             autofocus: true,
             onKeyEvent: _handleKeyEvent,
-            child: AnimatedBuilder(
-                animation: widget.controller,
-                builder: (context, _) {
-                    final state = widget.controller.state;
-                    final audioPacket = widget.controller.currentAudioPacket;
-                    final config = widget.controller.agentConfig;
-                    final palette = config.themePalette;
+            child: Scaffold(
+                backgroundColor: const Color(0xFF07090E),
+                body: AnimatedBuilder(
+                    animation: widget.controller,
+                    builder: (context, _) {
+                        final state = widget.controller.assistantState;
+                        final connection = widget.controller.connectionStatus;
+                        final amplitude = widget.controller.currentAmplitude;
+                        final isMuted = widget.controller.isMuted;
+                        final streamingSubtitle =
+                            widget.controller.streamingSubtitle;
+                        final isChatOpen = widget.controller.isChatPanelOpen;
 
-                    return Scaffold(
-                        backgroundColor: palette.background,
-                        body: Stack(
+                        final subtitleText = (state ==
+                                    AssistantState.speaking &&
+                                streamingSubtitle.isNotEmpty)
+                            ? streamingSubtitle
+                            : state.subtitleHint;
+
+                        return Row(
                             children: [
-                                // 1. Ambient Floating Background Orbs
-                                AmbientOrbsBackground(
-                                    state: state,
-                                    palette: palette,
-                                    isEnabled: config.backgroundOrbsEnabled,
+                                // Left-Side Chat Panel
+                                AnimatedSize(
+                                    duration: const Duration(milliseconds: 220),
+                                    curve: Curves.easeOutCubic,
+                                    child: isChatOpen
+                                        ? ChatPanel(
+                                              messages:
+                                                  widget.controller.messages,
+                                              assistantState: state,
+                                              onSendMessage: widget
+                                                  .controller.sendVoicePrompt,
+                                              onClearHistory: widget
+                                                  .controller.clearChatHistory,
+                                              onClosePanel: widget
+                                                  .controller.toggleChatPanel,
+                                          )
+                                        : const SizedBox.shrink(),
                                 ),
 
-                                // 2. Main Desktop Structure
-                                SafeArea(
-                                    child: Column(
-                                        children: [
-                                            // Top Navbar with User Section & Settings trigger
-                                            TopBar(
-                                                connectionStatus: widget.controller.connectionStatus,
-                                                connectionLabel: widget.controller.connectionLabel,
-                                                assistantState: state,
-                                                userProfile: widget.controller.userProfile,
-                                                isSidebarExpanded: _isSidebarExpanded,
-                                                isChatPanelOpen: _isChatPanelOpen,
-                                                onToggleSidebar: () {
-                                                    setState(() => _isSidebarExpanded = !_isSidebarExpanded);
-                                                },
-                                                onToggleChatPanel: () {
-                                                    setState(() => _isChatPanelOpen = !_isChatPanelOpen);
-                                                },
-                                                onOpenSettings: () {
-                                                    setState(() => _isSettingsOpen = true);
-                                                },
-                                                onRetryConnection: () => widget.controller.retryConnection(),
-                                            ),
+                                // Main Voice Interaction Stage
+                                Expanded(
+                                    child: LayoutBuilder(
+                                        builder: (context, constraints) {
+                                            final shortestSide =
+                                                constraints.biggest.shortestSide;
+                                            final orbSize = (shortestSide * 0.36)
+                                                .clamp(180.0, 290.0);
+                                            final waveWidth =
+                                                (constraints.maxWidth * 0.38)
+                                                    .clamp(240.0, 380.0);
 
-                                            // Main Working Area (Sidebar + Center Canvas + Right Chat)
-                                            Expanded(
-                                                child: Row(
-                                                    children: [
-                                                        // Left Sidebar for Basic Tasks Automation with bottom Settings launcher
-                                                        AutomationSidebar(
-                                                            isExpanded: _isSidebarExpanded,
-                                                            state: state,
-                                                            isSettingsOpen: _isSettingsOpen,
-                                                            activeToolName: widget.controller.currentToolStatus?.toolName,
-                                                            onToggleExpand: () {
-                                                                setState(() => _isSidebarExpanded = !_isSidebarExpanded);
-                                                            },
-                                                            onOpenSettings: () {
-                                                                setState(() => _isSettingsOpen = true);
-                                                            },
-                                                            onExecuteTask: (task) {
-                                                                widget.controller.executeAutomationTask(task);
-                                                                if (!_isChatPanelOpen) {
-                                                                    setState(() => _isChatPanelOpen = true);
-                                                                }
-                                                            },
+                                            return Stack(
+                                                children: [
+                                                    // Subtle deep-space radial atmosphere
+                                                    Positioned.fill(
+                                                        child: DecoratedBox(
+                                                            decoration:
+                                                                BoxDecoration(
+                                                                gradient:
+                                                                    RadialGradient(
+                                                                    center:
+                                                                        const Alignment(
+                                                                        0.0,
+                                                                        -0.08,
+                                                                    ),
+                                                                    radius: 0.85,
+                                                                    colors: [
+                                                                        const Color(
+                                                                                0xFF0F172A)
+                                                                            .withValues(
+                                                                                alpha:
+                                                                                    0.65,
+                                                                            ),
+                                                                        const Color(
+                                                                            0xFF07090E,
+                                                                        ),
+                                                                    ],
+                                                                ),
+                                                            ),
                                                         ),
+                                                    ),
 
-                                                        // Center Agent Canvas
-                                                        Expanded(
-                                                            child: LayoutBuilder(
-                                                                builder: (context, constraints) {
-                                                                    final isCompact = constraints.maxHeight < 560;
-
-                                                                    return Column(
+                                                    SafeArea(
+                                                        child: Padding(
+                                                            padding:
+                                                                const EdgeInsets
+                                                                    .symmetric(
+                                                                horizontal: 32,
+                                                                vertical: 24,
+                                                            ),
+                                                            child: Column(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
+                                                                children: [
+                                                                    // 1. Minimal Top Bar
+                                                                    Row(
+                                                                        mainAxisAlignment:
+                                                                            MainAxisAlignment
+                                                                                .spaceBetween,
                                                                         children: [
-                                                                            // Upgraded AI Voice Orb: Volumetric Glass & Small Dots Constellation
-                                                                            Expanded(
-                                                                                child: Center(
-                                                                                    child: ConstrainedBox(
-                                                                                        constraints: BoxConstraints(
-                                                                                            maxWidth: isCompact ? 280 : 340,
-                                                                                            maxHeight: isCompact ? 280 : 340,
+                                                                            Row(
+                                                                                mainAxisSize:
+                                                                                    MainAxisSize
+                                                                                        .min,
+                                                                                children: [
+                                                                                    if (!isChatOpen) ...[
+                                                                                        IconButton(
+                                                                                            onPressed:
+                                                                                                widget
+                                                                                                    .controller
+                                                                                                    .toggleChatPanel,
+                                                                                            tooltip:
+                                                                                                'Open Chat Panel',
+                                                                                            icon: const Icon(
+                                                                                                Icons
+                                                                                                    .chat_bubble_outline_rounded,
+                                                                                                size:
+                                                                                                    17,
+                                                                                                color: Color(
+                                                                                                    0xFF94A3B8,
+                                                                                                ),
+                                                                                            ),
+                                                                                            constraints:
+                                                                                                const BoxConstraints(
+                                                                                                minWidth:
+                                                                                                    32,
+                                                                                                minHeight:
+                                                                                                    32,
+                                                                                            ),
+                                                                                            padding:
+                                                                                                EdgeInsets
+                                                                                                    .zero,
                                                                                         ),
-                                                                                        child: FittedBox(
-                                                                                            fit: BoxFit.contain,
-                                                                                            child: AiOrb(
-                                                                                                state: state,
-                                                                                                amplitude: audioPacket.amplitude,
-                                                                                                particleCount: config.dotDensity,
-                                                                                                onTap: () {
-                                                                                                    if (state == AssistantState.error ||
-                                                                                                        state == AssistantState.disconnected) {
-                                                                                                        widget.controller.retryConnection();
-                                                                                                    } else {
-                                                                                                        widget.controller.toggleMicrophone();
-                                                                                                    }
-                                                                                                },
+                                                                                        const SizedBox(
+                                                                                            width:
+                                                                                                10,
+                                                                                        ),
+                                                                                    ],
+                                                                                    const Text(
+                                                                                        'Galaxy AI',
+                                                                                        style:
+                                                                                            TextStyle(
+                                                                                            fontSize:
+                                                                                                16,
+                                                                                            fontWeight:
+                                                                                                FontWeight
+                                                                                                    .w600,
+                                                                                            letterSpacing:
+                                                                                                0.6,
+                                                                                            color: Color(
+                                                                                                0xFFF8FAFC,
                                                                                             ),
                                                                                         ),
                                                                                     ),
+                                                                                ],
+                                                                            ),
+                                                                            Row(
+                                                                                mainAxisSize:
+                                                                                    MainAxisSize
+                                                                                        .min,
+                                                                                children: [
+                                                                                    StatusIndicator(
+                                                                                        status:
+                                                                                            connection,
+                                                                                        onReconnectRequested:
+                                                                                            widget
+                                                                                                .controller
+                                                                                                .reconnect,
+                                                                                    ),
+                                                                                    const SizedBox(
+                                                                                        width:
+                                                                                            14,
+                                                                                    ),
+                                                                                    IconButton(
+                                                                                        onPressed:
+                                                                                            _openSettingsDialog,
+                                                                                        tooltip:
+                                                                                            'Agent Settings',
+                                                                                        icon: const Icon(
+                                                                                            Icons
+                                                                                                .tune_rounded,
+                                                                                            size:
+                                                                                                18,
+                                                                                            color: Color(
+                                                                                                0xFF94A3B8,
+                                                                                            ),
+                                                                                        ),
+                                                                                        constraints:
+                                                                                            const BoxConstraints(
+                                                                                            minWidth:
+                                                                                                32,
+                                                                                            minHeight:
+                                                                                                32,
+                                                                                        ),
+                                                                                        padding:
+                                                                                            EdgeInsets
+                                                                                                .zero,
+                                                                                    ),
+                                                                                ],
+                                                                            ),
+                                                                        ],
+                                                                    ),
+
+                                                                    // 2. Center Voice Orb & Waveform
+                                                                    Expanded(
+                                                                        child:
+                                                                            Center(
+                                                                            child: SingleChildScrollView(
+                                                                                physics:
+                                                                                    const NeverScrollableScrollPhysics(),
+                                                                                child:
+                                                                                    Column(
+                                                                                    mainAxisSize:
+                                                                                        MainAxisSize
+                                                                                            .min,
+                                                                                    children: [
+                                                                                        AIOrb(
+                                                                                            state:
+                                                                                                state,
+                                                                                            amplitude:
+                                                                                                amplitude,
+                                                                                            isMuted:
+                                                                                                isMuted,
+                                                                                            size:
+                                                                                                orbSize,
+                                                                                            onTap: widget
+                                                                                                .controller
+                                                                                                .toggleVoiceInteraction,
+                                                                                        ),
+                                                                                        const SizedBox(
+                                                                                            height:
+                                                                                                18,
+                                                                                        ),
+                                                                                        WaveformVisualizer(
+                                                                                            state:
+                                                                                                state,
+                                                                                            amplitude:
+                                                                                                amplitude,
+                                                                                            isMuted:
+                                                                                                isMuted,
+                                                                                            width:
+                                                                                                waveWidth,
+                                                                                            height:
+                                                                                                52,
+                                                                                        ),
+                                                                                        const SizedBox(
+                                                                                            height:
+                                                                                                18,
+                                                                                        ),
+                                                                                        AnimatedSwitcher(
+                                                                                            duration:
+                                                                                                const Duration(
+                                                                                                milliseconds:
+                                                                                                    220,
+                                                                                            ),
+                                                                                            child:
+                                                                                                Text(
+                                                                                                isMuted &&
+                                                                                                        state ==
+                                                                                                            AssistantState
+                                                                                                                .listening
+                                                                                                    ? 'Microphone Muted'
+                                                                                                    : state
+                                                                                                        .displayLabel,
+                                                                                                key: ValueKey<
+                                                                                                    String>(
+                                                                                                    '${state.name}_$isMuted',
+                                                                                                ),
+                                                                                                style:
+                                                                                                    const TextStyle(
+                                                                                                    fontSize:
+                                                                                                        20,
+                                                                                                    fontWeight:
+                                                                                                        FontWeight
+                                                                                                            .w500,
+                                                                                                    letterSpacing:
+                                                                                                        0.4,
+                                                                                                    color: Color(
+                                                                                                        0xFFF1F5F9,
+                                                                                                    ),
+                                                                                                ),
+                                                                                            ),
+                                                                                        ),
+                                                                                        const SizedBox(
+                                                                                            height:
+                                                                                                6,
+                                                                                        ),
+                                                                                        ConstrainedBox(
+                                                                                            constraints:
+                                                                                                const BoxConstraints(
+                                                                                                maxWidth:
+                                                                                                    460,
+                                                                                            ),
+                                                                                            child:
+                                                                                                Text(
+                                                                                                subtitleText,
+                                                                                                maxLines:
+                                                                                                    2,
+                                                                                                overflow:
+                                                                                                    TextOverflow
+                                                                                                        .ellipsis,
+                                                                                                textAlign:
+                                                                                                    TextAlign
+                                                                                                        .center,
+                                                                                                style:
+                                                                                                    const TextStyle(
+                                                                                                    fontSize:
+                                                                                                        13,
+                                                                                                    color: Color(
+                                                                                                        0xFF64748B,
+                                                                                                    ),
+                                                                                                ),
+                                                                                            ),
+                                                                                        ),
+                                                                                        ToolActivityIndicator(
+                                                                                            toolActivity: widget
+                                                                                                .controller
+                                                                                                .activeTool,
+                                                                                        ),
+                                                                                    ],
                                                                                 ),
                                                                             ),
+                                                                        ),
+                                                                    ),
 
-                                                                            // Audio Waveform Visualizer
-                                                                            Padding(
-                                                                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                                                                child: WaveformVisualizer(
-                                                                                    state: state,
-                                                                                    audioPacket: audioPacket,
-                                                                                    height: isCompact ? 36 : 48,
+                                                                    // 3. Bottom Microphone Control & Connection Footer
+                                                                    Column(
+                                                                        mainAxisSize:
+                                                                            MainAxisSize
+                                                                                .min,
+                                                                        children: [
+                                                                            if (widget
+                                                                                    .controller
+                                                                                    .activeError !=
+                                                                                null) ...[
+                                                                                ErrorBanner(
+                                                                                    error: widget
+                                                                                        .controller
+                                                                                        .activeError,
+                                                                                    onRetry: widget
+                                                                                        .controller
+                                                                                        .reconnect,
+                                                                                    onDismiss: widget
+                                                                                        .controller
+                                                                                        .dismissError,
                                                                                 ),
-                                                                            ),
-
-                                                                            SizedBox(height: isCompact ? 8 : 14),
-
-                                                                            // Current State & Feedback
-                                                                            Padding(
-                                                                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                                                                                child: StatusBar(
-                                                                                    state: state,
-                                                                                    subtitle: widget.controller.statusSubtitle,
-                                                                                    toolStatus: widget.controller.currentToolStatus,
-                                                                                    onRetry: () => widget.controller.retryConnection(),
+                                                                                const SizedBox(
+                                                                                    height:
+                                                                                        18,
                                                                                 ),
+                                                                            ],
+                                                                            MicrophoneControl(
+                                                                                state:
+                                                                                    state,
+                                                                                isMuted:
+                                                                                    isMuted,
+                                                                                onPrimaryAction: widget
+                                                                                    .controller
+                                                                                    .toggleVoiceInteraction,
+                                                                                onMuteToggle: widget
+                                                                                    .controller
+                                                                                    .toggleMute,
                                                                             ),
-
-                                                                            SizedBox(height: isCompact ? 10 : 18),
-
-                                                                            // Bottom Controls & Shortcuts Bar
-                                                                            Padding(
-                                                                                padding: EdgeInsets.only(bottom: isCompact ? 10.0 : 18.0),
-                                                                                child: ControlsBar(
-                                                                                    state: state,
-                                                                                    isMuted: widget.controller.isMuted,
-                                                                                    onToggleMic: () => widget.controller.toggleMicrophone(),
-                                                                                    onInterrupt: () => widget.controller.interruptSpeaking(),
-                                                                                    onCycleState: () => widget.controller.cycleState(),
+                                                                            const SizedBox(
+                                                                                height:
+                                                                                    14,
+                                                                            ),
+                                                                            Text(
+                                                                                connection
+                                                                                    .label,
+                                                                                style:
+                                                                                    const TextStyle(
+                                                                                    fontSize:
+                                                                                        12,
+                                                                                    letterSpacing:
+                                                                                        0.3,
+                                                                                    color: Color(
+                                                                                        0xFF475569,
+                                                                                    ),
                                                                                 ),
                                                                             ),
                                                                         ],
-                                                                    );
-                                                                },
+                                                                    ),
+                                                                ],
                                                             ),
                                                         ),
-
-                                                        // Right Panel for Chat Agent
-                                                        if (_isChatPanelOpen)
-                                                            ChatPanel(
-                                                                messages: widget.controller.messages,
-                                                                state: state,
-                                                                userProfile: widget.controller.userProfile,
-                                                                onSendMessage: (text) => widget.controller.sendMessage(text),
-                                                                onClearMessages: () => widget.controller.clearMessages(),
-                                                                onClose: () => setState(() => _isChatPanelOpen = false),
-                                                                onToggleMic: () => widget.controller.toggleMicrophone(),
-                                                                isMuted: widget.controller.isMuted,
-                                                            ),
-                                                    ],
-                                                ),
-                                            ),
-                                        ],
+                                                    ),
+                                                ],
+                                            );
+                                        },
                                     ),
                                 ),
-
-                                // 3. In-Window Movable & Resizable Floating Settings Window Overlay
-                                if (_isSettingsOpen)
-                                    SettingsWindow(
-                                        userProfile: widget.controller.userProfile,
-                                        agentConfig: widget.controller.agentConfig,
-                                        onSaveUserProfile: (updatedProfile) {
-                                            widget.controller.updateUserProfile(updatedProfile);
-                                        },
-                                        onSaveAgentConfig: (updatedConfig) {
-                                            widget.controller.updateAgentConfig(updatedConfig);
-                                        },
-                                        onClose: () {
-                                            setState(() => _isSettingsOpen = false);
-                                        },
-                                    ),
                             ],
-                        ),
-                    );
-                },
+                        );
+                    },
+                ),
             ),
         );
     }

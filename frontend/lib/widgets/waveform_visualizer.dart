@@ -1,189 +1,168 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import '../models/assistant_state.dart';
-import '../models/audio_packet.dart';
 
-/// Desktop waveform visualization widget for Galaxy AI.
-///
-/// Dynamically renders multi-band audio bars reflecting microphone input
-/// while listening and assistant synthesized audio while speaking.
-class WaveformVisualizer extends StatelessWidget {
+import '../models/assistant_state.dart';
+
+/// Dynamic multi-harmonic waveform visualizer synchronized with voice/audio amplitude.
+class WaveformVisualizer extends StatefulWidget {
     final AssistantState state;
-    final AudioPacket audioPacket;
+    final double amplitude;
+    final bool isMuted;
     final double width;
     final double height;
 
     const WaveformVisualizer({
         super.key,
         required this.state,
-        required this.audioPacket,
-        this.width = 380,
-        this.height = 48,
+        required this.amplitude,
+        required this.isMuted,
+        this.width = 340,
+        this.height = 56,
     });
 
     @override
+    State<WaveformVisualizer> createState() => _WaveformVisualizerState();
+}
+
+class _WaveformVisualizerState extends State<WaveformVisualizer>
+    with SingleTickerProviderStateMixin {
+    late final AnimationController _waveController;
+
+    @override
+    void initState() {
+        super.initState();
+        _waveController = AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 2000),
+        )..repeat();
+    }
+
+    @override
+    void dispose() {
+        _waveController.dispose();
+        super.dispose();
+    }
+
+    Color _waveColor() {
+        if (widget.isMuted || widget.state == AssistantState.disconnected) {
+            return const Color(0xFF475569);
+        }
+        switch (widget.state) {
+            case AssistantState.listening:
+                return const Color(0xFF06B6D4);
+            case AssistantState.thinking:
+                return const Color(0xFF818CF8);
+            case AssistantState.speaking:
+                return const Color(0xFF22D3EE);
+            case AssistantState.connecting:
+                return const Color(0xFF38BDF8);
+            case AssistantState.error:
+                return const Color(0xFFF43F5E);
+            case AssistantState.disconnected:
+                return const Color(0xFF475569);
+        }
+    }
+
+    @override
     Widget build(BuildContext context) {
-        return RepaintBoundary(
-            child: ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: width),
-                child: SizedBox(
-                    width: double.infinity,
-                    height: height,
-                    child: CustomPaint(
-                        painter: _WaveformCustomPainter(
-                            state: state,
-                            amplitude: audioPacket.amplitude,
-                            frequencyBands: audioPacket.frequencyBands,
+        final color = _waveColor();
+        final isActive = (widget.state == AssistantState.listening && !widget.isMuted) ||
+            widget.state == AssistantState.speaking ||
+            widget.state == AssistantState.thinking;
+
+        return SizedBox(
+            width: widget.width,
+            height: widget.height,
+            child: AnimatedBuilder(
+                animation: _waveController,
+                builder: (context, _) {
+                    return CustomPaint(
+                        painter: _WaveformPainter(
+                            phase: _waveController.value * math.pi * 2,
+                            amplitude: isActive ? widget.amplitude : 0.02,
+                            primaryColor: color,
+                            isSpeaking: widget.state == AssistantState.speaking,
+                            isInactive: !isActive,
                         ),
-                    ),
-                ),
+                    );
+                },
             ),
         );
     }
 }
 
-class _WaveformCustomPainter extends CustomPainter {
-    final AssistantState state;
+class _WaveformPainter extends CustomPainter {
+    final double phase;
     final double amplitude;
-    final List<double> frequencyBands;
+    final Color primaryColor;
+    final bool isSpeaking;
+    final bool isInactive;
 
-    _WaveformCustomPainter({
-        required this.state,
+    const _WaveformPainter({
+        required this.phase,
         required this.amplitude,
-        required this.frequencyBands,
+        required this.primaryColor,
+        required this.isSpeaking,
+        required this.isInactive,
     });
 
     @override
     void paint(Canvas canvas, Size size) {
-        const totalBars = 32;
-        final barSpacing = size.width / totalBars;
-        final barWidth = (barSpacing * 0.45).clamp(2.5, 4.5);
         final centerY = size.height / 2;
+        const int barCount = 35;
+        final double spacing = size.width / (barCount - 1);
 
-        final colors = _getWaveformColors();
+        // Baseline hairline
+        final baselinePaint = Paint()
+            ..color = primaryColor.withValues(alpha: isInactive ? 0.14 : 0.22)
+            ..strokeWidth = 1.0;
 
-        final paint = Paint()
-            ..style = PaintingStyle.fill
-            ..strokeCap = StrokeCap.round;
+        canvas.drawLine(
+            Offset(0, centerY),
+            Offset(size.width, centerY),
+            baselinePaint,
+        );
 
-        for (int i = 0; i < totalBars; i++) {
-            // Symmetry mapping: highest energy in the middle
-            final distFromCenter = (i - totalBars / 2).abs() / (totalBars / 2);
-            final centerFactor = 1.0 - (distFromCenter * 0.65);
+        // Vertical symmetric harmonic bars with Gaussian window envelope
+        final barPaint = Paint()
+            ..strokeCap = StrokeCap.round
+            ..strokeWidth = 2.4;
 
-            // Fetch band energy or interpolate
-            double bandEnergy = 0.0;
-            if (frequencyBands.isNotEmpty) {
-                final bandIndex = (distFromCenter * (frequencyBands.length - 1)).round();
-                bandEnergy = frequencyBands[bandIndex.clamp(0, frequencyBands.length - 1)];
-            } else {
-                bandEnergy = amplitude;
-            }
+        for (int i = 0; i < barCount; i++) {
+            final normalizedX = (i / (barCount - 1)) * 2.0 - 1.0; // [-1, 1]
+            final window = math.exp(-3.2 * normalizedX * normalizedX);
 
-            // Compute height
-            double barHeight = 0.0;
-            if (state == AssistantState.listening || state == AssistantState.speaking) {
-                barHeight = 4.0 + (size.height * 0.85 * bandEnergy * centerFactor);
-            } else if (state == AssistantState.thinking || state == AssistantState.toolExecution || state == AssistantState.generating) {
-                // Subtle moving wave during reasoning
-                barHeight = 3.0 + (size.height * 0.35 * bandEnergy * centerFactor);
-            } else {
-                // Baseline resting idle line
-                barHeight = 3.0;
-            }
+            final waveA = math.sin((i * 0.42) + phase);
+            final waveB = math.cos((i * 0.78) - phase * 1.4);
+            final combined = ((waveA * 0.65 + waveB * 0.35) + 1.0) * 0.5;
 
-            barHeight = barHeight.clamp(3.0, size.height);
+            final effectiveAmp = isInactive
+                ? 0.03
+                : (amplitude * (isSpeaking ? 1.25 : 0.95)).clamp(0.06, 1.0);
 
-            final x = (i * barSpacing) + (barSpacing - barWidth) / 2;
-            final top = centerY - (barHeight / 2);
+            final halfHeight = (2.0 + combined * effectiveAmp * window * (size.height * 0.46))
+                .clamp(1.5, size.height * 0.48);
 
-            final barRect = RRect.fromRectAndRadius(
-                Rect.fromLTWH(x, top, barWidth, barHeight),
-                Radius.circular(barWidth / 2),
+            final alpha = isInactive
+                ? 0.22
+                : (0.30 + window * 0.65).clamp(0.25, 0.95);
+
+            barPaint.color = primaryColor.withValues(alpha: alpha);
+
+            final x = i * spacing;
+            canvas.drawLine(
+                Offset(x, centerY - halfHeight),
+                Offset(x, centerY + halfHeight),
+                barPaint,
             );
-
-            // Create linear gradient along the height
-            paint.shader = LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                    colors.topColor.withValues(alpha: 0.9),
-                    colors.bottomColor.withValues(alpha: 0.6),
-                ],
-            ).createShader(barRect.outerRect);
-
-            canvas.drawRRect(barRect, paint);
-        }
-    }
-
-    _WaveformColors _getWaveformColors() {
-        switch (state) {
-            case AssistantState.idle:
-                return _WaveformColors(
-                    topColor: const Color(0xFF818CF8),
-                    bottomColor: const Color(0xFF4F46E5),
-                );
-            case AssistantState.listening:
-                return _WaveformColors(
-                    topColor: const Color(0xFF38BDF8),
-                    bottomColor: const Color(0xFF0284C7),
-                );
-            case AssistantState.thinking:
-                return _WaveformColors(
-                    topColor: const Color(0xFFA78BFA),
-                    bottomColor: const Color(0xFF6366F1),
-                );
-            case AssistantState.toolExecution:
-                return _WaveformColors(
-                    topColor: const Color(0xFFFBBF24),
-                    bottomColor: const Color(0xFFD97706),
-                );
-            case AssistantState.generating:
-                return _WaveformColors(
-                    topColor: const Color(0xFF60A5FA),
-                    bottomColor: const Color(0xFF2563EB),
-                );
-            case AssistantState.speaking:
-                return _WaveformColors(
-                    topColor: const Color(0xFF34D399),
-                    bottomColor: const Color(0xFF0D9488),
-                );
-            case AssistantState.interrupted:
-                return _WaveformColors(
-                    topColor: const Color(0xFFF472B6),
-                    bottomColor: const Color(0xFFBE185D),
-                );
-            case AssistantState.connecting:
-                return _WaveformColors(
-                    topColor: const Color(0xFF60A5FA),
-                    bottomColor: const Color(0xFF1D4ED8),
-                );
-            case AssistantState.error:
-                return _WaveformColors(
-                    topColor: const Color(0xFFF87171),
-                    bottomColor: const Color(0xFFDC2626),
-                );
-            case AssistantState.disconnected:
-                return _WaveformColors(
-                    topColor: const Color(0xFF475569),
-                    bottomColor: const Color(0xFF334155),
-                );
         }
     }
 
     @override
-    bool shouldRepaint(covariant _WaveformCustomPainter oldDelegate) {
-        return oldDelegate.amplitude != amplitude ||
-            oldDelegate.state != state ||
-            oldDelegate.frequencyBands != frequencyBands;
+    bool shouldRepaint(covariant _WaveformPainter oldDelegate) {
+        return oldDelegate.phase != phase ||
+            oldDelegate.amplitude != amplitude ||
+            oldDelegate.primaryColor != primaryColor ||
+            oldDelegate.isInactive != isInactive;
     }
-}
-
-class _WaveformColors {
-    final Color topColor;
-    final Color bottomColor;
-
-    _WaveformColors({
-        required this.topColor,
-        required this.bottomColor,
-    });
 }

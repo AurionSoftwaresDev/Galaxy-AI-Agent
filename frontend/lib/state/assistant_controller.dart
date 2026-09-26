@@ -1,550 +1,430 @@
 import 'dart:async';
-
 import 'package:flutter/foundation.dart';
 
 import '../api/backend_client.dart';
-import '../models/agent_config.dart';
 import '../models/assistant_state.dart';
-import '../models/audio_packet.dart';
-import '../models/backend_event.dart';
-import '../models/chat_message.dart';
-import '../models/user_profile.dart';
-import '../services/audio_service.dart';
-import '../services/connection_service.dart';
-import '../widgets/automation_sidebar.dart';
+import '../services/voice_service.dart';
 
-/// Central state coordinator for the Galaxy AI desktop assistant.
-///
-/// Implements [ChangeNotifier] for lightweight, predictable, and reactive UI updates.
+/// Coordinates UI state, FastAPI backend connection (`http://127.0.0.1:8000`),
+/// WebSocket streaming (`/ws/assistant`), left-side chat history, `/settings/*`, and `VoiceService`.
 class AssistantController extends ChangeNotifier {
-  final BackendClient _backendClient;
-  final AudioService _audioService;
-  final ConnectionService _connectionService;
+    final BackendClient _backendClient;
+    final VoiceService _voiceService;
 
-  AssistantState _state = AssistantState.idle;
-  String? _activeErrorMessage;
-  ToolStatusInfo? _currentToolStatus;
-  AudioPacket _currentAudioPacket = AudioPacket.silent();
-  bool _isMuted = false;
-  bool _isInitialized = false;
+    AssistantState _assistantState = AssistantState.connecting;
+    ConnectionStatus _connectionStatus = ConnectionStatus.connecting;
+    ToolActivity? _activeTool;
+    AssistantError? _activeError;
+    AgentSettingsSnapshot _settings = const AgentSettingsSnapshot();
+    double _currentAmplitude = 0.0;
+    String _streamingSubtitle = '';
+    bool _isChatPanelOpen = true;
+    final List<ChatMessage> _messages = [];
+    String? _activeStreamingMessageId;
 
-  // User Profile with Gmail, username, and initials fallback
-  UserProfile _userProfile = const UserProfile(
-    username: 'Example User',
-    email: 'example@gmail.com',
-  );
+    StreamSubscription<ConnectionStatus>? _connectionSub;
+    StreamSubscription<BackendEvent>? _eventSub;
+    StreamSubscription<AssistantError>? _backendErrorSub;
+    StreamSubscription<AssistantError>? _voiceErrorSub;
+    StreamSubscription<double>? _amplitudeSub;
+    StreamSubscription<String>? _speechSub;
+    StreamSubscription<void>? _speakingDoneSub;
 
-  // Agent Configuration
-  AgentConfig _agentConfig = const AgentConfig();
-
-  // Chat Conversation History
-  final List<ChatMessage> _messages = [];
-
-  // Stream subscriptions
-  StreamSubscription<ConnectionStatus>? _connectionSub;
-  StreamSubscription<BackendEvent>? _eventSub;
-  StreamSubscription<AudioPacket>? _audioSub;
-  Timer? _activeSimulationTimer;
-
-  AssistantController({
-    required BackendClient backendClient,
-    required AudioService audioService,
-    required ConnectionService connectionService,
-  }) : _backendClient = backendClient,
-       _audioService = audioService,
-       _connectionService = connectionService {
-    _seedInitialConversation();
-  }
-
-  /// Current operational state of the assistant.
-  AssistantState get state => _state;
-
-  /// Human-readable error description, if in error state.
-  String? get activeErrorMessage => _activeErrorMessage;
-
-  /// Active tool information if backend is executing a tool in the background.
-  ToolStatusInfo? get currentToolStatus => _currentToolStatus;
-
-  /// Active audio packet for live waveform visualizer.
-  AudioPacket get currentAudioPacket => _currentAudioPacket;
-
-  /// Whether microphone input is manually muted.
-  bool get isMuted => _isMuted;
-
-  /// Current backend connection status.
-  ConnectionStatus get connectionStatus => _connectionService.currentStatus;
-
-  /// Whether audio provider is currently simulated vs real hardware.
-  bool get isAudioSimulated => _audioService.isSimulated;
-
-  /// User profile details.
-  UserProfile get userProfile => _userProfile;
-
-  /// Active agent configurations.
-  AgentConfig get agentConfig => _agentConfig;
-
-  /// Chat messages in conversation.
-  List<ChatMessage> get messages => List.unmodifiable(_messages);
-
-  /// Human-readable connection label for the top header.
-  String get connectionLabel {
-    switch (_connectionService.currentStatus) {
-      case ConnectionStatus.connected:
-        return 'Connected';
-      case ConnectionStatus.connecting:
-        return 'Connecting...';
-      case ConnectionStatus.error:
-        return 'Offline';
-      case ConnectionStatus.disconnected:
-        return 'Offline';
-    }
-  }
-
-  /// Primary human-readable status text displayed beneath the waveform.
-  String get statusSubtitle {
-    if (_activeErrorMessage != null && _state == AssistantState.error) {
-      return _activeErrorMessage!;
-    }
-    if (_currentToolStatus != null &&
-        (_state == AssistantState.thinking ||
-            _state == AssistantState.toolExecution)) {
-      return _currentToolStatus!.humanReadableMessage;
-    }
-    switch (_state) {
-      case AssistantState.idle:
-        return 'Galaxy AI ready. Click microphone or issue a task.';
-      case AssistantState.disconnected:
-        return 'Backend offline at 127.0.0.1:8080. Click to retry.';
-      case AssistantState.connecting:
-        return 'Establishing secure connection to Galaxy AI...';
-      case AssistantState.listening:
-        return _isMuted
-            ? 'Microphone muted. Press Space or click to speak.'
-            : 'Listening to your voice...';
-      case AssistantState.thinking:
-        return 'Reasoning and analyzing request...';
-      case AssistantState.toolExecution:
-        return 'Executing desktop automation tool...';
-      case AssistantState.generating:
-        return 'Generating multi-modal response...';
-      case AssistantState.speaking:
-        return 'Speaking response...';
-      case AssistantState.interrupted:
-        return 'Playback interrupted by user.';
-      case AssistantState.error:
-        return _activeErrorMessage ??
-            'An unexpected connection issue occurred.';
-    }
-  }
-
-  void _seedInitialConversation() {
-    _messages.addAll([
-      ChatMessage(
-        id: 'msg_welcome',
-        role: MessageRole.assistant,
-        text: 'Hello Jakir! Galaxy AI desktop assistant is online and ready. You can speak naturally, trigger workflow automations from the left sidebar, or customize agent parameters in Settings.',
-        timestamp: DateTime.now().subtract(const Duration(minutes: 2)),
-        hasAudio: true,
-      ),
-    ]);
-  }
-
-  /// Startup sequence:
-  /// 1. Initialize frontend audio service.
-  /// 2. Subscribe to event and audio streams.
-  /// 3. Attempt backend connection.
-  Future<void> initialize() async {
-    if (_isInitialized) return;
-    _isInitialized = true;
-
-    await _audioService.initialize();
-
-    _audioSub = _audioService.amplitudeStream.listen((packet) {
-      _currentAudioPacket = packet;
-      notifyListeners();
-    });
-
-    _connectionSub = _connectionService.statusStream.listen((connStatus) {
-      _handleConnectionStatusChange(connStatus);
-    });
-
-    _eventSub = _backendClient.eventStream.listen((event) {
-      _handleBackendEvent(event);
-    });
-
-    // Initiate initial connection to FastAPI backend
-    _setState(AssistantState.connecting);
-    await _connectionService.connect();
-  }
-
-  void _handleConnectionStatusChange(ConnectionStatus connStatus) {
-    switch (connStatus) {
-      case ConnectionStatus.connected:
-        _activeErrorMessage = null;
-        _setState(AssistantState.idle);
-        break;
-      case ConnectionStatus.connecting:
-        _setState(AssistantState.connecting);
-        break;
-      case ConnectionStatus.error:
-        _activeErrorMessage =
-            _connectionService.lastError ??
-            'Unable to reach backend at 127.0.0.1:8080';
-        _setState(AssistantState.error);
-        break;
-      case ConnectionStatus.disconnected:
-        _setState(AssistantState.disconnected);
-        break;
-    }
-  }
-
-  void _handleBackendEvent(BackendEvent event) {
-    final parsedState = event.parseState();
-
-    if (parsedState != null) _setState(parsedState);
-
-    final toolInfo = event.parseToolStatus();
-
-    if (toolInfo != null) {
-      _currentToolStatus = toolInfo;
-
-      notifyListeners();
+    AssistantController({
+        required BackendClient backendClient,
+        required VoiceService voiceService,
+    })  : _backendClient = backendClient,
+          _voiceService = voiceService {
+        _bindStreams();
     }
 
-    if (event.type == "text_delta") {
-      _handleTextDelta(event);
+    AssistantState get assistantState => _assistantState;
+    ConnectionStatus get connectionStatus => _connectionStatus;
+    ToolActivity? get activeTool => _activeTool;
+    AssistantError? get activeError => _activeError;
+    AgentSettingsSnapshot get settings => _settings;
+    double get currentAmplitude => _currentAmplitude;
+    bool get isMuted => _voiceService.isMuted;
+    bool get isMicActive =>
+        _assistantState == AssistantState.listening && !_voiceService.isMuted;
+    String get backendBaseUrl => _backendClient.config.baseUrl;
+    String get streamingSubtitle => _streamingSubtitle;
+    bool get isChatPanelOpen => _isChatPanelOpen;
+    List<ChatMessage> get messages => List.unmodifiable(_messages);
 
-      return;
+    /// Toggles the left-side chat panel open or closed.
+    void toggleChatPanel() {
+        _isChatPanelOpen = !_isChatPanelOpen;
+        notifyListeners();
     }
 
-    if (event.type == "done") {
-      _handleResponseCompleted();
-
-      return;
+    /// Clears the local conversation transcript in the left chat panel.
+    void clearChatHistory() {
+        _messages.clear();
+        _activeStreamingMessageId = null;
+        _streamingSubtitle = '';
+        notifyListeners();
     }
 
-    if (event.type == "error") {
-      _handleAgentError(event);
+    /// Initializes default voice mode on startup, connects to `http://127.0.0.1:8000`,
+    /// and loads available LLM providers and models from `/settings/*`.
+    Future<void> initializeDefaultVoiceMode() async {
+        _activeError = null;
+        _setAssistantState(AssistantState.connecting);
+
+        final audioReady = await _voiceService.initialize();
+        if (!audioReady) {
+            _setAssistantState(AssistantState.error);
+            return;
+        }
+
+        await _voiceService.startListening();
+        await _backendClient.connect();
+
+        if (_connectionStatus == ConnectionStatus.connected) {
+            await refreshAgentSettings();
+        }
     }
 
-    if (toolInfo != null &&
-        _state != AssistantState.thinking &&
-        _state != AssistantState.toolExecution) {
-      _currentToolStatus = null;
-    }
-  }
+    /// Fetches `/settings/avaliable-providers` and `/settings/avaliable-models` from the backend.
+    Future<void> refreshAgentSettings() async {
+        final results = await Future.wait([
+            _backendClient.fetchAvailableProviders(),
+            _backendClient.fetchAvailableModels(),
+        ]);
 
-  void _handleTextDelta(BackendEvent event) {
+        final providers = results[0];
+        final models = results[1];
 
-    final text = event.payload["content"];
-
-    if (text is! String || text.isEmpty) return;
-
-    final index = _messages.lastIndexWhere((message) => message.role == MessageRole.assistant && message.status == MessageStatus.thinking);
-
-    if (index == -1) return;
-
-    final message = _messages[index];
-
-    _messages[index] = message.copyWith(text : message.text + text, status : MessageStatus.streaming);
-
-    _setState(AssistantState.generating);
-
-    notifyListeners();
-  }
-
-  void _handleResponseCompleted() {
-
-    final index = _messages.lastIndexWhere(
-      (message) => message.role == MessageRole.assistant && message.status == MessageStatus.streaming
-    );
-
-    if (index != -1) {
-
-
-      _messages[index] = _messages[index].copyWith(status : MessageStatus.completed);
-
-      _currentToolStatus = null;
-
-      _setState(AssistantState.idle);
-
-      notifyListeners();
-    }
-  }
-
-  void _handleAgentError(BackendEvent event) {
-
-    final message = event.payload["content"];
-
-    _activeErrorMessage = message is String ? message : "Agent Failed To Generate A Response.";
-
-    _setState(AssistantState.error);
-  }
-
-  void _setState(AssistantState newState) {
-    if (_state == newState) return;
-    _state = newState;
-    _audioService.setAssistantState(newState);
-
-    if (newState != AssistantState.thinking &&
-        newState != AssistantState.toolExecution) {
-      _currentToolStatus = null;
-    }
-    if (newState != AssistantState.error) {
-      _activeErrorMessage = null;
-    }
-
-    notifyListeners();
-  }
-
-  /// Direct state change override (e.g. from UI buttons).
-  void setAssistantState(AssistantState newState) {
-    _setState(newState);
-  }
-
-  /// Updates the user profile (Username, Gmail, Avatar).
-  void updateUserProfile(UserProfile updated) {
-    _userProfile = updated;
-    notifyListeners();
-  }
-
-  /// Updates the agent configuration (Models, Voice, Density, Palette).
-  void updateAgentConfig(AgentConfig updated) {
-    _agentConfig = updated;
-    notifyListeners();
-  }
-
-  /// Clear chat history.
-  void clearMessages() {
-    _messages.clear();
-    notifyListeners();
-  }
-
-  /// Execute a task automation from the sidebar.
-  void executeAutomationTask(AutomationTask task) {
-    sendMessage(task.prompt, toolName: task.toolName);
-  }
-
-  /// Handles sending a user prompt either from chat input or voice recognition.
-  void sendMessage(String text, {String? toolName}) {
-    if (text.trim().isEmpty) return;
-
-    final userMsgId = 'msg_${DateTime.now().millisecondsSinceEpoch}_u';
-    _messages.add(
-      ChatMessage(
-        id: userMsgId,
-        role: MessageRole.user,
-        text: text,
-        timestamp: DateTime.now(),
-      ),
-    );
-
-    // Create placeholder assistant message
-    final assistantMsgId = 'msg_${DateTime.now().millisecondsSinceEpoch}_a';
-    _messages.add(
-      ChatMessage(
-        id: assistantMsgId,
-        role: MessageRole.assistant,
-        text: '',
-        timestamp: DateTime.now(),
-        status: MessageStatus.thinking,
-        toolName: toolName,
-      ),
-    );
-
-    _setState(AssistantState.thinking);
-    notifyListeners();
-
-    _backendClient.sendMessage(text);
-  }
-
-  void _runAgentPipelineSimulation(
-    String messageId,
-    String prompt,
-    String? toolName,
-  ) {
-    _activeSimulationTimer?.cancel();
-
-    // Mark any prior lingering messages as completed to avoid stuck states
-    for (int i = 0; i < _messages.length; i++) {
-      if (_messages[i].id != messageId &&
-          (_messages[i].status == MessageStatus.thinking ||
-              _messages[i].status == MessageStatus.executingTool)) {
-        _messages[i] = _messages[i].copyWith(status: MessageStatus.completed);
-      }
-    }
-
-    // 1. Thinking phase (1.0s)
-    _activeSimulationTimer = Timer(const Duration(milliseconds: 1000), () {
-      final msgIndex = _messages.indexWhere((m) => m.id == messageId);
-      if (msgIndex == -1) return;
-
-      final detectedTool = toolName ?? _detectToolFromPrompt(prompt);
-
-      if (detectedTool != null) {
-        // Transition to tool execution state
-        _setState(AssistantState.toolExecution);
-        _currentToolStatus = ToolStatusInfo(
-          toolName: detectedTool,
-          humanReadableMessage: 'Calling $detectedTool...',
-          timestamp: DateTime.now(),
-        );
-        _messages[msgIndex] = _messages[msgIndex].copyWith(
-          status: MessageStatus.executingTool,
-          toolName: detectedTool,
-          reasoning:
-              'Deconstructed query into target execution plan: invoking $detectedTool.',
+        _settings = _settings.copyWith(
+            availableProviders: providers,
+            availableModels: models,
+            activeProvider: _settings.activeProvider ??
+                (providers.isNotEmpty ? providers.first : null),
         );
         notifyListeners();
+    }
 
-        // 2. Tool Execution phase (1.2s)
-        _activeSimulationTimer = Timer(const Duration(milliseconds: 1200), () {
-          _transitionToGenerating(messageId, prompt, detectedTool);
-        });
-      } else {
-        _transitionToGenerating(messageId, prompt, null);
-      }
-    });
-  }
-
-  void _transitionToGenerating(String messageId, String prompt, String? tool) {
-    _setState(AssistantState.generating);
-    final msgIndex = _messages.indexWhere((m) => m.id == messageId);
-    if (msgIndex == -1) return;
-
-    final responseText = _generateResponseText(prompt, tool);
-    _messages[msgIndex] = _messages[msgIndex].copyWith(
-      status: MessageStatus.streaming,
-      text: responseText,
-      reasoning:
-          'Synthesized high-context response using ${_agentConfig.model}.',
-    );
-    notifyListeners();
-
-    // 3. Transition to Speaking phase with audio synthesis (2.8s)
-    _activeSimulationTimer = Timer(const Duration(milliseconds: 800), () {
-      _setState(AssistantState.speaking);
-      if (msgIndex < _messages.length) {
-        _messages[msgIndex] = _messages[msgIndex].copyWith(
-          status: MessageStatus.completed,
-          hasAudio: true,
-        );
-      }
-      notifyListeners();
-
-      // End speaking phase
-      _activeSimulationTimer = Timer(const Duration(milliseconds: 3200), () {
-        if (_agentConfig.autoListen) {
-          _setState(AssistantState.listening);
-        } else {
-          _setState(AssistantState.idle);
+    /// Updates the active LLM provider via `PATCH /settings/change-agent-provider`.
+    Future<bool> changeProvider(String providerName) async {
+        final ok = await _backendClient.changeAgentProvider(providerName);
+        if (ok) {
+            _settings = _settings.copyWith(activeProvider: providerName);
+            notifyListeners();
         }
-      });
-    });
-  }
-
-  String? _detectToolFromPrompt(String prompt) {
-    final lower = prompt.toLowerCase();
-    if (lower.contains('clipboard') || lower.contains('paste'))
-      return 'clipboard_extractor';
-    if (lower.contains('diagnostic') ||
-        lower.contains('health') ||
-        lower.contains('speed'))
-      return 'diagnostics_runner';
-    if (lower.contains('email') || lower.contains('draft'))
-      return 'email_composer';
-    if (lower.contains('research') ||
-        lower.contains('web') ||
-        lower.contains('search'))
-      return 'web_search';
-    if (lower.contains('translate') || lower.contains('spanish'))
-      return 'polyglot_translator';
-    if (lower.contains('schedule') || lower.contains('calendar'))
-      return 'calendar_sync';
-    return null;
-  }
-
-  String _generateResponseText(String prompt, String? tool) {
-    if (tool == 'clipboard_extractor') {
-      return 'I inspected your active clipboard buffer. Here are the 3 critical action items:\n\n1. Finalize desktop release build v2.4 with updated neon dot shader.\n2. Review WebSocket handshake retry backoff parameters.\n3. Validate cross-platform input bindings for macOS & Linux.';
-    }
-    if (tool == 'diagnostics_runner') {
-      return 'Desktop System Health Check Completed:\n\n• Audio Latency: 14ms (Optimal Low-Latency SIMD)\n• LLM Model: ${_agentConfig.model} (Ready)\n• Connection Stream: 127.0.0.1:8080 (Listening)\n• Memory Footprint: 26.4 MB\n\nAll background tasks and subsystems are operating normally.';
-    }
-    if (tool == 'email_composer') {
-      return 'Here is the drafted executive briefing email:\n\nSubject: Sprint Delivery: Galaxy AI Desktop Agent Overhaul\n\nHi Team,\n\nWe have successfully integrated the new multi-state reasoning engine, interactive neon particle constellation, and task automation sidebar into the desktop build. Latency benchmarks remain under 15ms.\n\nBest regards,\n${_userProfile.username}';
-    }
-    if (tool == 'web_search') {
-      return 'Web search synthesis for your query:\n\nLatest benchmarks indicate that modern multimodal voice agents achieve sub-300ms end-to-end response times by streaming tokenized audio directly from the model, eliminating discrete TTS transcription lag.';
-    }
-    if (tool == 'calendar_sync') {
-      return 'Scheduled calendar event: "Team Sync & Galaxy AI Review" for tomorrow at 2:00 PM - 2:30 PM. Calendar invitation payload has been prepared.';
-    }
-    if (tool == 'polyglot_translator') {
-      return 'Polyglot translation synthesis complete:\n\n• Spanish: "El agente de escritorio Galaxy AI está completamente sincronizado y listo para responder."\n• German: "Der Galaxy AI Desktop-Agent ist vollständig synchronisiert und einsatzbereit."';
-    }
-    if (tool == 'memory_sanitizer') {
-      return 'Context buffer memory flushed successfully. Transient token caches have been cleared while your user profile and model preferences remain preserved.';
+        return ok;
     }
 
-    return 'Understood, ${_userProfile.username}. I have processed your request: "$prompt". All parameters and context memory have been synchronized across Galaxy AI.';
-  }
-
-  /// Toggle microphone mute/active state.
-  void toggleMicrophone() {
-    if (!_state.canInteract) return;
-    _isMuted = !_isMuted;
-    _audioService.toggleMute();
-
-    if (_isMuted) {
-      _backendClient.sendEvent(BackendEvent.audioStop());
-      if (_state == AssistantState.listening) {
-        _setState(AssistantState.idle);
-      }
-    } else {
-      _backendClient.sendEvent(BackendEvent.audioStart());
-      _setState(AssistantState.listening);
+    /// Updates the LLM temperature via `PATCH /settings/change-agent-temperature`.
+    Future<bool> changeTemperature(double newTemperature) async {
+        final clamped = double.parse(newTemperature.clamp(0.0, 1.0).toStringAsFixed(2));
+        final ok = await _backendClient.changeAgentTemperature(clamped);
+        if (ok) {
+            _settings = _settings.copyWith(temperature: clamped);
+            notifyListeners();
+        }
+        return ok;
     }
-    notifyListeners();
-  }
 
-  /// Interrupt assistant speech.
-  void interruptSpeaking() {
-    if (_state == AssistantState.speaking) {
-      _backendClient.sendEvent(BackendEvent.interrupt());
-      _setState(AssistantState.interrupted);
-      Timer(const Duration(milliseconds: 900), () {
-        _setState(
-          _agentConfig.autoListen
-              ? AssistantState.listening
-              : AssistantState.idle,
+    /// Sends a chat or voice prompt to `/ws/assistant` (or `/agent/generate` fallback)
+    /// and appends it to the left-side chat panel.
+    Future<void> sendVoicePrompt(String prompt) async {
+        final trimmed = prompt.trim();
+        if (trimmed.isEmpty) return;
+
+        final now = DateTime.now();
+        final userMsg = ChatMessage(
+            id: 'user_${now.microsecondsSinceEpoch}',
+            role: ChatRole.user,
+            content: trimmed,
+            timestamp: now,
         );
-      });
+        final assistantMsgId = 'assistant_${now.microsecondsSinceEpoch + 1}';
+        final placeholderAssistantMsg = ChatMessage(
+            id: assistantMsgId,
+            role: ChatRole.assistant,
+            content: '',
+            timestamp: now,
+            isStreaming: true,
+        );
+
+        _messages.add(userMsg);
+        _messages.add(placeholderAssistantMsg);
+        _activeStreamingMessageId = assistantMsgId;
+        _activeError = null;
+        _activeTool = null;
+        _streamingSubtitle = '';
+        _setAssistantState(AssistantState.thinking);
+
+        if (_connectionStatus == ConnectionStatus.offline) {
+            await reconnect();
+            if (_connectionStatus == ConnectionStatus.offline) {
+                _finalizeStreamingMessageWithError(
+                    'Backend server at $backendBaseUrl is offline.',
+                );
+                return;
+            }
+        }
+
+        await _backendClient.sendPrompt(trimmed);
     }
-  }
 
-  /// Re-attempt connection to backend.
-  Future<void> retryConnection() async {
-    _activeErrorMessage = null;
-    _setState(AssistantState.connecting);
-    await _connectionService.retryConnection();
-  }
+    /// Toggles between active voice listening and muted state, or interrupts assistant speech.
+    Future<void> toggleVoiceInteraction() async {
+        if (_connectionStatus == ConnectionStatus.offline ||
+            _assistantState == AssistantState.disconnected ||
+            _assistantState == AssistantState.error) {
+            await reconnect();
+            return;
+        }
 
-  /// Directly cycle state for desktop testing and visual previews.
-  void cycleState() {
-    const states = AssistantState.values;
-    final nextIndex = (_state.index + 1) % states.length;
-    _setState(states[nextIndex]);
-  }
+        if (_assistantState == AssistantState.speaking) {
+            await interruptAssistant();
+            return;
+        }
 
-  @override
-  void dispose() {
-    _activeSimulationTimer?.cancel();
-    _connectionSub?.cancel();
-    _eventSub?.cancel();
-    _audioSub?.cancel();
-    _audioService.dispose();
-    _connectionService.dispose();
-    super.dispose();
-  }
+        if (_voiceService.isMuted) {
+            _voiceService.setMuted(false);
+            await _voiceService.startListening();
+            _setAssistantState(AssistantState.listening);
+        } else {
+            _voiceService.setMuted(true);
+            notifyListeners();
+        }
+    }
+
+    /// Explicitly toggles microphone mute state.
+    Future<void> toggleMute() async {
+        final nextMuted = !_voiceService.isMuted;
+        _voiceService.setMuted(nextMuted);
+        notifyListeners();
+    }
+
+    /// Interrupts the assistant while speaking and returns to listening mode.
+    Future<void> interruptAssistant() async {
+        if (_connectionStatus != ConnectionStatus.connected) return;
+        _activeTool = null;
+        _streamingSubtitle = '';
+        _completeActiveStreamingMessage();
+        _setAssistantState(AssistantState.listening);
+        await _voiceService.startListening();
+    }
+
+    /// Reconnects to the Python backend (`http://127.0.0.1:8000`) and restores default voice mode.
+    Future<void> reconnect() async {
+        _activeError = null;
+        _activeTool = null;
+        _streamingSubtitle = '';
+        _setAssistantState(AssistantState.connecting);
+        await _voiceService.startListening();
+        await _backendClient.connect();
+
+        if (_connectionStatus == ConnectionStatus.connected) {
+            await refreshAgentSettings();
+        }
+    }
+
+    /// Updates the configurable backend base URL and reconnects.
+    Future<void> updateBackendBaseUrl(String newBaseUrl) async {
+        final sanitized = newBaseUrl.trim();
+        if (sanitized.isEmpty) return;
+        _activeError = null;
+        _streamingSubtitle = '';
+        _setAssistantState(AssistantState.connecting);
+        await _backendClient.updateConfig(
+            _backendClient.config.copyWith(baseUrl: sanitized),
+        );
+        if (_connectionStatus == ConnectionStatus.connected) {
+            await refreshAgentSettings();
+        }
+    }
+
+    /// Dismisses the current non-fatal error banner.
+    void dismissError() {
+        if (_activeError != null) {
+            _activeError = null;
+            if (_connectionStatus == ConnectionStatus.connected &&
+                _assistantState == AssistantState.error) {
+                _setAssistantState(AssistantState.listening);
+            }
+            notifyListeners();
+        }
+    }
+
+    void _appendStreamingDeltaToChat(String delta) {
+        if (delta.isEmpty) return;
+
+        if (_activeStreamingMessageId != null) {
+            final index = _messages.indexWhere(
+                (m) => m.id == _activeStreamingMessageId,
+            );
+            if (index != -1) {
+                final existing = _messages[index];
+                _messages[index] = existing.copyWith(
+                    content: existing.content + delta,
+                    isStreaming: true,
+                );
+                return;
+            }
+        }
+
+        final now = DateTime.now();
+        final newId = 'assistant_${now.microsecondsSinceEpoch}';
+        _activeStreamingMessageId = newId;
+        _messages.add(
+            ChatMessage(
+                id: newId,
+                role: ChatRole.assistant,
+                content: delta,
+                timestamp: now,
+                isStreaming: true,
+            ),
+        );
+    }
+
+    void _completeActiveStreamingMessage() {
+        if (_activeStreamingMessageId == null) return;
+        final index = _messages.indexWhere(
+            (m) => m.id == _activeStreamingMessageId,
+        );
+        if (index != -1) {
+            final existing = _messages[index];
+            _messages[index] = existing.copyWith(isStreaming: false);
+        }
+        _activeStreamingMessageId = null;
+    }
+
+    void _finalizeStreamingMessageWithError(String errorMessage) {
+        if (_activeStreamingMessageId == null) return;
+        final index = _messages.indexWhere(
+            (m) => m.id == _activeStreamingMessageId,
+        );
+        if (index != -1) {
+            final existing = _messages[index];
+            _messages[index] = existing.copyWith(
+                content: existing.content.isEmpty ? errorMessage : existing.content,
+                isStreaming: false,
+                isError: true,
+            );
+        }
+        _activeStreamingMessageId = null;
+        notifyListeners();
+    }
+
+    void _bindStreams() {
+        _connectionSub = _backendClient.connectionStatusStream.listen((status) {
+            _connectionStatus = status;
+            if (status == ConnectionStatus.offline) {
+                _activeTool = null;
+                _streamingSubtitle = '';
+                _setAssistantState(AssistantState.disconnected);
+            } else if (status == ConnectionStatus.connecting) {
+                _setAssistantState(AssistantState.connecting);
+            } else if (status == ConnectionStatus.connected) {
+                _activeError = null;
+                if (_assistantState == AssistantState.connecting ||
+                    _assistantState == AssistantState.disconnected ||
+                    _assistantState == AssistantState.error) {
+                    _setAssistantState(AssistantState.listening);
+                }
+            }
+            notifyListeners();
+        });
+
+        _eventSub = _backendClient.eventStream.listen((event) {
+            if (event.toolActivity != null) {
+                _activeTool = event.toolActivity!.isActive
+                    ? event.toolActivity
+                    : null;
+            }
+
+            if (event.type == BackendEventType.stateChange &&
+                event.assistantState != null) {
+                if (event.assistantState == AssistantState.thinking) {
+                    _streamingSubtitle = '';
+                }
+                _setAssistantState(event.assistantState!);
+            }
+
+            if (event.type == BackendEventType.textDelta &&
+                event.textDelta != null &&
+                event.textDelta!.isNotEmpty) {
+                _activeTool = null;
+                _streamingSubtitle = (_streamingSubtitle + event.textDelta!).trim();
+                _appendStreamingDeltaToChat(event.textDelta!);
+
+                if (_assistantState != AssistantState.speaking) {
+                    _setAssistantState(AssistantState.speaking);
+                }
+                _voiceService.onStreamingTextDelta(event.textDelta!);
+            }
+
+            if (event.type == BackendEventType.done || event.isCompleted) {
+                _activeTool = null;
+                _completeActiveStreamingMessage();
+                if (_assistantState == AssistantState.speaking) {
+                    _voiceService.onBackendStreamDone();
+                } else {
+                    _setAssistantState(AssistantState.listening);
+                }
+            }
+
+            notifyListeners();
+        });
+
+        _speakingDoneSub = _voiceService.speakingCompletedStream.listen((_) {
+            if (_connectionStatus == ConnectionStatus.connected &&
+                _assistantState == AssistantState.speaking) {
+                _setAssistantState(AssistantState.listening);
+            }
+        });
+
+        _speechSub = _voiceService.recognizedSpeechStream.listen((utterance) {
+            sendVoicePrompt(utterance);
+        });
+
+        _backendErrorSub = _backendClient.errorStream.listen((error) {
+            _activeError = error;
+            _finalizeStreamingMessageWithError(error.userMessage);
+            if (_connectionStatus == ConnectionStatus.offline) {
+                _setAssistantState(AssistantState.disconnected);
+            } else {
+                _setAssistantState(AssistantState.error);
+            }
+            notifyListeners();
+        });
+
+        _voiceErrorSub = _voiceService.errorStream.listen((error) {
+            _activeError = error;
+            _setAssistantState(AssistantState.error);
+            notifyListeners();
+        });
+
+        _amplitudeSub = _voiceService.amplitudeStream.listen((amplitude) {
+            if ((_currentAmplitude - amplitude).abs() > 0.005) {
+                _currentAmplitude = amplitude;
+                notifyListeners();
+            }
+        });
+    }
+
+    void _setAssistantState(AssistantState nextState) {
+        _assistantState = nextState;
+        _voiceService.syncAssistantState(nextState);
+        notifyListeners();
+    }
+
+    @override
+    void dispose() {
+        _connectionSub?.cancel();
+        _eventSub?.cancel();
+        _backendErrorSub?.cancel();
+        _voiceErrorSub?.cancel();
+        _amplitudeSub?.cancel();
+        _speechSub?.cancel();
+        _speakingDoneSub?.cancel();
+        _voiceService.dispose();
+        _backendClient.dispose();
+        super.dispose();
+    }
 }
