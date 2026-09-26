@@ -28,6 +28,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
     final FocusNode _keyboardFocusNode = FocusNode();
+    bool _isChatInputFocused = false;
 
     @override
     void initState() {
@@ -43,14 +44,52 @@ class _MainScreenState extends State<MainScreen> {
         super.dispose();
     }
 
+    void _focusVoiceStage() {
+        _isChatInputFocused = false;
+        _keyboardFocusNode.requestFocus();
+    }
+
+    bool _isTextInputFocused(FocusNode rootNode) {
+        if (_isChatInputFocused) {
+            return true;
+        }
+        if (!rootNode.hasPrimaryFocus) {
+            return true;
+        }
+        final primaryFocus = FocusManager.instance.primaryFocus;
+        final focusContext = primaryFocus?.context;
+        if (focusContext == null) {
+            return false;
+        }
+        if (focusContext.widget is EditableText ||
+            focusContext.widget is TextField) {
+            return true;
+        }
+        if (focusContext.findAncestorWidgetOfExactType<EditableText>() !=
+                null ||
+            focusContext.findAncestorWidgetOfExactType<TextField>() != null ||
+            focusContext.findAncestorStateOfType<EditableTextState>() != null) {
+            return true;
+        }
+        return false;
+    }
+
     KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
         if (event is! KeyDownEvent) {
             return KeyEventResult.ignored;
         }
 
-        // Ignore global shortcuts when typing inside a TextField
-        final primaryFocus = FocusManager.instance.primaryFocus;
-        if (primaryFocus?.context?.widget is EditableText) {
+        // Ignore global shortcuts when typing inside any TextField / EditableText
+        // or when a child input widget holds primary focus.
+        if (_isTextInputFocused(node)) {
+            return KeyEventResult.ignored;
+        }
+
+        // Ignore when modifier keys (Ctrl, Alt, Cmd) are pressed
+        final keyboard = HardwareKeyboard.instance;
+        if (keyboard.isControlPressed ||
+            keyboard.isMetaPressed ||
+            keyboard.isAltPressed) {
             return KeyEventResult.ignored;
         }
 
@@ -121,16 +160,25 @@ class _MainScreenState extends State<MainScreen> {
                                                   .controller.sendVoicePrompt,
                                               onClearHistory: widget
                                                   .controller.clearChatHistory,
-                                              onClosePanel: widget
-                                                  .controller.toggleChatPanel,
+                                              onClosePanel: () {
+                                                  _focusVoiceStage();
+                                                  widget.controller
+                                                      .toggleChatPanel();
+                                              },
+                                              onInputFocusChanged: (focused) {
+                                                  _isChatInputFocused = focused;
+                                              },
                                           )
                                         : const SizedBox.shrink(),
                                 ),
 
                                 // Main Voice Interaction Stage
                                 Expanded(
-                                    child: LayoutBuilder(
-                                        builder: (context, constraints) {
+                                    child: GestureDetector(
+                                        behavior: HitTestBehavior.translucent,
+                                        onTap: _focusVoiceStage,
+                                        child: LayoutBuilder(
+                                            builder: (context, constraints) {
                                             final shortestSide =
                                                 constraints.biggest.shortestSide;
                                             final orbSize = (shortestSide * 0.36)
@@ -479,6 +527,7 @@ class _MainScreenState extends State<MainScreen> {
                                                 ],
                                             );
                                         },
+                                        ),
                                     ),
                                 ),
                             ],
