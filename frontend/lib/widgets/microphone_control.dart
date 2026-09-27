@@ -8,6 +8,8 @@ class MicrophoneControl extends StatefulWidget {
     final bool isMuted;
     final VoidCallback onPrimaryAction;
     final VoidCallback onMuteToggle;
+    final String toggleVoiceShortcutLabel;
+    final String muteShortcutLabel;
 
     const MicrophoneControl({
         super.key,
@@ -15,6 +17,8 @@ class MicrophoneControl extends StatefulWidget {
         required this.isMuted,
         required this.onPrimaryAction,
         required this.onMuteToggle,
+        this.toggleVoiceShortcutLabel = 'Space',
+        this.muteShortcutLabel = 'M',
     });
 
     @override
@@ -44,15 +48,21 @@ class _MicrophoneControlState extends State<MicrophoneControl> {
                     cursor: SystemMouseCursors.click,
                     onEnter: (_) => setState(() => _isHovered = true),
                     onExit: (_) => setState(() => _isHovered = false),
-                    child: Semantics(
-                        button: true,
-                        label: isOffline
+                    child: Tooltip(
+                        message: isOffline
                             ? 'Reconnect microphone'
                             : widget.isMuted
-                                ? 'Unmute microphone'
-                                : 'Mute microphone',
-                        child: GestureDetector(
-                            onTap: widget.onPrimaryAction,
+                                ? 'Unmute Microphone (${widget.toggleVoiceShortcutLabel} / ${widget.muteShortcutLabel})'
+                                : 'Mute Microphone (${widget.toggleVoiceShortcutLabel} / ${widget.muteShortcutLabel})',
+                        child: Semantics(
+                            button: true,
+                            label: isOffline
+                                ? 'Reconnect microphone'
+                                : widget.isMuted
+                                    ? 'Unmute microphone'
+                                    : 'Mute microphone',
+                            child: GestureDetector(
+                                onTap: widget.onPrimaryAction,
                             child: AnimatedContainer(
                                 duration: const Duration(milliseconds: 180),
                                 width: 56,
@@ -94,6 +104,7 @@ class _MicrophoneControlState extends State<MicrophoneControl> {
                                             : const Color(0xFFE2E8F0),
                                 ),
                             ),
+                        ),
                         ),
                     ),
                 ),

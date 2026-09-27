@@ -10,6 +10,7 @@ class ChatPanel extends StatefulWidget {
     final ValueChanged<String> onSendMessage;
     final VoidCallback onClearHistory;
     final VoidCallback onClosePanel;
+    final ValueChanged<bool>? onInputFocusChanged;
 
     const ChatPanel({
         super.key,
@@ -18,6 +19,7 @@ class ChatPanel extends StatefulWidget {
         required this.onSendMessage,
         required this.onClearHistory,
         required this.onClosePanel,
+        this.onInputFocusChanged,
     });
 
     @override
@@ -34,6 +36,16 @@ class _ChatPanelState extends State<ChatPanel> {
         'What is the current date and time?',
         'Fetch the latest technology news',
     ];
+
+    @override
+    void initState() {
+        super.initState();
+        _inputFocusNode.addListener(_handleFocusChange);
+    }
+
+    void _handleFocusChange() {
+        widget.onInputFocusChanged?.call(_inputFocusNode.hasFocus);
+    }
 
     @override
     void didUpdateWidget(covariant ChatPanel oldWidget) {
@@ -68,6 +80,8 @@ class _ChatPanelState extends State<ChatPanel> {
 
     @override
     void dispose() {
+        _inputFocusNode.removeListener(_handleFocusChange);
+        widget.onInputFocusChanged?.call(false);
         _inputController.dispose();
         _scrollController.dispose();
         _inputFocusNode.dispose();

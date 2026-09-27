@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import '../api/backend_client.dart';
 import '../models/assistant_state.dart';
@@ -16,9 +17,13 @@ class AssistantController extends ChangeNotifier {
     ToolActivity? _activeTool;
     AssistantError? _activeError;
     AgentSettingsSnapshot _settings = const AgentSettingsSnapshot();
+    FrontendShortcutsConfig _shortcuts = FrontendShortcutsConfig.defaults();
+    FrontendShortcutAction? _recordingShortcutAction;
+    String? _shortcutFeedbackMessage;
     double _currentAmplitude = 0.0;
     String _streamingSubtitle = '';
     bool _isChatPanelOpen = true;
+    bool _isLeftBottomShortcutsExpanded = true;
     final List<ChatMessage> _messages = [];
     String? _activeStreamingMessageId;
 
@@ -43,6 +48,12 @@ class AssistantController extends ChangeNotifier {
     ToolActivity? get activeTool => _activeTool;
     AssistantError? get activeError => _activeError;
     AgentSettingsSnapshot get settings => _settings;
+    FrontendShortcutsConfig get shortcuts => _shortcuts;
+    FrontendShortcutAction? get recordingShortcutAction =>
+        _recordingShortcutAction;
+    bool get isRecordingShortcut => _recordingShortcutAction != null;
+    String? get shortcutFeedbackMessage => _shortcutFeedbackMessage;
+    bool get isLeftBottomShortcutsExpanded => _isLeftBottomShortcutsExpanded;
     double get currentAmplitude => _currentAmplitude;
     bool get isMuted => _voiceService.isMuted;
     bool get isMicActive =>
@@ -55,6 +66,60 @@ class AssistantController extends ChangeNotifier {
     /// Toggles the left-side chat panel open or closed.
     void toggleChatPanel() {
         _isChatPanelOpen = !_isChatPanelOpen;
+        notifyListeners();
+    }
+
+    /// Toggles the Left Bottom Side Settings / Keyboard Shortcuts section expanded or collapsed.
+    void toggleLeftBottomShortcutsSection() {
+        _isLeftBottomShortcutsExpanded = !_isLeftBottomShortcutsExpanded;
+        if (!_isLeftBottomShortcutsExpanded) {
+            _recordingShortcutAction = null;
+        }
+        notifyListeners();
+    }
+
+    /// Starts or cancels listening for a new key press to rebind a frontend shortcut.
+    void setRecordingShortcutAction(
+        FrontendShortcutAction? action, {
+        bool notify = true,
+    }) {
+        final nextAction =
+            (action != null && _recordingShortcutAction == action)
+                ? null
+                : action;
+        if (_recordingShortcutAction == nextAction &&
+            _shortcutFeedbackMessage == null) {
+            return;
+        }
+        _recordingShortcutAction = nextAction;
+        if (nextAction != null) {
+            _shortcutFeedbackMessage = null;
+        }
+        if (notify) {
+            notifyListeners();
+        }
+    }
+
+    /// Updates a frontend keyboard shortcut binding in the UI without touching the backend.
+    void updateShortcut(
+        FrontendShortcutAction action,
+        LogicalKeyboardKey newKey,
+    ) {
+        if (FrontendShortcutsConfig.isModifierKey(newKey)) {
+            return;
+        }
+        _shortcuts = _shortcuts.copyWithBinding(action, newKey);
+        _recordingShortcutAction = null;
+        _shortcutFeedbackMessage =
+            'Updated "${action.label}" to [${_shortcuts.labelFor(action)}]';
+        notifyListeners();
+    }
+
+    /// Resets all frontend keyboard shortcuts to their default bindings (Space, M, Esc, R).
+    void resetShortcutsToDefault() {
+        _shortcuts = FrontendShortcutsConfig.defaults();
+        _recordingShortcutAction = null;
+        _shortcutFeedbackMessage = 'Reset all shortcuts to defaults';
         notifyListeners();
     }
 

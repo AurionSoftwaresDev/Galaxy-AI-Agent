@@ -33,13 +33,17 @@ class _MainScreenState extends State<MainScreen> {
     @override
     void initState() {
         super.initState();
+        HardwareKeyboard.instance.addHandler(_handleHardwareKey);
         WidgetsBinding.instance.addPostFrameCallback((_) {
-            _keyboardFocusNode.requestFocus();
+            if (mounted) {
+                _keyboardFocusNode.requestFocus();
+            }
         });
     }
 
     @override
     void dispose() {
+        HardwareKeyboard.instance.removeHandler(_handleHardwareKey);
         _keyboardFocusNode.dispose();
         super.dispose();
     }
@@ -49,11 +53,8 @@ class _MainScreenState extends State<MainScreen> {
         _keyboardFocusNode.requestFocus();
     }
 
-    bool _isTextInputFocused(FocusNode rootNode) {
+    bool _isTextInputFocused() {
         if (_isChatInputFocused) {
-            return true;
-        }
-        if (!rootNode.hasPrimaryFocus) {
             return true;
         }
         final primaryFocus = FocusManager.instance.primaryFocus;
@@ -74,15 +75,25 @@ class _MainScreenState extends State<MainScreen> {
         return false;
     }
 
-    KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
-        if (event is! KeyDownEvent) {
-            return KeyEventResult.ignored;
+    bool _executeShortcutKey(LogicalKeyboardKey logicalKey) {
+        // If user is recording a new key for a frontend shortcut:
+        final recordingAction = widget.controller.recordingShortcutAction;
+        if (recordingAction != null) {
+            if (FrontendShortcutsConfig.isModifierKey(logicalKey)) {
+                return true;
+            }
+            widget.controller.updateShortcut(recordingAction, logicalKey);
+            return true;
+        }
+
+        // Do not fire main screen shortcuts when a modal dialog is open on top
+        if (mounted && !(ModalRoute.of(context)?.isCurrent ?? true)) {
+            return false;
         }
 
         // Ignore global shortcuts when typing inside any TextField / EditableText
-        // or when a child input widget holds primary focus.
-        if (_isTextInputFocused(node)) {
-            return KeyEventResult.ignored;
+        if (_isTextInputFocused()) {
+            return false;
         }
 
         // Ignore when modifier keys (Ctrl, Alt, Cmd) are pressed
@@ -90,26 +101,55 @@ class _MainScreenState extends State<MainScreen> {
         if (keyboard.isControlPressed ||
             keyboard.isMetaPressed ||
             keyboard.isAltPressed) {
+            return false;
+        }
+
+        final shortcuts = widget.controller.shortcuts;
+
+        if (shortcuts.matches(
+            FrontendShortcutAction.toggleVoiceInteraction,
+            logicalKey,
+        )) {
+            widget.controller.toggleVoiceInteraction();
+            return true;
+        }
+        if (shortcuts.matches(
+            FrontendShortcutAction.toggleMute,
+            logicalKey,
+        )) {
+            widget.controller.toggleMute();
+            return true;
+        }
+        if (shortcuts.matches(
+            FrontendShortcutAction.interruptAssistant,
+            logicalKey,
+        )) {
+            widget.controller.interruptAssistant();
+            return true;
+        }
+        if (shortcuts.matches(
+            FrontendShortcutAction.reconnect,
+            logicalKey,
+        )) {
+            widget.controller.reconnect();
+            return true;
+        }
+
+        return false;
+    }
+
+    bool _handleHardwareKey(KeyEvent event) {
+        if (event is! KeyDownEvent) {
+            return false;
+        }
+        return _executeShortcutKey(event.logicalKey);
+    }
+
+    KeyEventResult _handleKeyEvent(FocusNode node, KeyEvent event) {
+        if (event is! KeyDownEvent) {
             return KeyEventResult.ignored;
         }
-
-        if (event.logicalKey == LogicalKeyboardKey.space) {
-            widget.controller.toggleVoiceInteraction();
-            return KeyEventResult.handled;
-        }
-        if (event.logicalKey == LogicalKeyboardKey.keyM) {
-            widget.controller.toggleMute();
-            return KeyEventResult.handled;
-        }
-        if (event.logicalKey == LogicalKeyboardKey.escape) {
-            widget.controller.interruptAssistant();
-            return KeyEventResult.handled;
-        }
-        if (event.logicalKey == LogicalKeyboardKey.keyR) {
-            widget.controller.reconnect();
-            return KeyEventResult.handled;
-        }
-
+        // Handled via HardwareKeyboard.instance listener
         return KeyEventResult.ignored;
     }
 
@@ -117,7 +157,23 @@ class _MainScreenState extends State<MainScreen> {
         showDialog<void>(
             context: context,
             builder: (_) => SettingsDialog(controller: widget.controller),
-        );
+        ).then((_) {
+            if (mounted) {
+                _focusVoiceStage();
+            }
+        });
+    }
+
+    void _openKeyboardShortcutsDialog() {
+        showDialog<void>(
+            context: context,
+            builder: (_) =>
+                KeyboardShortcutsDialog(controller: widget.controller),
+        ).then((_) {
+            if (mounted) {
+                _focusVoiceStage();
+            }
+        });
     }
 
     @override
@@ -138,12 +194,30 @@ class _MainScreenState extends State<MainScreen> {
                         final streamingSubtitle =
                             widget.controller.streamingSubtitle;
                         final isChatOpen = widget.controller.isChatPanelOpen;
+                        final shortcuts = widget.controller.shortcuts;
+                        final toggleVoiceKeyLabel = shortcuts.labelFor(
+                            FrontendShortcutAction.toggleVoiceInteraction,
+                        );
+                        final muteKeyLabel = shortcuts.labelFor(
+                            FrontendShortcutAction.toggleMute,
+                        );
+                        final interruptKeyLabel = shortcuts.labelFor(
+                            FrontendShortcutAction.interruptAssistant,
+                        );
 
-                        final subtitleText = (state ==
-                                    AssistantState.speaking &&
-                                streamingSubtitle.isNotEmpty)
-                            ? streamingSubtitle
-                            : state.subtitleHint;
+                        final String subtitleText;
+                        if (state == AssistantState.speaking &&
+                            streamingSubtitle.isNotEmpty) {
+                            subtitleText = streamingSubtitle;
+                        } else if (state == AssistantState.speaking) {
+                            subtitleText =
+                                'Press $interruptKeyLabel or tap the orb to interrupt';
+                        } else if (state == AssistantState.idle) {
+                            subtitleText =
+                                'Click the orb or press $toggleVoiceKeyLabel to begin speaking';
+                        } else {
+                            subtitleText = state.subtitleHint;
+                        }
 
                         return Row(
                             children: [
@@ -499,6 +573,10 @@ class _MainScreenState extends State<MainScreen> {
                                                                                 onMuteToggle: widget
                                                                                     .controller
                                                                                     .toggleMute,
+                                                                                toggleVoiceShortcutLabel:
+                                                                                    toggleVoiceKeyLabel,
+                                                                                muteShortcutLabel:
+                                                                                    muteKeyLabel,
                                                                             ),
                                                                             const SizedBox(
                                                                                 height:
@@ -521,6 +599,38 @@ class _MainScreenState extends State<MainScreen> {
                                                                         ],
                                                                     ),
                                                                 ],
+                                                            ),
+                                                        ),
+                                                    ),
+
+                                                    // Left Bottom Side Settings Icon for Frontend Keyboard Shortcuts
+                                                    Positioned(
+                                                        left: 32,
+                                                        bottom: 24,
+                                                        child: SafeArea(
+                                                            child: IconButton(
+                                                                onPressed:
+                                                                    _openKeyboardShortcutsDialog,
+                                                                tooltip:
+                                                                    'Keyboard Shortcuts (${shortcuts.summaryLabel()})',
+                                                                icon: const Icon(
+                                                                    Icons
+                                                                        .keyboard_command_key_rounded,
+                                                                    size: 18,
+                                                                    color: Color(
+                                                                        0xFF94A3B8,
+                                                                    ),
+                                                                ),
+                                                                constraints:
+                                                                    const BoxConstraints(
+                                                                    minWidth:
+                                                                        32,
+                                                                    minHeight:
+                                                                        32,
+                                                                ),
+                                                                padding:
+                                                                    EdgeInsets
+                                                                        .zero,
                                                             ),
                                                         ),
                                                     ),
