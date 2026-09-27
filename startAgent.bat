@@ -323,7 +323,7 @@ if errorlevel 1 (
 )
 
 echo [OK] Flutter detected.
-flutter --version
+call flutter --version
 echo.
 
 REM ------------------------------------------------------------
@@ -332,7 +332,7 @@ REM ------------------------------------------------------------
 
 echo [INFO] Checking Flutter Windows support...
 
-flutter devices
+call flutter devices
 
 echo.
 
@@ -344,7 +344,7 @@ echo [INFO] Preparing Flutter dependencies...
 
 cd /d "%FRONTEND%"
 
-flutter pub get
+call flutter pub get
 
 if errorlevel 1 (
     echo.
@@ -404,7 +404,7 @@ echo                 STARTING AI AGENT APP
 echo ============================================================
 echo.
 
-flutter run -d windows
+call flutter run -d windows
 
 set "FLUTTER_EXIT=%ERRORLEVEL%"
 
