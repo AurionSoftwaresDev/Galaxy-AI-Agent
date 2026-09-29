@@ -165,6 +165,9 @@ enum AssistantState {
     speaking,
     error;
 
+    /// Alias for the default ready/listening state.
+    static const AssistantState idle = AssistantState.listening;
+
     String get displayLabel {
         switch (this) {
             case AssistantState.disconnected:

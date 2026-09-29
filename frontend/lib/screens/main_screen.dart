@@ -212,9 +212,10 @@ class _MainScreenState extends State<MainScreen> {
                         } else if (state == AssistantState.speaking) {
                             subtitleText =
                                 'Press $interruptKeyLabel or tap the orb to interrupt';
-                        } else if (state == AssistantState.idle) {
-                            subtitleText =
-                                'Click the orb or press $toggleVoiceKeyLabel to begin speaking';
+                        } else if (state == AssistantState.listening) {
+                            subtitleText = isMuted
+                                ? 'Click the orb or press $toggleVoiceKeyLabel to unmute microphone'
+                                : 'Click the orb or press $toggleVoiceKeyLabel to begin speaking';
                         } else {
                             subtitleText = state.subtitleHint;
                         }
@@ -612,7 +613,7 @@ class _MainScreenState extends State<MainScreen> {
                                                                 onPressed:
                                                                     _openKeyboardShortcutsDialog,
                                                                 tooltip:
-                                                                    'Keyboard Shortcuts (${shortcuts.summaryLabel()})',
+                                                                    'Keyboard Shortcuts (${shortcuts.summaryLabel})',
                                                                 icon: const Icon(
                                                                     Icons
                                                                         .keyboard_command_key_rounded,

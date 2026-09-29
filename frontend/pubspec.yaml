@@ -16,6 +16,26 @@ dev_dependencies:
     flutter_test:
         sdk: flutter
     flutter_lints: ^4.0.0
+    flutter_launcher_icons: ^0.14.4
 
 flutter:
     uses-material-design: true
+
+flutter_launcher_icons :
+  image_path: "assets/images/app_logo.png"
+  
+  windows :
+    generate : true
+    image_path : "assets/images/app_logo.png"   
+    icon_size : 256
+
+  macos :
+    generate : true
+    image_path : "assets/images/app_logo.png"
+    icon_size : 256
+
+  linux :
+    generate :  true
+    image_path : "assets/images/app_logo.png"
+    file_name : "app_logo" 
+    icon_size : 256

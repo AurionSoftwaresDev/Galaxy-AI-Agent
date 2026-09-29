@@ -100,6 +100,12 @@ class AssistantController extends ChangeNotifier {
         }
     }
 
+    /// Cancels active shortcut key recording without triggering `notifyListeners()`,
+    /// safe to call from widget `dispose()` or dialog teardown.
+    void cancelRecordingShortcutSilently() {
+        _recordingShortcutAction = null;
+    }
+
     /// Updates a frontend keyboard shortcut binding in the UI without touching the backend.
     void updateShortcut(
         FrontendShortcutAction action,

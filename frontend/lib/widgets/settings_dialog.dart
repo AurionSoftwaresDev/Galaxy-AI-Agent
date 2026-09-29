@@ -119,6 +119,7 @@ class _SettingsDialogState extends State<SettingsDialog> {
                 final settings = widget.controller.settings;
                 final providers = settings.availableProviders;
                 final models = settings.availableModels;
+                final shortcuts = widget.controller.shortcuts;
                 final recordingAction =
                     widget.controller.recordingShortcutAction;
 
@@ -756,13 +757,14 @@ class _SettingsDialogState extends State<SettingsDialog> {
                                         ),
                                     ),
                                 ],
-                            );
-                        },
+                            ),
+                        ),
                     ),
                 ),
             ),
-            ),
         );
+    },
+);
     }
 }
 
