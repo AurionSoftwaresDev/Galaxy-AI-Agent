@@ -1,3 +1,4 @@
+import multiprocessing, uvicorn
 import shlex
 import shutil
 import subprocess
@@ -262,6 +263,10 @@ def startNewTerminal(command, title):
 
     raise OSError(f"Unsupported Operating System : { sys.platform } ")
 
+def runAgentServer() -> None:
+
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, log_level="info")
+
 def mainHandler():
 
     arguments = getArguments()
@@ -276,18 +281,11 @@ def mainHandler():
 
         logger.info("Starting Agent Server And Routers...")
 
-        startNewTerminal(
-            [
-                sys.executable,
-                "-m",
-                "uvicorn",
-                "server:agentServer",
-                "--reload",
-                "--port",
-                "8000"
-            ],
-            "Galaxy AI - Server"
-        )
+        agentBackendServerProcess = multiprocessing.Process(target = runAgentServer, daemon = True)
+
+        agentBackendServerProcess.start()
+        
+        logger.info("Uvicorn Galaxy AI Agent Server Started In The Background")
 
 
     if arguments["agent"]:

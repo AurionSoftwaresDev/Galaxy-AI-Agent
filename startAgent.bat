@@ -538,65 +538,12 @@ if errorlevel 1 (
 )
 
 echo [OK] Flutter application started.
-echo.
-echo [INFO] Close the Flutter application to continue.
-echo.
-
-
-REM ------------------------------------------------------------
-REM WAIT FOR FLUTTER APPLICATION
-REM ------------------------------------------------------------
-
-:WAIT_FOR_FLUTTER
-
-tasklist /FI "WINDOWTITLE eq AI Agent Flutter App*" 2>nul | find /I "AI Agent Flutter App" >nul
-
-if not errorlevel 1 (
-    timeout /t 2 /nobreak >nul
-    goto WAIT_FOR_FLUTTER
-)
-
-
-REM ------------------------------------------------------------
-REM FLUTTER APPLICATION CLOSED
-REM ------------------------------------------------------------
 
 set "FLUTTER_EXIT=0"
 
-echo.
-echo ============================================================
-echo                 FLUTTER APPLICATION CLOSED
-echo ============================================================
-echo.
-
-echo.
-echo ============================================================
-echo                 FLUTTER APPLICATION CLOSED
-echo ============================================================
-echo.
-
-REM ------------------------------------------------------------
-REM CLEANUP BACKEND
-REM ------------------------------------------------------------
-
-echo [INFO] Stopping backend...
-
-taskkill /FI "WINDOWTITLE eq AI Agent Backend*" /T /F >nul 2>&1
-
-echo [OK] Backend stopped.
-echo.
-
 cd /d "%ROOT%"
 
-if "%FLUTTER_EXIT%"=="0" (
-    echo [OK] AI Agent closed normally.
-) else (
-    echo [WARNING] Flutter exited with code %FLUTTER_EXIT%.
-    echo.
-    echo Backend logs:
-    echo   %BACKEND%\backend.log
-    echo   %BACKEND%\backend-error.log
-)
+echo [OK] AI Agent closed normally.
 
 echo.
 pause
