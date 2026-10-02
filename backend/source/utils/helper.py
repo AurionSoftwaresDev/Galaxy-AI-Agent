@@ -5,6 +5,7 @@ from source.config.EnviromentKeys import ENVRIOMENTAL_KEYS
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QLoggingCategory
 from source.gui.widgets.DialogBox import NeonPremiumDialog
+from source.constants.agentHelpingMenu import HELPING_MENU
 
 def sleep(startRange : int, endRange : int) -> int:
     
@@ -82,3 +83,36 @@ def validateUserEnviromentVariables():
 
         logger.info(f"Empty OR Not Added API Keys : { foundedEmptyKeys } ")
         logger.info(f"Avaliable API Keys : { avaliableAPIKeys } ")
+
+
+def getArguments():
+
+    arguments = {
+        "server": False,
+        "agent": False
+    }
+
+    if "-h" in sys.argv[1:] or "--help" in sys.argv[1:]:
+
+        print(HELPING_MENU)
+
+        sys.exit(0)
+
+    for argument in sys.argv[1:]:
+
+        if "=" not in argument:
+
+            continue
+
+        key, value = argument.split("=", 1)
+
+        if key in arguments:
+
+            arguments[key] = value.lower() == "true"
+
+    if len(sys.argv) == 1:
+
+        arguments["server"] = True
+        arguments["agent"] = True
+
+    return arguments

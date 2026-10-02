@@ -6,24 +6,28 @@ load_dotenv()
 
 def getGeminiAPIKey() -> (str | None):
     
-    return os.getenv("GOOGLE_API_KEY") 
+    return os.getenv(key = "GOOGLE_API_KEY") 
 
 def getMistralAPIKey() -> (str | None):
     
-    return os.getenv("MISTRAL_API_KEY")
+    return os.getenv(key = "MISTRAL_API_KEY")
 
 def getSMTPSenderEmail() -> (str | None):
 
-    return os.getenv("SMTP_SENDER_EMAIL")
+    return os.getenv(key = "SMTP_SENDER_EMAIL")
 
 def getSMTPPORT() -> (str | None):
 
-    return os.getenv("SMTP_PORT")
+    return os.getenv(key = "SMTP_PORT")
 
 def getSMTPServerHost() -> (str | None):
 
-    return os.getenv("SMTP_SERVER_HOST")
+    return os.getenv(key = "SMTP_SERVER_HOST")
 
 def getSMTPSenderPassword() -> (str | None):
 
-    return os.getenv("SMTP_SENDER_PASSWORD")
+    return os.getenv(key = "SMTP_SENDER_PASSWORD")
+
+def getAgentServerRunningPort() -> int:
+
+    return int(os.getenv(key = "AGENT_SERVER_RUNNING_PORT")) if os.getenv(key = "AGENT_SERVER_RUNNING_PORT") != None else 8000

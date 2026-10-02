@@ -370,30 +370,11 @@ if exist "%BACKEND%\backend.log" del /q "%BACKEND%\backend.log" >nul 2>&1
 if exist "%BACKEND%\backend-error.log" del /q "%BACKEND%\backend-error.log" >nul 2>&1
 
 start "AI Agent Backend" /min cmd /c ^
-"cd /d ""%BACKEND%"" && ""%VENV_PYTHON%"" -u ""%BACKEND%\startGalaxy.py"" 1>""%BACKEND%\backend.log"" 2>""%BACKEND%\backend-error.log"""
+"cd /d ""%BACKEND%"" && ""%VENV_PYTHON%"" -u ""%BACKEND%\startGalaxy.py""
 
 timeout /t 3 /nobreak >nul
 
 echo [OK] Backend process started.
-echo.
-
-REM ------------------------------------------------------------
-REM CHECK BACKEND PROCESS
-REM ------------------------------------------------------------
-
-tasklist /FI "IMAGENAME eq python.exe" 2>nul | find /I "python.exe" >nul
-
-if errorlevel 1 (
-    echo [WARNING] Python backend process may have stopped.
-    echo.
-    echo Check:
-    echo   %BACKEND%\backend.log
-    echo   %BACKEND%\backend-error.log
-    echo.
-) else (
-    echo [OK] Backend Python process is running.
-    echo.
-)
 
 REM ------------------------------------------------------------
 REM FLUTTER RELEASE BUILD

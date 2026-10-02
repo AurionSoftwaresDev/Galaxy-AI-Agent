@@ -1,12 +1,11 @@
 import logging
 from pathlib import Path
 from source.utils.getCurrentDateTime import getCurrentDate
+from source.config.LogPaths import AGENT_LOGS_PATH
 
-LOGS_PATH : Path = (Path(__file__).resolve().parents[2] / "storage" / "logs" )
+AGENT_LOGS_PATH.mkdir(parents = True, exist_ok = True)
 
-LOGS_PATH.mkdir(parents = True, exist_ok = True)
-
-LOGS_FILE : Path = LOGS_PATH / f"app_{getCurrentDate()}.log"
+LOGS_FILE : Path = AGENT_LOGS_PATH / f"agent_{getCurrentDate()}.log"
 
 logger = logging.getLogger("agent")
 
@@ -28,4 +27,3 @@ formatter : logging.Formatter = logging.Formatter(
 fileHandler.setFormatter(formatter)
 
 logger.addHandler(fileHandler)
-
