@@ -6,11 +6,11 @@ import '../state/assistant_controller.dart';
 import '../widgets/ai_orb.dart';
 import '../widgets/chat_panel.dart';
 import '../widgets/error_banner.dart';
-import '../widgets/microphone_control.dart';
 import '../widgets/settings_dialog.dart';
-import '../widgets/status_indicator.dart';
 import '../widgets/tool_activity_indicator.dart';
 import '../widgets/waveform_visualizer.dart';
+import 'components/voice_stage_footer.dart';
+import 'components/voice_stage_header.dart';
 
 /// Primary desktop screen for Galaxy AI Agent featuring a collapsible
 /// left-side Chat Panel alongside the central Voice Interaction stage.
@@ -149,14 +149,16 @@ class _MainScreenState extends State<MainScreen> {
         if (event is! KeyDownEvent) {
             return KeyEventResult.ignored;
         }
-        // Handled via HardwareKeyboard.instance listener
-        return KeyEventResult.ignored;
+        final handled = _executeShortcutKey(event.logicalKey);
+        return handled ? KeyEventResult.handled : KeyEventResult.ignored;
     }
 
     void _openSettingsDialog() {
         showDialog<void>(
             context: context,
-            builder: (_) => SettingsDialog(controller: widget.controller),
+            barrierDismissible: true,
+            barrierColor: Colors.black.withValues(alpha: 0.65),
+            builder: (ctx) => SettingsDialog(controller: widget.controller),
         ).then((_) {
             if (mounted) {
                 _focusVoiceStage();
@@ -165,9 +167,12 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     void _openKeyboardShortcutsDialog() {
+        widget.controller.cancelRecordingShortcutSilently();
         showDialog<void>(
             context: context,
-            builder: (_) =>
+            barrierDismissible: true,
+            barrierColor: Colors.black.withValues(alpha: 0.65),
+            builder: (ctx) =>
                 KeyboardShortcutsDialog(controller: widget.controller),
         ).then((_) {
             if (mounted) {
@@ -189,455 +194,197 @@ class _MainScreenState extends State<MainScreen> {
                     builder: (context, _) {
                         final state = widget.controller.assistantState;
                         final connection = widget.controller.connectionStatus;
-                        final amplitude = widget.controller.currentAmplitude;
                         final isMuted = widget.controller.isMuted;
-                        final streamingSubtitle =
-                            widget.controller.streamingSubtitle;
+                        final amplitude = widget.controller.currentAmplitude;
+                        final error = widget.controller.activeError;
+                        final tool = widget.controller.activeTool;
                         final isChatOpen = widget.controller.isChatPanelOpen;
                         final shortcuts = widget.controller.shortcuts;
-                        final toggleVoiceKeyLabel = shortcuts.labelFor(
-                            FrontendShortcutAction.toggleVoiceInteraction,
-                        );
-                        final muteKeyLabel = shortcuts.labelFor(
-                            FrontendShortcutAction.toggleMute,
-                        );
-                        final interruptKeyLabel = shortcuts.labelFor(
-                            FrontendShortcutAction.interruptAssistant,
-                        );
 
-                        final String subtitleText;
-                        if (state == AssistantState.speaking &&
-                            streamingSubtitle.isNotEmpty) {
-                            subtitleText = streamingSubtitle;
-                        } else if (state == AssistantState.speaking) {
+                        final toggleVoiceKeyLabel = shortcuts
+                            .labelFor(FrontendShortcutAction.toggleVoiceInteraction);
+                        final muteKeyLabel =
+                            shortcuts.labelFor(FrontendShortcutAction.toggleMute);
+                        final interruptKeyLabel = shortcuts
+                            .labelFor(FrontendShortcutAction.interruptAssistant);
+
+                        String titleText = state.displayLabel;
+                        String subtitleText = state.subtitleHint;
+
+                        if (state == AssistantState.speaking) {
+                            titleText = 'Speaking';
                             subtitleText =
-                                'Press $interruptKeyLabel or tap the orb to interrupt';
+                                'Press $interruptKeyLabel or click the orb to interrupt';
+                        } else if (state == AssistantState.thinking) {
+                            titleText = 'Thinking';
+                            subtitleText = tool != null
+                                ? tool.statusText
+                                : 'Galaxy AI is reasoning...';
                         } else if (state == AssistantState.listening) {
                             subtitleText = isMuted
                                 ? 'Click the orb or press $toggleVoiceKeyLabel to unmute microphone'
-                                : 'Click the orb or press $toggleVoiceKeyLabel to begin speaking';
-                        } else {
-                            subtitleText = state.subtitleHint;
+                                : 'Speak naturally or type in the left chat panel';
                         }
 
                         return Row(
                             children: [
-                                // Left-Side Chat Panel
-                                AnimatedSize(
-                                    duration: const Duration(milliseconds: 220),
-                                    curve: Curves.easeOutCubic,
-                                    child: isChatOpen
-                                        ? ChatPanel(
-                                              messages:
-                                                  widget.controller.messages,
-                                              assistantState: state,
-                                              onSendMessage: widget
-                                                  .controller.sendVoicePrompt,
-                                              onClearHistory: widget
-                                                  .controller.clearChatHistory,
-                                              onClosePanel: () {
-                                                  _focusVoiceStage();
-                                                  widget.controller
-                                                      .toggleChatPanel();
-                                              },
-                                              onInputFocusChanged: (focused) {
-                                                  _isChatInputFocused = focused;
-                                              },
-                                          )
-                                        : const SizedBox.shrink(),
-                                ),
+                                // 1. Collapsible Left-Side Chat Panel
+                                if (isChatOpen)
+                                    ChatPanel(
+                                        messages: widget.controller.messages,
+                                        assistantState: state,
+                                        onSendMessage:
+                                            widget.controller.sendTextMessage,
+                                        onClearHistory:
+                                            widget.controller.clearChatHistory,
+                                        onClosePanel:
+                                            widget.controller.toggleChatPanel,
+                                        onInputFocusChanged: (isFocused) {
+                                            _isChatInputFocused = isFocused;
+                                        },
+                                    ),
 
-                                // Main Voice Interaction Stage
+                                // 2. Central Voice Interaction Stage
                                 Expanded(
                                     child: GestureDetector(
                                         behavior: HitTestBehavior.translucent,
                                         onTap: _focusVoiceStage,
                                         child: LayoutBuilder(
                                             builder: (context, constraints) {
-                                            final shortestSide =
-                                                constraints.biggest.shortestSide;
-                                            final orbSize = (shortestSide * 0.36)
-                                                .clamp(180.0, 290.0);
-                                            final waveWidth =
-                                                (constraints.maxWidth * 0.38)
-                                                    .clamp(240.0, 380.0);
+                                                final stageHeight =
+                                                    constraints.maxHeight;
+                                                final orbSize = (stageHeight *
+                                                        0.32)
+                                                    .clamp(140.0, 240.0);
+                                                final waveWidth = (constraints
+                                                            .maxWidth *
+                                                        0.42)
+                                                    .clamp(200.0, 360.0);
 
-                                            return Stack(
-                                                children: [
-                                                    // Subtle deep-space radial atmosphere
-                                                    Positioned.fill(
-                                                        child: DecoratedBox(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                                gradient:
-                                                                    RadialGradient(
-                                                                    center:
-                                                                        const Alignment(
-                                                                        0.0,
-                                                                        -0.08,
-                                                                    ),
-                                                                    radius: 0.85,
-                                                                    colors: [
-                                                                        const Color(
-                                                                                0xFF0F172A)
-                                                                            .withValues(
-                                                                                alpha:
-                                                                                    0.65,
-                                                                            ),
-                                                                        const Color(
-                                                                            0xFF07090E,
-                                                                        ),
-                                                                    ],
-                                                                ),
-                                                            ),
+                                                return Container(
+                                                    decoration:
+                                                        const BoxDecoration(
+                                                        radialGradient:
+                                                            RadialGradient(
+                                                            center:
+                                                                Alignment(0, -0.1),
+                                                            radius: 0.85,
+                                                            colors: [
+                                                                Color(0xFF0F172A),
+                                                                Color(0xFF07090E),
+                                                            ],
                                                         ),
                                                     ),
-
-                                                    SafeArea(
-                                                        child: Padding(
-                                                            padding:
-                                                                const EdgeInsets
-                                                                    .symmetric(
-                                                                horizontal: 32,
-                                                                vertical: 24,
+                                                    padding:
+                                                        const EdgeInsets.symmetric(
+                                                        horizontal: 32,
+                                                        vertical: 24,
+                                                    ),
+                                                    child: Column(
+                                                        children: [
+                                                            // Header
+                                                            VoiceStageHeader(
+                                                                isChatPanelOpen:
+                                                                    isChatOpen,
+                                                                connectionStatus:
+                                                                    connection,
+                                                                onToggleChat: widget
+                                                                    .controller
+                                                                    .toggleChatPanel,
+                                                                onOpenSettings:
+                                                                    _openSettingsDialog,
+                                                                onReconnect: widget
+                                                                    .controller
+                                                                    .reconnect,
                                                             ),
-                                                            child: Column(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .spaceBetween,
-                                                                children: [
-                                                                    // 1. Minimal Top Bar
-                                                                    Row(
-                                                                        mainAxisAlignment:
-                                                                            MainAxisAlignment
-                                                                                .spaceBetween,
-                                                                        children: [
-                                                                            Row(
-                                                                                mainAxisSize:
-                                                                                    MainAxisSize
-                                                                                        .min,
-                                                                                children: [
-                                                                                    if (!isChatOpen) ...[
-                                                                                        IconButton(
-                                                                                            onPressed:
-                                                                                                widget
-                                                                                                    .controller
-                                                                                                    .toggleChatPanel,
-                                                                                            tooltip:
-                                                                                                'Open Chat Panel',
-                                                                                            icon: const Icon(
-                                                                                                Icons
-                                                                                                    .chat_bubble_outline_rounded,
-                                                                                                size:
-                                                                                                    17,
-                                                                                                color: Color(
-                                                                                                    0xFF94A3B8,
-                                                                                                ),
-                                                                                            ),
-                                                                                            constraints:
-                                                                                                const BoxConstraints(
-                                                                                                minWidth:
-                                                                                                    32,
-                                                                                                minHeight:
-                                                                                                    32,
-                                                                                            ),
-                                                                                            padding:
-                                                                                                EdgeInsets
-                                                                                                    .zero,
-                                                                                        ),
-                                                                                        const SizedBox(
-                                                                                            width:
-                                                                                                10,
-                                                                                        ),
-                                                                                    ],
-                                                                                    const Text(
-                                                                                        'Galaxy AI',
-                                                                                        style:
-                                                                                            TextStyle(
-                                                                                            fontSize:
-                                                                                                16,
-                                                                                            fontWeight:
-                                                                                                FontWeight
-                                                                                                    .w600,
-                                                                                            letterSpacing:
-                                                                                                0.6,
-                                                                                            color: Color(
-                                                                                                0xFFF8FAFC,
-                                                                                            ),
-                                                                                        ),
-                                                                                    ),
-                                                                                ],
-                                                                            ),
-                                                                            Row(
-                                                                                mainAxisSize:
-                                                                                    MainAxisSize
-                                                                                        .min,
-                                                                                children: [
-                                                                                    StatusIndicator(
-                                                                                        status:
-                                                                                            connection,
-                                                                                        onReconnectRequested:
-                                                                                            widget
-                                                                                                .controller
-                                                                                                .reconnect,
-                                                                                    ),
-                                                                                    const SizedBox(
-                                                                                        width:
-                                                                                            14,
-                                                                                    ),
-                                                                                    IconButton(
-                                                                                        onPressed:
-                                                                                            _openSettingsDialog,
-                                                                                        tooltip:
-                                                                                            'Agent Settings',
-                                                                                        icon: const Icon(
-                                                                                            Icons
-                                                                                                .tune_rounded,
-                                                                                            size:
-                                                                                                18,
-                                                                                            color: Color(
-                                                                                                0xFF94A3B8,
-                                                                                            ),
-                                                                                        ),
-                                                                                        constraints:
-                                                                                            const BoxConstraints(
-                                                                                            minWidth:
-                                                                                                32,
-                                                                                            minHeight:
-                                                                                                32,
-                                                                                        ),
-                                                                                        padding:
-                                                                                            EdgeInsets
-                                                                                                .zero,
-                                                                                    ),
-                                                                                ],
-                                                                            ),
-                                                                        ],
-                                                                    ),
 
-                                                                    // 2. Center Voice Orb & Waveform
-                                                                    Expanded(
+                                                            // Center AI Orb & Waveform
+                                                            Expanded(
+                                                                child: Center(
+                                                                    child:
+                                                                        SingleChildScrollView(
+                                                                        physics:
+                                                                            const NeverScrollableScrollPhysics(),
                                                                         child:
-                                                                            Center(
-                                                                            child: SingleChildScrollView(
-                                                                                physics:
-                                                                                    const NeverScrollableScrollPhysics(),
-                                                                                child:
-                                                                                    Column(
-                                                                                    mainAxisSize:
-                                                                                        MainAxisSize
-                                                                                            .min,
-                                                                                    children: [
-                                                                                        AIOrb(
-                                                                                            state:
-                                                                                                state,
-                                                                                            amplitude:
-                                                                                                amplitude,
-                                                                                            isMuted:
-                                                                                                isMuted,
-                                                                                            size:
-                                                                                                orbSize,
-                                                                                            onTap: widget
-                                                                                                .controller
-                                                                                                .toggleVoiceInteraction,
-                                                                                        ),
-                                                                                        const SizedBox(
-                                                                                            height:
-                                                                                                18,
-                                                                                        ),
-                                                                                        WaveformVisualizer(
-                                                                                            state:
-                                                                                                state,
-                                                                                            amplitude:
-                                                                                                amplitude,
-                                                                                            isMuted:
-                                                                                                isMuted,
-                                                                                            width:
-                                                                                                waveWidth,
-                                                                                            height:
-                                                                                                52,
-                                                                                        ),
-                                                                                        const SizedBox(
-                                                                                            height:
-                                                                                                18,
-                                                                                        ),
-                                                                                        AnimatedSwitcher(
-                                                                                            duration:
-                                                                                                const Duration(
-                                                                                                milliseconds:
-                                                                                                    220,
-                                                                                            ),
-                                                                                            child:
-                                                                                                Text(
-                                                                                                isMuted &&
-                                                                                                        state ==
-                                                                                                            AssistantState
-                                                                                                                .listening
-                                                                                                    ? 'Microphone Muted'
-                                                                                                    : state
-                                                                                                        .displayLabel,
-                                                                                                key: ValueKey<
-                                                                                                    String>(
-                                                                                                    '${state.name}_$isMuted',
-                                                                                                ),
-                                                                                                style:
-                                                                                                    const TextStyle(
-                                                                                                    fontSize:
-                                                                                                        20,
-                                                                                                    fontWeight:
-                                                                                                        FontWeight
-                                                                                                            .w500,
-                                                                                                    letterSpacing:
-                                                                                                        0.4,
-                                                                                                    color: Color(
-                                                                                                        0xFFF1F5F9,
-                                                                                                    ),
-                                                                                                ),
-                                                                                            ),
-                                                                                        ),
-                                                                                        const SizedBox(
-                                                                                            height:
-                                                                                                6,
-                                                                                        ),
-                                                                                        ConstrainedBox(
-                                                                                            constraints:
-                                                                                                const BoxConstraints(
-                                                                                                maxWidth:
-                                                                                                    460,
-                                                                                            ),
-                                                                                            child:
-                                                                                                Text(
-                                                                                                subtitleText,
-                                                                                                maxLines:
-                                                                                                    2,
-                                                                                                overflow:
-                                                                                                    TextOverflow
-                                                                                                        .ellipsis,
-                                                                                                textAlign:
-                                                                                                    TextAlign
-                                                                                                        .center,
-                                                                                                style:
-                                                                                                    const TextStyle(
-                                                                                                    fontSize:
-                                                                                                        13,
-                                                                                                    color: Color(
-                                                                                                        0xFF64748B,
-                                                                                                    ),
-                                                                                                ),
-                                                                                            ),
-                                                                                        ),
-                                                                                        ToolActivityIndicator(
-                                                                                            toolActivity: widget
-                                                                                                .controller
-                                                                                                .activeTool,
-                                                                                        ),
-                                                                                    ],
+                                                                            Column(
+                                                                            mainAxisSize:
+                                                                                MainAxisSize.min,
+                                                                            children: [
+                                                                                AIOrb(
+                                                                                    state: state,
+                                                                                    amplitude: amplitude,
+                                                                                    isMuted: isMuted,
+                                                                                    size: orbSize,
+                                                                                    onTap: widget.controller.toggleVoiceInteraction,
                                                                                 ),
-                                                                            ),
-                                                                        ),
-                                                                    ),
-
-                                                                    // 3. Bottom Microphone Control & Connection Footer
-                                                                    Column(
-                                                                        mainAxisSize:
-                                                                            MainAxisSize
-                                                                                .min,
-                                                                        children: [
-                                                                            if (widget
-                                                                                    .controller
-                                                                                    .activeError !=
-                                                                                null) ...[
-                                                                                ErrorBanner(
-                                                                                    error: widget
-                                                                                        .controller
-                                                                                        .activeError,
-                                                                                    onRetry: widget
-                                                                                        .controller
-                                                                                        .reconnect,
-                                                                                    onDismiss: widget
-                                                                                        .controller
-                                                                                        .dismissError,
+                                                                                const SizedBox(height: 18),
+                                                                                WaveformVisualizer(
+                                                                                    state: state,
+                                                                                    amplitude: amplitude,
+                                                                                    isMuted: isMuted,
+                                                                                    width: waveWidth,
+                                                                                    height: 52,
                                                                                 ),
-                                                                                const SizedBox(
-                                                                                    height:
-                                                                                        18,
-                                                                                ),
-                                                                            ],
-                                                                            MicrophoneControl(
-                                                                                state:
-                                                                                    state,
-                                                                                isMuted:
-                                                                                    isMuted,
-                                                                                onPrimaryAction: widget
-                                                                                    .controller
-                                                                                    .toggleVoiceInteraction,
-                                                                                onMuteToggle: widget
-                                                                                    .controller
-                                                                                    .toggleMute,
-                                                                                toggleVoiceShortcutLabel:
-                                                                                    toggleVoiceKeyLabel,
-                                                                                muteShortcutLabel:
-                                                                                    muteKeyLabel,
-                                                                            ),
-                                                                            const SizedBox(
-                                                                                height:
-                                                                                    14,
-                                                                            ),
-                                                                            Text(
-                                                                                connection
-                                                                                    .label,
-                                                                                style:
-                                                                                    const TextStyle(
-                                                                                    fontSize:
-                                                                                        12,
-                                                                                    letterSpacing:
-                                                                                        0.3,
-                                                                                    color: Color(
-                                                                                        0xFF475569,
+                                                                                const SizedBox(height: 18),
+                                                                                Text(
+                                                                                    titleText,
+                                                                                    style: const TextStyle(
+                                                                                        fontSize: 16,
+                                                                                        fontWeight: FontWeight.w600,
+                                                                                        color: Color(0xFFF1F5F9),
                                                                                     ),
                                                                                 ),
-                                                                            ),
-                                                                        ],
+                                                                                const SizedBox(height: 6),
+                                                                                Text(
+                                                                                    subtitleText,
+                                                                                    textAlign: TextAlign.center,
+                                                                                    style: const TextStyle(
+                                                                                        fontSize: 12.5,
+                                                                                        color: Color(0xFF64748B),
+                                                                                    ),
+                                                                                ),
+                                                                                if (tool != null && tool.isActive) ...[
+                                                                                    const SizedBox(height: 14),
+                                                                                    ToolActivityIndicator(activity: tool),
+                                                                                ],
+                                                                                if (error != null) ...[
+                                                                                    const SizedBox(height: 14),
+                                                                                    ErrorBanner(
+                                                                                        error: error,
+                                                                                        onRetry: widget.controller.reconnect,
+                                                                                    ),
+                                                                                ],
+                                                                            ],
+                                                                        ),
                                                                     ),
-                                                                ],
+                                                                ),
                                                             ),
-                                                        ),
-                                                    ),
 
-                                                    // Left Bottom Side Settings Icon for Frontend Keyboard Shortcuts
-                                                    Positioned(
-                                                        left: 32,
-                                                        bottom: 24,
-                                                        child: SafeArea(
-                                                            child: IconButton(
-                                                                onPressed:
+                                                            // Footer
+                                                            VoiceStageFooter(
+                                                                state: state,
+                                                                isMuted: isMuted,
+                                                                connection:
+                                                                    connection,
+                                                                toggleVoiceKeyLabel:
+                                                                    toggleVoiceKeyLabel,
+                                                                muteKeyLabel:
+                                                                    muteKeyLabel,
+                                                                shortcuts:
+                                                                    shortcuts,
+                                                                onToggleVoice: widget
+                                                                    .controller
+                                                                    .toggleVoiceInteraction,
+                                                                onToggleMute: widget
+                                                                    .controller
+                                                                    .toggleMute,
+                                                                onOpenShortcutsDialog:
                                                                     _openKeyboardShortcutsDialog,
-                                                                tooltip:
-                                                                    'Keyboard Shortcuts (${shortcuts.summaryLabel})',
-                                                                icon: const Icon(
-                                                                    Icons
-                                                                        .keyboard_command_key_rounded,
-                                                                    size: 18,
-                                                                    color: Color(
-                                                                        0xFF94A3B8,
-                                                                    ),
-                                                                ),
-                                                                constraints:
-                                                                    const BoxConstraints(
-                                                                    minWidth:
-                                                                        32,
-                                                                    minHeight:
-                                                                        32,
-                                                                ),
-                                                                padding:
-                                                                    EdgeInsets
-                                                                        .zero,
                                                             ),
-                                                        ),
+                                                        ],
                                                     ),
-                                                ],
-                                            );
-                                        },
+                                                );
+                                            },
                                         ),
                                     ),
                                 ),

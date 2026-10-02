@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
 
 import '../api/backend_client.dart';
 import '../models/assistant_state.dart';
 import '../services/voice_service.dart';
+import 'shortcuts_controller_mixin.dart';
 
 /// Coordinates UI state, FastAPI backend connection (`http://127.0.0.1:8000`),
 /// WebSocket streaming (`/ws/assistant`), left-side chat history, `/settings/*`, and `VoiceService`.
-class AssistantController extends ChangeNotifier {
+class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
     final BackendClient _backendClient;
     final VoiceService _voiceService;
 
@@ -17,13 +17,9 @@ class AssistantController extends ChangeNotifier {
     ToolActivity? _activeTool;
     AssistantError? _activeError;
     AgentSettingsSnapshot _settings = const AgentSettingsSnapshot();
-    FrontendShortcutsConfig _shortcuts = FrontendShortcutsConfig.defaults();
-    FrontendShortcutAction? _recordingShortcutAction;
-    String? _shortcutFeedbackMessage;
     double _currentAmplitude = 0.0;
     String _streamingSubtitle = '';
     bool _isChatPanelOpen = true;
-    bool _isLeftBottomShortcutsExpanded = true;
     final List<ChatMessage> _messages = [];
     String? _activeStreamingMessageId;
 
@@ -48,12 +44,6 @@ class AssistantController extends ChangeNotifier {
     ToolActivity? get activeTool => _activeTool;
     AssistantError? get activeError => _activeError;
     AgentSettingsSnapshot get settings => _settings;
-    FrontendShortcutsConfig get shortcuts => _shortcuts;
-    FrontendShortcutAction? get recordingShortcutAction =>
-        _recordingShortcutAction;
-    bool get isRecordingShortcut => _recordingShortcutAction != null;
-    String? get shortcutFeedbackMessage => _shortcutFeedbackMessage;
-    bool get isLeftBottomShortcutsExpanded => _isLeftBottomShortcutsExpanded;
     double get currentAmplitude => _currentAmplitude;
     bool get isMuted => _voiceService.isMuted;
     bool get isMicActive =>
@@ -66,66 +56,6 @@ class AssistantController extends ChangeNotifier {
     /// Toggles the left-side chat panel open or closed.
     void toggleChatPanel() {
         _isChatPanelOpen = !_isChatPanelOpen;
-        notifyListeners();
-    }
-
-    /// Toggles the Left Bottom Side Settings / Keyboard Shortcuts section expanded or collapsed.
-    void toggleLeftBottomShortcutsSection() {
-        _isLeftBottomShortcutsExpanded = !_isLeftBottomShortcutsExpanded;
-        if (!_isLeftBottomShortcutsExpanded) {
-            _recordingShortcutAction = null;
-        }
-        notifyListeners();
-    }
-
-    /// Starts or cancels listening for a new key press to rebind a frontend shortcut.
-    void setRecordingShortcutAction(
-        FrontendShortcutAction? action, {
-        bool notify = true,
-    }) {
-        final nextAction =
-            (action != null && _recordingShortcutAction == action)
-                ? null
-                : action;
-        if (_recordingShortcutAction == nextAction &&
-            _shortcutFeedbackMessage == null) {
-            return;
-        }
-        _recordingShortcutAction = nextAction;
-        if (nextAction != null) {
-            _shortcutFeedbackMessage = null;
-        }
-        if (notify) {
-            notifyListeners();
-        }
-    }
-
-    /// Cancels active shortcut key recording without triggering `notifyListeners()`,
-    /// safe to call from widget `dispose()` or dialog teardown.
-    void cancelRecordingShortcutSilently() {
-        _recordingShortcutAction = null;
-    }
-
-    /// Updates a frontend keyboard shortcut binding in the UI without touching the backend.
-    void updateShortcut(
-        FrontendShortcutAction action,
-        LogicalKeyboardKey newKey,
-    ) {
-        if (FrontendShortcutsConfig.isModifierKey(newKey)) {
-            return;
-        }
-        _shortcuts = _shortcuts.copyWithBinding(action, newKey);
-        _recordingShortcutAction = null;
-        _shortcutFeedbackMessage =
-            'Updated "${action.label}" to [${_shortcuts.labelFor(action)}]';
-        notifyListeners();
-    }
-
-    /// Resets all frontend keyboard shortcuts to their default bindings (Space, M, Esc, R).
-    void resetShortcutsToDefault() {
-        _shortcuts = FrontendShortcutsConfig.defaults();
-        _recordingShortcutAction = null;
-        _shortcutFeedbackMessage = 'Reset all shortcuts to defaults';
         notifyListeners();
     }
 
@@ -188,7 +118,9 @@ class AssistantController extends ChangeNotifier {
 
     /// Updates the LLM temperature via `PATCH /settings/change-agent-temperature`.
     Future<bool> changeTemperature(double newTemperature) async {
-        final clamped = double.parse(newTemperature.clamp(0.0, 1.0).toStringAsFixed(2));
+        final clamped = double.parse(
+            newTemperature.clamp(0.0, 1.0).toStringAsFixed(2),
+        );
         final ok = await _backendClient.changeAgentTemperature(clamped);
         if (ok) {
             _settings = _settings.copyWith(temperature: clamped);
@@ -239,6 +171,9 @@ class AssistantController extends ChangeNotifier {
 
         await _backendClient.sendPrompt(trimmed);
     }
+
+    /// Alias for sending message from chat panel input bar.
+    Future<void> sendTextMessage(String text) => sendVoicePrompt(text);
 
     /// Toggles between active voice listening and muted state, or interrupts assistant speech.
     Future<void> toggleVoiceInteraction() async {
@@ -293,6 +228,18 @@ class AssistantController extends ChangeNotifier {
         if (_connectionStatus == ConnectionStatus.connected) {
             await refreshAgentSettings();
         }
+    }
+
+    /// Requests desktop server termination/kill via `POST /server/desktop/disconnect`,
+    /// closes local streaming connection, and updates status to offline/disconnected.
+    Future<bool> disconnectDesktopServer() async {
+        _activeError = null;
+        _activeTool = null;
+        _streamingSubtitle = '';
+        _setAssistantState(AssistantState.disconnected);
+        final result = await _backendClient.disconnectDesktopServer();
+        notifyListeners();
+        return result;
     }
 
     /// Updates the configurable backend base URL and reconnects.
@@ -373,7 +320,8 @@ class AssistantController extends ChangeNotifier {
         if (index != -1) {
             final existing = _messages[index];
             _messages[index] = existing.copyWith(
-                content: existing.content.isEmpty ? errorMessage : existing.content,
+                content:
+                    existing.content.isEmpty ? errorMessage : existing.content,
                 isStreaming: false,
                 isError: true,
             );
@@ -386,102 +334,78 @@ class AssistantController extends ChangeNotifier {
         _connectionSub = _backendClient.connectionStatusStream.listen((status) {
             _connectionStatus = status;
             if (status == ConnectionStatus.offline) {
-                _activeTool = null;
-                _streamingSubtitle = '';
                 _setAssistantState(AssistantState.disconnected);
             } else if (status == ConnectionStatus.connecting) {
                 _setAssistantState(AssistantState.connecting);
-            } else if (status == ConnectionStatus.connected) {
-                _activeError = null;
-                if (_assistantState == AssistantState.connecting ||
-                    _assistantState == AssistantState.disconnected ||
-                    _assistantState == AssistantState.error) {
-                    _setAssistantState(AssistantState.listening);
-                }
+            } else if (status == ConnectionStatus.connected &&
+                _assistantState != AssistantState.speaking &&
+                _assistantState != AssistantState.thinking) {
+                _setAssistantState(AssistantState.listening);
             }
             notifyListeners();
         });
 
         _eventSub = _backendClient.eventStream.listen((event) {
             if (event.toolActivity != null) {
-                _activeTool = event.toolActivity!.isActive
-                    ? event.toolActivity
-                    : null;
+                _activeTool = event.toolActivity;
+                notifyListeners();
             }
 
-            if (event.type == BackendEventType.stateChange &&
-                event.assistantState != null) {
-                if (event.assistantState == AssistantState.thinking) {
-                    _streamingSubtitle = '';
-                }
+            if (event.textDelta != null) {
+                _appendStreamingDeltaToChat(event.textDelta!);
+                _streamingSubtitle = (_streamingSubtitle + event.textDelta!);
+                _voiceService.speak(event.textDelta!);
+            }
+
+            if (event.assistantState != null) {
                 _setAssistantState(event.assistantState!);
             }
 
-            if (event.type == BackendEventType.textDelta &&
-                event.textDelta != null &&
-                event.textDelta!.isNotEmpty) {
-                _activeTool = null;
-                _streamingSubtitle = (_streamingSubtitle + event.textDelta!).trim();
-                _appendStreamingDeltaToChat(event.textDelta!);
-
-                if (_assistantState != AssistantState.speaking) {
-                    _setAssistantState(AssistantState.speaking);
-                }
-                _voiceService.onStreamingTextDelta(event.textDelta!);
-            }
-
-            if (event.type == BackendEventType.done || event.isCompleted) {
-                _activeTool = null;
+            if (event.isCompleted) {
                 _completeActiveStreamingMessage();
-                if (_assistantState == AssistantState.speaking) {
-                    _voiceService.onBackendStreamDone();
-                } else {
-                    _setAssistantState(AssistantState.listening);
-                }
-            }
-
-            notifyListeners();
-        });
-
-        _speakingDoneSub = _voiceService.speakingCompletedStream.listen((_) {
-            if (_connectionStatus == ConnectionStatus.connected &&
-                _assistantState == AssistantState.speaking) {
+                _activeTool = null;
+                _streamingSubtitle = '';
                 _setAssistantState(AssistantState.listening);
             }
-        });
 
-        _speechSub = _voiceService.recognizedSpeechStream.listen((utterance) {
-            sendVoicePrompt(utterance);
-        });
-
-        _backendErrorSub = _backendClient.errorStream.listen((error) {
-            _activeError = error;
-            _finalizeStreamingMessageWithError(error.userMessage);
-            if (_connectionStatus == ConnectionStatus.offline) {
-                _setAssistantState(AssistantState.disconnected);
-            } else {
-                _setAssistantState(AssistantState.error);
-            }
             notifyListeners();
         });
 
-        _voiceErrorSub = _voiceService.errorStream.listen((error) {
-            _activeError = error;
+        _backendErrorSub = _backendClient.errorStream.listen((err) {
+            _activeError = err;
+            _finalizeStreamingMessageWithError(err.userMessage);
             _setAssistantState(AssistantState.error);
             notifyListeners();
         });
 
-        _amplitudeSub = _voiceService.amplitudeStream.listen((amplitude) {
-            if ((_currentAmplitude - amplitude).abs() > 0.005) {
-                _currentAmplitude = amplitude;
-                notifyListeners();
+        _voiceErrorSub = _voiceService.errorStream.listen((err) {
+            _activeError = err;
+            _setAssistantState(AssistantState.error);
+            notifyListeners();
+        });
+
+        _amplitudeSub = _voiceService.amplitudeStream.listen((amp) {
+            _currentAmplitude = amp;
+            notifyListeners();
+        });
+
+        _speechSub = _voiceService.recognizedSpeechStream.listen((speech) {
+            if (speech.isNotEmpty) {
+                sendVoicePrompt(speech);
+            }
+        });
+
+        _speakingDoneSub = _voiceService.speakingDoneStream.listen((_) {
+            _streamingSubtitle = '';
+            if (_assistantState == AssistantState.speaking) {
+                _setAssistantState(AssistantState.listening);
             }
         });
     }
 
-    void _setAssistantState(AssistantState nextState) {
-        _assistantState = nextState;
-        _voiceService.syncAssistantState(nextState);
+    void _setAssistantState(AssistantState next) {
+        if (_assistantState == next) return;
+        _assistantState = next;
         notifyListeners();
     }
 
