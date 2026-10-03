@@ -354,7 +354,7 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
             if (event.textDelta != null) {
                 _appendStreamingDeltaToChat(event.textDelta!);
                 _streamingSubtitle = (_streamingSubtitle + event.textDelta!);
-                _voiceService.speak(event.textDelta!);
+                _voiceService.onStreamingTextDelta(event.textDelta!);
             }
 
             if (event.assistantState != null) {
@@ -365,6 +365,7 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
                 _completeActiveStreamingMessage();
                 _activeTool = null;
                 _streamingSubtitle = '';
+                _voiceService.onBackendStreamDone();
                 _setAssistantState(AssistantState.listening);
             }
 
@@ -395,7 +396,7 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
             }
         });
 
-        _speakingDoneSub = _voiceService.speakingDoneStream.listen((_) {
+        _speakingDoneSub = _voiceService.speakingCompletedStream.listen((_) {
             _streamingSubtitle = '';
             if (_assistantState == AssistantState.speaking) {
                 _setAssistantState(AssistantState.listening);

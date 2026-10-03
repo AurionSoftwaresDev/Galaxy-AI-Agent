@@ -225,7 +225,7 @@ class _ChatPanelState extends State<ChatPanel> {
                     // 1. Top Panel Header
                     Container(
                         height: 56,
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 14),
                         decoration: const BoxDecoration(
                             border: Border(
                                 bottom: BorderSide(
@@ -237,22 +237,69 @@ class _ChatPanelState extends State<ChatPanel> {
                         child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                                const Row(
+                                Row(
                                     children: [
-                                        Icon(
-                                            Icons.forum_outlined,
-                                            size: 16,
-                                            color: Color(0xFF22D3EE),
-                                        ),
-                                        SizedBox(width: 8),
-                                        Text(
-                                            'Chat',
-                                            style: TextStyle(
-                                                fontSize: 13.5,
-                                                fontWeight: FontWeight.w600,
-                                                letterSpacing: 0.3,
-                                                color: Color(0xFFF1F5F9),
+                                        // Stylized Chat Logo Badge
+                                        Container(
+                                            width: 28,
+                                            height: 28,
+                                            decoration: BoxDecoration(
+                                                gradient: const LinearGradient(
+                                                    begin: Alignment.topLeft,
+                                                    end: Alignment.bottomRight,
+                                                    colors: [
+                                                        Color(0xFF06B6D4),
+                                                        Color(0xFF2563EB),
+                                                    ],
+                                                ),
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                                boxShadow: [
+                                                    BoxShadow(
+                                                        color: const Color(0xFF06B6D4)
+                                                            .withValues(alpha: 0.28),
+                                                        blurRadius: 8,
+                                                    ),
+                                                ],
                                             ),
+                                            child: const Center(
+                                                child: Icon(
+                                                    Icons.forum_rounded,
+                                                    size: 15,
+                                                    color: Color(0xFF07090E),
+                                                ),
+                                            ),
+                                        ),
+                                        const SizedBox(width: 10),
+                                        const Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                                Text(
+                                                    'Galaxy Chat',
+                                                    style: TextStyle(
+                                                        fontSize: 13.5,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        letterSpacing: 0.2,
+                                                        color:
+                                                            Color(0xFFF1F5F9),
+                                                    ),
+                                                ),
+                                                Text(
+                                                    'AI Direct Channel',
+                                                    style: TextStyle(
+                                                        fontSize: 10,
+                                                        letterSpacing: 0.3,
+                                                        color:
+                                                            Color(0xFF06B6D4),
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                    ),
+                                                ),
+                                            ],
                                         ),
                                     ],
                                 ),

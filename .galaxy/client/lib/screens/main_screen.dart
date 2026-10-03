@@ -228,21 +228,37 @@ class _MainScreenState extends State<MainScreen> {
 
                         return Row(
                             children: [
-                                // 1. Collapsible Left-Side Chat Panel
-                                if (isChatOpen)
-                                    ChatPanel(
-                                        messages: widget.controller.messages,
-                                        assistantState: state,
-                                        onSendMessage:
-                                            widget.controller.sendTextMessage,
-                                        onClearHistory:
-                                            widget.controller.clearChatHistory,
-                                        onClosePanel:
-                                            widget.controller.toggleChatPanel,
-                                        onInputFocusChanged: (isFocused) {
-                                            _isChatInputFocused = isFocused;
-                                        },
+                                // 1. Collapsible Left-Side Chat Panel with Smooth Animation
+                                ClipRect(
+                                    child: AnimatedContainer(
+                                        duration:
+                                            const Duration(milliseconds: 320),
+                                        curve: Curves.easeInOutCubic,
+                                        width: isChatOpen ? 360.0 : 0.0,
+                                        child: OverflowBox(
+                                            minWidth: 360.0,
+                                            maxWidth: 360.0,
+                                            alignment: Alignment.topRight,
+                                            child: ChatPanel(
+                                                messages:
+                                                    widget.controller.messages,
+                                                assistantState: state,
+                                                onSendMessage: widget
+                                                    .controller.sendTextMessage,
+                                                onClearHistory: widget
+                                                    .controller
+                                                    .clearChatHistory,
+                                                onClosePanel: widget
+                                                    .controller.toggleChatPanel,
+                                                onInputFocusChanged:
+                                                    (isFocused) {
+                                                    _isChatInputFocused =
+                                                        isFocused;
+                                                },
+                                            ),
+                                        ),
                                     ),
+                                ),
 
                                 // 2. Central Voice Interaction Stage
                                 Expanded(
@@ -264,7 +280,7 @@ class _MainScreenState extends State<MainScreen> {
                                                 return Container(
                                                     decoration:
                                                         const BoxDecoration(
-                                                        radialGradient:
+                                                        gradient:
                                                             RadialGradient(
                                                             center:
                                                                 Alignment(0, -0.1),
@@ -286,6 +302,10 @@ class _MainScreenState extends State<MainScreen> {
                                                             VoiceStageHeader(
                                                                 isChatPanelOpen:
                                                                     isChatOpen,
+                                                                messageCount: widget
+                                                                    .controller
+                                                                    .messages
+                                                                    .length,
                                                                 connectionStatus:
                                                                     connection,
                                                                 onToggleChat: widget
@@ -345,13 +365,14 @@ class _MainScreenState extends State<MainScreen> {
                                                                                 ),
                                                                                 if (tool != null && tool.isActive) ...[
                                                                                     const SizedBox(height: 14),
-                                                                                    ToolActivityIndicator(activity: tool),
+                                                                                    ToolActivityIndicator(toolActivity: tool),
                                                                                 ],
                                                                                 if (error != null) ...[
                                                                                     const SizedBox(height: 14),
                                                                                     ErrorBanner(
                                                                                         error: error,
                                                                                         onRetry: widget.controller.reconnect,
+                                                                                        onDismiss: widget.controller.dismissError,
                                                                                     ),
                                                                                 ],
                                                                             ],
@@ -360,7 +381,7 @@ class _MainScreenState extends State<MainScreen> {
                                                                 ),
                                                             ),
 
-                                                            // Footer
+                                                            // Footer with Left-Bottom Settings & Shortcuts
                                                             VoiceStageFooter(
                                                                 state: state,
                                                                 isMuted: isMuted,
@@ -380,6 +401,8 @@ class _MainScreenState extends State<MainScreen> {
                                                                     .toggleMute,
                                                                 onOpenShortcutsDialog:
                                                                     _openKeyboardShortcutsDialog,
+                                                                onOpenSettings:
+                                                                    _openSettingsDialog,
                                                             ),
                                                         ],
                                                     ),

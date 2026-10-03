@@ -42,6 +42,9 @@ class VoiceService {
     /// Emits when assistant speech vocalization finishes after receiving `done` from backend.
     Stream<void> get speakingCompletedStream => _speakingCompletedController.stream;
 
+    /// Alias for speakingCompletedStream
+    Stream<void> get speakingDoneStream => speakingCompletedStream;
+
     /// Audio hardware errors surfaced with clean user-facing messages.
     Stream<AssistantError> get errorStream => _errorController.stream;
 
@@ -112,6 +115,9 @@ class VoiceService {
         final energyBoost = (0.35 + (textChunk.trim().length % 12) * 0.045).clamp(0.3, 0.95);
         _externalAmplitude = energyBoost;
     }
+
+    /// Vocalizes incoming speech or feeds delta chunks into the cadence engine.
+    void speak(String text) => onStreamingTextDelta(text);
 
     /// Called when the backend sends `{"type": "done"}` so speech finishes smoothly.
     void onBackendStreamDone() {
