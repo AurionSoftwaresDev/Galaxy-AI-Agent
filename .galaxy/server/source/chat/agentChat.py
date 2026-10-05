@@ -1,6 +1,6 @@
 from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
 from source.agent.agent import agent
-from source.chat.memory.agentMemory import (
+from source.memory.agentMemory import (
     loadMessagesFromAgentMemory,
     saveMessagesInAgentMemory
 )

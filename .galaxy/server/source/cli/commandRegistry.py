@@ -1,18 +1,18 @@
 from source.cli.commands.help import help
-from source.cli.commands.status import status
+# from source.cli.commands.status import status
 from source.cli.commands.tools import tools
 from source.cli.commands.version import version
-from source.cli.commands.reset import reset
+# from source.cli.commands.reset import reset
 from source.cli.commands.exit import exit
 from source.cli.commands.clear import clear
 from source.cli.commands.provider import provider
 
 COMMAND_REGISTRY = {
     "/help": help,
-    "/status": status,
+    # "/status": status,
     "/tools": tools,
     "/version": version,
-    "/reset": reset,
+    # "/reset": reset,
     "/exit": exit,
     "/clear": clear,
     "/providers": provider

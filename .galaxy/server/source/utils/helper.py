@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QLoggingCategory
 from source.gui.widgets.DialogBox import NeonPremiumDialog
 from source.constants.agentHelpingMenu import HELPING_MENU
+from source.config.LogPaths import SERVER_PID_STORE_PATH
 
 def sleep(startRange : int, endRange : int) -> int:
     
@@ -116,3 +117,21 @@ def getArguments():
         arguments["agent"] = True
 
     return arguments
+
+def findServerPID() -> int:
+
+    serverPID : int
+
+    with open(file = SERVER_PID_STORE_PATH, mode = "r") as serverPIDFile:
+
+        try:
+
+            serverPID = int(serverPIDFile.readline())
+
+        except TypeError:
+
+            logger.info("Wrong Type Casting. I Think Someone Change server.pid File!")  
+
+            return -1
+
+    return serverPID

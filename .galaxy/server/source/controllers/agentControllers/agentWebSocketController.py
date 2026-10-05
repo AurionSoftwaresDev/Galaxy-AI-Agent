@@ -1,7 +1,7 @@
 from fastapi import WebSocket, WebSocketDisconnect
 from langchain.messages import AIMessageChunk, HumanMessage, ToolMessage
 from source.agent.agent import agent
-from source.chat.memory.agentMemory import (
+from source.memory.agentMemory import (
     loadMessagesFromAgentMemory,
     saveMessagesInAgentMemory
 )

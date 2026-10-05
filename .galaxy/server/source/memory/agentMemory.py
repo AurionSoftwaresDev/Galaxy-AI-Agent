@@ -1,8 +1,6 @@
 import sqlite3
-from pathlib import Path
 from source.utils.logger import logger
-
-MEMORY_STORE_PATH : Path = Path(__file__).resolve().parents[3] / "storage" / "memory" / "memory.db"
+from source.config.databasePaths import MEMORY_STORE_PATH
 
 def checkMemoryIsNoCorrupted(connection : sqlite3.Connection) -> bool:
     

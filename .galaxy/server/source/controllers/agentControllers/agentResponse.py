@@ -3,7 +3,7 @@ from fastapi import (
     status
 )
 from langchain.messages import HumanMessage
-from source.chat.memory.agentMemory import (
+from source.memory.agentMemory import (
     loadMessagesFromAgentMemory,
     saveMessagesInAgentMemory
 )

@@ -37,8 +37,8 @@ build
 
 ### AI Agent Memory ###
 memory.db
-storage
-/storage
+database
+/database
 
 ### Testing Directories ###
 test

@@ -17,7 +17,7 @@ from source.tools.fileSystem.archive.archiveExtractorTool import archiveExtracto
 from source.tools.launchDesktopApplicationTool import launchApplicationTool
 from source.tools.commandsExecutorTool import commandsExecutorTool
 
-agentTools : list[BaseTool | StructuredTool] = [
+AGENT_TOOLS : list[BaseTool | StructuredTool] = [
     fetchCurrentDateTimeTool,
     webSearchTool,
     sendEmailTool,
