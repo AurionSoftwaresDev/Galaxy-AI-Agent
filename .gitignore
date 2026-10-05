@@ -39,6 +39,7 @@ build
 memory.db
 database
 /database
+oldAgentMemory.py
 
 ### Testing Directories ###
 test

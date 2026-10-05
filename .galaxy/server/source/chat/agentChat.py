@@ -1,3 +1,4 @@
+import os
 from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
 from source.agent.agent import agent
 from source.memory.agentMemory import (
@@ -79,11 +80,19 @@ async def chat() -> bool:
 
         console.print("User : ", end = "", style = "bold cyan")
 
-        userPrompt = input()
+        try:
 
-        if userPrompt.strip() == "":
+            userPrompt = input()
 
-            continue
+            if userPrompt.strip() == "":
+
+                continue
+
+        except KeyboardInterrupt:
+
+            typingTextOnTerminal("[+] Agent Shutdown...", speed = 0.03)
+
+            os._exit(0)
 
         break
 
