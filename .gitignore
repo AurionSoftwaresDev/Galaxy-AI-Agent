@@ -37,9 +37,8 @@ build
 
 ### AI Agent Memory ###
 memory.db
-database
-/database
-oldAgentMemory.py
+databases
+/databases
 
 ### Testing Directories ###
 test

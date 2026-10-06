@@ -3,6 +3,6 @@ from source.controllers.terminateServer import terminateServer
 
 agentServerTerminaterRouter = APIRouter()
 
-agentServerTerminaterRouter.get("/desktop/disconnect")(
+agentServerTerminaterRouter.get("/disconnect")(
     terminateServer
 )

@@ -23,9 +23,10 @@ def terminateServer() -> None:
 
                     serverProcess.terminate()
 
-        except Exception as unexpectedException:
+        except Exception:
 
             logger.exception("Failed To Terminate Agent Server(It-Self)")
+
             logger.exception("Try Again To Terminating Using PORT PID Process Already Failed")
 
     else:
@@ -47,6 +48,7 @@ def terminateServer() -> None:
             continue
 
     logger.exception("Failed To Terminate Server With PORT OR PID")
+
     logger.exception("Kill All Python Servers!")
 
     currentPID = os.getpid() 
@@ -64,6 +66,7 @@ def terminateServer() -> None:
                 pythonKillCounts += 1
 
                 logger.info(f"Killed { proc.name() }. Current Kills : { pythonKillCounts }")    
+                
         except (psutil.NoSuchProcess, psutil.AccessDenied):
 
             continue

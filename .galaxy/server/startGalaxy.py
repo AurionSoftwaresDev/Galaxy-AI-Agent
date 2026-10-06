@@ -3,7 +3,7 @@ from source.config.configs import getAgentServerRunningPort
 from source.utils.logger import logger
 from source.utils.helper import validateUserEnviromentVariables
 from source.memory.agentMemory import initializeAgentMemory
-from source.config.LogPaths import SERVER_LOGS_PATH, SERVER_PID_STORE_PATH
+from source.config.LogPaths import SERVER_LOGS_PATH, SERVER_PID_STORE_FILE_NAME
 from source.config.RootPaths import BACKEND_PATH
 from source.utils.getCurrentDateTime import getCurrentDate
 from source.utils.Terminal.OpenTerminal import startNewTerminal
@@ -65,11 +65,11 @@ def mainHandler():
 
         logger.debug(f"AI Agent Server Run At PID : { serverPID }")
 
-        SERVER_PID_STORE_PATH.mkdir(exist_ok = True, parents = True)
+        SERVER_LOGS_PATH.mkdir(exist_ok = True, parents = True)
 
-        with open(file = SERVER_PID_STORE_PATH, mode = "w") as serverPIDFile:
+        with open(file = f"{ SERVER_LOGS_PATH }/{ SERVER_PID_STORE_FILE_NAME }", mode = "w") as serverPIDFile:
 
-            serverPIDFile.write(serverPID)
+            serverPIDFile.write(str(serverPID))
 
         logger.info("Uvicorn Galaxy AI Agent Server Started In The Background")
 

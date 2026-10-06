@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QLoggingCategory
 from source.gui.widgets.DialogBox import NeonPremiumDialog
 from source.constants.agentHelpingMenu import HELPING_MENU
-from source.config.LogPaths import SERVER_PID_STORE_PATH
+from source.config.LogPaths import SERVER_LOGS_PATH, SERVER_PID_STORE_FILE_NAME
 
 def sleep(startRange : int, endRange : int) -> int:
     
@@ -122,16 +122,33 @@ def findServerPID() -> int:
 
     serverPID : int
 
-    with open(file = SERVER_PID_STORE_PATH, mode = "r") as serverPIDFile:
+    serverPIDStoreFilePath = f"{ SERVER_LOGS_PATH }/{ SERVER_PID_STORE_FILE_NAME }"
 
-        try:
+    try:
+        with open(file = serverPIDStoreFilePath, mode = "r") as serverPIDFile:
 
-            serverPID = int(serverPIDFile.readline())
+            try:
 
-        except TypeError:
+                serverPID = int(serverPIDFile.readline())
 
-            logger.info("Wrong Type Casting. I Think Someone Change server.pid File!")  
+                return serverPID
 
-            return -1
+            except TypeError:
+
+                logger.info("Wrong Type Casting. I Think Someone Change server.pid File!")  
+
+                return -1
+
+    except FileNotFoundError:
+
+        logger.exception(f"{ SERVER_PID_STORE_FILE_NAME } File Does't Exsits!")
+
+        return -1
+
+    except Exception as unexpectedException:
+
+        logger.exception(f"Unexpected Exception To Find Server PID : { unexpectedException }")
+
+        return -1
 
     return serverPID

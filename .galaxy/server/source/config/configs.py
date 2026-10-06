@@ -31,3 +31,10 @@ def getSMTPSenderPassword() -> (str | None):
 def getAgentServerRunningPort() -> int:
 
     return int(os.getenv(key = "AGENT_SERVER_RUNNING_PORT")) if os.getenv(key = "AGENT_SERVER_RUNNING_PORT") != None else 8000
+
+def getServerURL() -> str:
+
+    return str(os.getenv(key = "SERVER_URL")) if os.getenv("SERVER_URL") != None else f"http://localhost:{ getAgentServerRunningPort() }"
+
+
+
