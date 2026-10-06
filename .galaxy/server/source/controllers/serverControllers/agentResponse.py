@@ -10,7 +10,7 @@ from source.memory.agentMemory import (
 from source.models.serverModels.agentRequestModel import AgentRequestModel
 from source.agent.agent import agent
 
-async def agentRequestResponse(userRequest : AgentRequestModel, response : Response):
+async def agentRequestResponse(userRequest : AgentRequestModel, response : Response) -> str | dict[str, str | int]:
     
     userPrompt = userRequest.prompt
     

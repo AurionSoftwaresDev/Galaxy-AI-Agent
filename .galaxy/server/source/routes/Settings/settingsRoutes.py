@@ -1,8 +1,8 @@
 from fastapi import APIRouter
-from source.controllers.agentControllers.Settings.getModels import getAvaliableLLMModels
-from source.controllers.agentControllers.Settings.getProvidersController import getAvaliabeProviders
-from source.controllers.agentControllers.Settings.changeAgentTemperature import changeAgentTemperature
-from source.controllers.agentControllers.Settings.changeAgentProvider import changeAgentProvider
+from source.controllers.serverControllers.Settings.getModels import getAvaliableLLMModels
+from source.controllers.serverControllers.Settings.getProvidersController import getAvaliabeProviders
+from source.controllers.serverControllers.Settings.changeAgentTemperature import changeAgentTemperature
+from source.controllers.serverControllers.Settings.changeAgentProvider import changeAgentProvider
 
 agentSettingsRouter = APIRouter()
 

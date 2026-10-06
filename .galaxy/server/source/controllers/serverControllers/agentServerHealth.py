@@ -3,7 +3,7 @@ from fastapi import (
     status
 )
 
-def agentHealth(response : Response):
+def agentHealth(response : Response) -> dict[str, str | int]:
     
     response.status_code = status.HTTP_200_OK
 

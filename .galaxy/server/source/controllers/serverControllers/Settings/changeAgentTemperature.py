@@ -4,7 +4,7 @@ from source.provider.llmProviders import llmProviders
 from source.models.serverModels.Settings.changeAgentTemperatureModel import ChangeAgentTemperatureRequestModel
 from source.agent.agent import createNewAgent, llmProviderModel, setNewAgent
 
-def changeAgentTemperature(request : ChangeAgentTemperatureRequestModel, response : Response) -> dict:
+def changeAgentTemperature(request : ChangeAgentTemperatureRequestModel, response : Response) -> dict[str, float | int]:
 
     newTemperature : float = request.temperature
 
@@ -16,7 +16,7 @@ def changeAgentTemperature(request : ChangeAgentTemperatureRequestModel, respons
 
     newAgent = createNewAgent(llmProviderModel = llmProviderModel)
 
-    setNewAgent(agent = newAgent)
+    setNewAgent(newAgent = newAgent)
 
     response.status_code = status.HTTP_201_CREATED
 

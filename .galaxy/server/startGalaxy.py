@@ -3,6 +3,7 @@ from source.config.configs import getAgentServerRunningPort
 from source.utils.logger import logger
 from source.utils.helper import validateUserEnviromentVariables
 from source.memory.agentMemory import initializeAgentMemory
+from source.memory.chatHistoryMemory import initializeChatAgentMemory
 from source.config.LogPaths import SERVER_LOGS_PATH, SERVER_PID_STORE_FILE_NAME
 from source.config.RootPaths import BACKEND_PATH
 from source.utils.getCurrentDateTime import getCurrentDate
@@ -20,6 +21,12 @@ def mainHandler():
     initializeAgentMemory()
 
     logger.info("Memory Initialized Successfully")
+
+    logger.info("Chat Memory Initializing...")
+
+    initializeChatAgentMemory()
+
+    logger.info("Chat Memory Initlized")
 
     if arguments["server"]:
 

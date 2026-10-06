@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from source.controllers.agentControllers.agentServerHealth import agentHealth
+from source.controllers.serverControllers.agentServerHealth import agentHealth
 
 agentHealthChecker = APIRouter()
 

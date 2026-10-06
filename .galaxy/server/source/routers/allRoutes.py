@@ -1,9 +1,10 @@
-from fastapi import APIRouter, WebSocket
+from fastapi import APIRouter
 from source.routes.agentRoutes import agentRouter
-from source.routes.healthCheck import agentHealthChecker
+from source.routes.healthCheckRoute import agentHealthChecker
 from source.routes.webSocketRoute import agentWebSocketRouter
-from source.routes.Settings.settings import agentSettingsRouter
-from source.routes.terminateServer import agentServerTerminaterRouter
+from source.routes.Settings.settingsRoutes import agentSettingsRouter
+from source.routes.terminateServerRoute import agentServerTerminaterRouter
+from source.routes.Chats.chatsRoutes import agentChatsRouter
 
 rootRouter = APIRouter()
 
@@ -28,4 +29,9 @@ rootRouter.include_router(
 rootRouter.include_router(
     prefix = "/server",
     router = agentServerTerminaterRouter
+)
+
+rootRouter.include_router(
+    prefix = "/chats",
+    router = agentChatsRouter
 )

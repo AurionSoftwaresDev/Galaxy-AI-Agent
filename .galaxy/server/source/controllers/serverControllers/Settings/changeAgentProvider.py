@@ -6,7 +6,7 @@ from source.utils.extractProvider import extractProvider
 from source.models.serverModels.Settings.changeAgentProviderModel import ChangeAgentProviderModel
 from source.provider.providers import providerFunctions
 
-def changeAgentProvider(request : ChangeAgentProviderModel, response : Response):
+def changeAgentProvider(request : ChangeAgentProviderModel, response : Response) -> dict[str, str | int | list[str]]:
 
     oldProvider, _ = extractProvider(agent = agent, llmProviderModel = llmProviderModel)
 

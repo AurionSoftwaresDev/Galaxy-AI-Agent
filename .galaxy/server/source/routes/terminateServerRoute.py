@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from source.controllers.terminateServer import terminateServer
+from source.controllers.serverControllers.terminateServer import terminateServer
 
 agentServerTerminaterRouter = APIRouter()
 

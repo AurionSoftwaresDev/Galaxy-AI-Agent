@@ -1,9 +1,11 @@
 import sqlite3
+from typing import Any
+
 from source.utils.logger import logger
 from source.config.databasePaths import MEMORY_STORE_PATH
 
 
-def checkMemoryIsNoCorrupted(connection: sqlite3.Connection) -> bool:
+def checkMemoryIsNoCorrupted(connection : sqlite3.Connection) -> bool:
 
     if not MEMORY_STORE_PATH.exists():
 
@@ -11,7 +13,7 @@ def checkMemoryIsNoCorrupted(connection: sqlite3.Connection) -> bool:
 
         return False
 
-    cursor : sqlite3.Cursor = connection.cursor()
+    cursor: sqlite3.Cursor = connection.cursor()
 
     cursor.execute("""
         SELECT name
@@ -20,7 +22,7 @@ def checkMemoryIsNoCorrupted(connection: sqlite3.Connection) -> bool:
         AND name = 'messages'
     """)
 
-    table = cursor.fetchone()
+    table : Any = cursor.fetchone()
 
     if table is None:
 
@@ -59,7 +61,7 @@ def initializeAgentMemory() -> None:
 
         logger.info(f"Creating AI Agent Memory File At: {MEMORY_STORE_PATH}")
 
-        with sqlite3.connect(MEMORY_STORE_PATH) as connection:
+        with sqlite3.connect(database = MEMORY_STORE_PATH) as connection:
 
             connection.execute("""
                 CREATE TABLE messages (
@@ -76,7 +78,7 @@ def initializeAgentMemory() -> None:
 
         return
 
-    with sqlite3.connect(MEMORY_STORE_PATH) as connection:
+    with sqlite3.connect(database = MEMORY_STORE_PATH) as connection:
 
         checkMemoryIsNoCorrupted(connection)
 
@@ -89,7 +91,7 @@ def loadMessagesFromAgentMemory() -> list[dict[str, str]]:
 
     logger.info("Loading AI Agent Memory...")
 
-    with sqlite3.connect(MEMORY_STORE_PATH) as memory:
+    with sqlite3.connect(database = MEMORY_STORE_PATH) as memory:
 
         rows = memory.execute("""
             SELECT role, content
@@ -124,7 +126,7 @@ def saveMessagesInAgentMemory(role : str, content : str) -> None:
 
         logger.info("AI Agent Memory Saving...")
 
-    with sqlite3.connect(MEMORY_STORE_PATH) as memory:
+    with sqlite3.connect(database = MEMORY_STORE_PATH) as memory:
 
         memory.execute("""
             INSERT INTO messages (

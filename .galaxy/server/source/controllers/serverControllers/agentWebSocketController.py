@@ -1,5 +1,5 @@
 from fastapi import WebSocket, WebSocketDisconnect
-from langchain.messages import AIMessageChunk, HumanMessage, ToolMessage
+from langchain.messages import AIMessageChunk, ToolMessage
 from source.agent.agent import agent
 from source.memory.agentMemory import (
     loadMessagesFromAgentMemory,
@@ -142,7 +142,7 @@ async def agentWebSocketController(webSocket : WebSocket) -> None:
                     }
                 })
             
-    except WebSocketDisconnect as webSocketException:
+    except WebSocketDisconnect:
 
         logger.info("AI Agent Frontend To Backend WebSocket Client Disconnected")
 
