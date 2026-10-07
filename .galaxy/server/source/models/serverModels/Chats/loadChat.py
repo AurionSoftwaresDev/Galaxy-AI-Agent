@@ -1,6 +1,7 @@
+from typing import Optional
 from pydantic import BaseModel
 
 class LoadChatModel(BaseModel):
 
-    title : str
+    title : Optional[str] = None
     chatId : int

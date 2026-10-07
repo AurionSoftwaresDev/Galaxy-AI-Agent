@@ -6,15 +6,19 @@ from source.memory.chatHistoryMemory import loadChat
 def loadChatController(
     request : LoadChatModel, 
     response : Response
-) -> dict[
-        str, str | int | bool | list[str] 
-    ] | dict[
-            str, int | str | dict[str, str | int] | None
-        ] | None:
+) -> dict[str, str | int | dict[str, str | int | list[dict[str, str | int]]]]:
 
-    chatId : int = int(str(object = request.chatId).strip())
+    chatId : int | None = (
+        int(str(request.chatId).strip())
+        if request.chatId is not None
+        else None
+    )
 
-    chatTitle : str = str(object = request.chatId).strip()
+    chatTitle : str | None = (
+        str(request.title).strip()
+        if request.title is not None
+        else None
+    )
 
     if not chatId and not chatTitle:
 
@@ -27,9 +31,9 @@ def loadChatController(
 
     logger.info(f"Fetching Chat With Details { f"Id : { chatId } " if chatId else f"Title : { chatTitle }"}")
 
-    chatHistory = loadChat(
+    chatHistory : dict[str, str | int | list[dict[str, str | int]]] | None = loadChat(
         chatId = chatId,
-        title = chatTitle
+        title = chatTitle if (chatTitle != "" and chatTitle != None) else None
     )
 
     response.status_code = status.HTTP_200_OK
@@ -38,7 +42,7 @@ def loadChatController(
 
     return {
         "Status": response.status_code,
-        "Message": "Successfully Fetch Chat!" if chatHistory else "Failed To Fetch Completly!",
-        "Chat History": chatHistory
+        "Message": "Successfully Fetchd Chat!" if chatHistory else "Failed To Fetching Chat Completly!",
+        "Chat History": chatHistory if chatHistory else {}
     }
     

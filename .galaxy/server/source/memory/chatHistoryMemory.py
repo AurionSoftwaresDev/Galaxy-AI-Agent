@@ -207,7 +207,7 @@ def validateChatMemory() -> None:
 
         initializeChatAgentMemory()
 
-def loadChat(chatId : int = None, title : str = None) -> dict[str, str | int] | None:
+def loadChat(chatId : int = None, title : str = None) -> dict[str, str | int | list[dict[str, str | int]]] | None:
 
     with sqlite3.connect(database = CHAT_STORE_PATH) as connection:
     
@@ -254,7 +254,7 @@ def loadChat(chatId : int = None, title : str = None) -> dict[str, str | int] | 
             ORDER BY id ASC
         """, (chat[0],)).fetchall()
 
-    result = {
+    result : dict[str, str | int | list[dict[str, str | int]]] | None = {
         "id": chat[0],
         "title": chat[1],
         "created_at": chat[2],

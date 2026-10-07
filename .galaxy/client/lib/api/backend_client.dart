@@ -39,5 +39,23 @@ abstract class BackendClient {
     /// Calls `POST /server/desktop/disconnect` to kill/terminate the backend server process.
     Future<bool> disconnectDesktopServer();
 
+    /// Calls `GET /chats/load-all` -> returns list of all chat sessions.
+    Future<List<Map<String, dynamic>>> fetchAllChats();
+
+    /// Calls `POST /chats/create` with `{"title": title}` -> returns created chat details.
+    Future<Map<String, dynamic>?> createChat(String title);
+
+    /// Calls `POST /chats/load-chat` with `{"chatId": chatId, "title": title}` -> returns chat details and messages.
+    Future<Map<String, dynamic>?> loadChat(int chatId, String title);
+
+    /// Calls `POST /chats/save-message` with `{"chatId": chatId, "role": role, "content": content}`.
+    Future<bool> saveChatMessage(int chatId, String role, String content);
+
+    /// Calls `PATCH /chats/update-title` with `{"chatId": chatId, "title": title}`.
+    Future<bool> updateChatTitle(int chatId, String title);
+
+    /// Calls `POST /chats/delete` with `{"chatId": chatId, "title": title}`.
+    Future<bool> deleteChat(int chatId, String title);
+
     void dispose();
 }

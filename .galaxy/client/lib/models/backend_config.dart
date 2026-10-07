@@ -58,6 +58,24 @@ class BackendConfig {
     Uri get disconnectServerUri =>
         Uri.parse('$_normalizedBase/server/desktop/disconnect');
 
+    /// `GET /chats/load-all` -> lists all conversations
+    Uri get loadAllChatsUri => Uri.parse('$_normalizedBase/chats/load-all');
+
+    /// `POST /chats/create` -> creates a new conversation
+    Uri get createChatUri => Uri.parse('$_normalizedBase/chats/create');
+
+    /// `POST /chats/load-chat` -> loads a specific conversation and its messages
+    Uri get loadChatUri => Uri.parse('$_normalizedBase/chats/load-chat');
+
+    /// `POST /chats/save-message` -> persists a user or assistant message to SQLite
+    Uri get saveChatMessageUri => Uri.parse('$_normalizedBase/chats/save-message');
+
+    /// `PATCH /chats/update-title` -> updates a conversation title
+    Uri get updateChatTitleUri => Uri.parse('$_normalizedBase/chats/update-title');
+
+    /// `POST /chats/delete` -> deletes a conversation from SQLite
+    Uri get deleteChatUri => Uri.parse('$_normalizedBase/chats/delete');
+
     BackendConfig copyWith({
         String? baseUrl,
         Duration? connectionTimeout,

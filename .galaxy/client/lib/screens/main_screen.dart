@@ -37,6 +37,7 @@ class _MainScreenState extends State<MainScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
             if (mounted) {
                 _keyboardFocusNode.requestFocus();
+                widget.controller.fetchAllChats();
             }
         });
     }
@@ -255,6 +256,20 @@ class _MainScreenState extends State<MainScreen> {
                                                     _isChatInputFocused =
                                                         isFocused;
                                                 },
+                                                chatSessions: widget
+                                                    .controller.chatSessions,
+                                                currentChatId: widget
+                                                    .controller.currentChatId,
+                                                currentChatTitle: widget
+                                                    .controller.currentChatTitle,
+                                                onCreateChat: widget
+                                                    .controller.createNewChat,
+                                                onSelectChat: widget
+                                                    .controller.selectChat,
+                                                onRenameChat: widget
+                                                    .controller.renameChat,
+                                                onDeleteChat: widget
+                                                    .controller.deleteChat,
                                             ),
                                         ),
                                     ),

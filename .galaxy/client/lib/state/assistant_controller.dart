@@ -23,6 +23,10 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
     final List<ChatMessage> _messages = [];
     String? _activeStreamingMessageId;
 
+    final List<Map<String, dynamic>> _chatSessions = [];
+    int? _currentChatId;
+    String _currentChatTitle = 'Untitled Chat';
+
     StreamSubscription<ConnectionStatus>? _connectionSub;
     StreamSubscription<BackendEvent>? _eventSub;
     StreamSubscription<AssistantError>? _backendErrorSub;
@@ -52,6 +56,9 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
     String get streamingSubtitle => _streamingSubtitle;
     bool get isChatPanelOpen => _isChatPanelOpen;
     List<ChatMessage> get messages => List.unmodifiable(_messages);
+    List<Map<String, dynamic>> get chatSessions => List.unmodifiable(_chatSessions);
+    int? get currentChatId => _currentChatId;
+    String get currentChatTitle => _currentChatTitle;
 
     /// Toggles the left-side chat panel open or closed.
     void toggleChatPanel() {
@@ -65,6 +72,130 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
         _activeStreamingMessageId = null;
         _streamingSubtitle = '';
         notifyListeners();
+    }
+
+    /// Loads all chat sessions from `GET /chats/load-all`.
+    Future<void> fetchAllChats() async {
+        final sessions = await _backendClient.fetchAllChats();
+        _chatSessions.clear();
+        _chatSessions.addAll(sessions);
+        if (_chatSessions.isNotEmpty) {
+            if (_currentChatId == null) {
+                final first = _chatSessions.first;
+                final id = (first['id'] as num?)?.toInt() ?? 1;
+                final title = first['title'] as String? ?? 'Untitled Chat';
+                await selectChat(id, title);
+            }
+        } else {
+            await createNewChat('Untitled Chat');
+        }
+        notifyListeners();
+    }
+
+    /// Creates a new chat session via `POST /chats/create`.
+    Future<void> createNewChat([String? title]) async {
+        final chatTitle = (title != null && title.trim().isNotEmpty)
+            ? title.trim()
+            : 'Untitled Chat';
+        final resp = await _backendClient.createChat(chatTitle);
+        int newId = 1;
+        String newTitle = chatTitle;
+        if (resp != null) {
+            newId = (resp['Chat Id'] as num?)?.toInt() ?? 1;
+            newTitle = resp['Chat Title'] as String? ?? chatTitle;
+        }
+        _currentChatId = newId;
+        _currentChatTitle = newTitle;
+        _messages.clear();
+        _activeStreamingMessageId = null;
+        _streamingSubtitle = '';
+
+        final sessions = await _backendClient.fetchAllChats();
+        _chatSessions.clear();
+        if (sessions.isNotEmpty) {
+            _chatSessions.addAll(sessions);
+        } else {
+            _chatSessions.add({
+                'id': newId,
+                'title': newTitle,
+                'created_at': DateTime.now().toIso8601String(),
+                'updated_at': DateTime.now().toIso8601String(),
+            });
+        }
+        notifyListeners();
+    }
+
+    /// Loads messages for a selected chat via `POST /chats/load-chat`.
+    Future<void> selectChat(int chatId, String title) async {
+        _currentChatId = chatId;
+        _currentChatTitle = title;
+        _messages.clear();
+        _activeStreamingMessageId = null;
+        _streamingSubtitle = '';
+
+        final history = await _backendClient.loadChat(chatId, title);
+        if (history != null && history['messages'] is List) {
+            final rawList = history['messages'] as List;
+            for (final item in rawList) {
+                if (item is Map) {
+                    final roleStr = item['role'] as String? ?? 'user';
+                    final content = item['content'] as String? ?? '';
+                    final role =
+                        roleStr == 'assistant' ? ChatRole.assistant : ChatRole.user;
+                    final ts = item['created_at'] != null
+                        ? DateTime.tryParse(item['created_at'].toString()) ??
+                            DateTime.now()
+                        : DateTime.now();
+                    _messages.add(
+                        ChatMessage(
+                            id: 'msg_${item['id'] ?? DateTime.now().microsecondsSinceEpoch}',
+                            role: role,
+                            content: content,
+                            timestamp: ts,
+                        ),
+                    );
+                }
+            }
+        }
+        notifyListeners();
+    }
+
+    /// Updates chat title via `PATCH /chats/update-title`.
+    Future<bool> renameChat(int chatId, String newTitle) async {
+        final trimmed = newTitle.trim();
+        if (trimmed.isEmpty) return false;
+        final ok = await _backendClient.updateChatTitle(chatId, trimmed);
+        if (ok) {
+            if (_currentChatId == chatId) {
+                _currentChatTitle = trimmed;
+            }
+            final idx = _chatSessions.indexWhere((c) => c['id'] == chatId);
+            if (idx != -1) {
+                _chatSessions[idx]['title'] = trimmed;
+            }
+            notifyListeners();
+        }
+        return ok;
+    }
+
+    /// Deletes chat via `POST /chats/delete`.
+    Future<bool> deleteChat(int chatId, String title) async {
+        final ok = await _backendClient.deleteChat(chatId, title);
+        if (ok) {
+            _chatSessions.removeWhere((c) => c['id'] == chatId);
+            if (_currentChatId == chatId) {
+                if (_chatSessions.isNotEmpty) {
+                    final next = _chatSessions.first;
+                    final nextId = (next['id'] as num?)?.toInt() ?? 1;
+                    final nextTitle = next['title'] as String? ?? 'Untitled Chat';
+                    await selectChat(nextId, nextTitle);
+                } else {
+                    await createNewChat('Untitled Chat');
+                }
+            }
+            notifyListeners();
+        }
+        return ok;
     }
 
     /// Initializes default voice mode on startup, connects to `http://127.0.0.1:8000`,
@@ -84,6 +215,7 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
 
         if (_connectionStatus == ConnectionStatus.connected) {
             await refreshAgentSettings();
+            await fetchAllChats();
         }
     }
 
@@ -135,6 +267,10 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
         final trimmed = prompt.trim();
         if (trimmed.isEmpty) return;
 
+        if (_currentChatId == null) {
+            await createNewChat('Untitled Chat');
+        }
+
         final now = DateTime.now();
         final userMsg = ChatMessage(
             id: 'user_${now.microsecondsSinceEpoch}',
@@ -158,6 +294,10 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
         _activeTool = null;
         _streamingSubtitle = '';
         _setAssistantState(AssistantState.thinking);
+
+        if (_currentChatId != null) {
+            _backendClient.saveChatMessage(_currentChatId!, 'user', trimmed);
+        }
 
         if (_connectionStatus == ConnectionStatus.offline) {
             await reconnect();
@@ -308,6 +448,13 @@ class AssistantController extends ChangeNotifier with ShortcutsControllerMixin {
         if (index != -1) {
             final existing = _messages[index];
             _messages[index] = existing.copyWith(isStreaming: false);
+            if (_currentChatId != null && existing.content.isNotEmpty) {
+                _backendClient.saveChatMessage(
+                    _currentChatId!,
+                    'assistant',
+                    existing.content,
+                );
+            }
         }
         _activeStreamingMessageId = null;
     }

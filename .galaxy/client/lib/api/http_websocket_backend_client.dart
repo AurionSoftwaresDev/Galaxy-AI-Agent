@@ -378,6 +378,130 @@ class HttpWebSocketBackendClient implements BackendClient {
         return contactedServer;
     }
 
+    @override
+    Future<List<Map<String, dynamic>>> fetchAllChats() async {
+        if (_isDisposed) return [];
+        try {
+            final response = await _httpClient
+                .get(_config.loadAllChatsUri)
+                .timeout(_config.requestTimeout);
+
+            if (response.statusCode == 200) {
+                final decoded = jsonDecode(response.body);
+                if (decoded is List) {
+                    return decoded.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+                }
+            }
+        } catch (_) {}
+        return [];
+    }
+
+    @override
+    Future<Map<String, dynamic>?> createChat(String title) async {
+        if (_isDisposed) return null;
+        try {
+            final response = await _httpClient
+                .post(
+                    _config.createChatUri,
+                    headers: const {'Content-Type': 'application/json'},
+                    body: jsonEncode({'title': title.trim()}),
+                )
+                .timeout(_config.requestTimeout);
+
+            if (response.statusCode == 201 || response.statusCode == 200) {
+                final decoded = jsonDecode(response.body);
+                if (decoded is Map<String, dynamic>) {
+                    return decoded;
+                }
+            }
+        } catch (_) {}
+        return null;
+    }
+
+    @override
+    Future<Map<String, dynamic>?> loadChat(int chatId, String title) async {
+        if (_isDisposed) return null;
+        try {
+            final response = await _httpClient
+                .post(
+                    _config.loadChatUri,
+                    headers: const {'Content-Type': 'application/json'},
+                    body: jsonEncode({'chatId': chatId, 'title': title}),
+                )
+                .timeout(_config.requestTimeout);
+
+            if (response.statusCode == 200) {
+                final decoded = jsonDecode(response.body);
+                if (decoded is Map<String, dynamic>) {
+                    final history = decoded['Chat History'];
+                    if (history is Map<String, dynamic>) {
+                        return history;
+                    }
+                    return decoded;
+                }
+            }
+        } catch (_) {}
+        return null;
+    }
+
+    @override
+    Future<bool> saveChatMessage(int chatId, String role, String content) async {
+        if (_isDisposed) return false;
+        try {
+            final response = await _httpClient
+                .post(
+                    _config.saveChatMessageUri,
+                    headers: const {'Content-Type': 'application/json'},
+                    body: jsonEncode({
+                        'chatId': chatId,
+                        'role': role,
+                        'content': content,
+                    }),
+                )
+                .timeout(_config.requestTimeout);
+
+            return response.statusCode == 202 || response.statusCode == 200;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    @override
+    Future<bool> updateChatTitle(int chatId, String title) async {
+        if (_isDisposed) return false;
+        try {
+            final response = await _httpClient
+                .patch(
+                    _config.updateChatTitleUri,
+                    headers: const {'Content-Type': 'application/json'},
+                    body: jsonEncode({'chatId': chatId, 'title': title.trim()}),
+                )
+                .timeout(_config.requestTimeout);
+
+            return response.statusCode == 202 || response.statusCode == 200;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    @override
+    Future<bool> deleteChat(int chatId, String title) async {
+        if (_isDisposed) return false;
+        try {
+            final response = await _httpClient
+                .post(
+                    _config.deleteChatUri,
+                    headers: const {'Content-Type': 'application/json'},
+                    body: jsonEncode({'chatId': chatId, 'title': title}),
+                )
+                .timeout(_config.requestTimeout);
+
+            return response.statusCode == 200;
+        } catch (_) {
+            return false;
+        }
+    }
+
     void _handleWebSocketMessage(dynamic rawData) {
         if (_isDisposed || rawData is! String) return;
 
