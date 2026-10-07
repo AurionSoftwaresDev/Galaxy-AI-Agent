@@ -1,15 +1,18 @@
 import os, psutil
+from fastapi import Response, status
 from source.utils.logger import logger
 from source.utils.helper import findServerPID
 from source.config.configs import getAgentServerRunningPort 
 
-def terminateServer() -> None:
+def terminateServer(response : Response) -> None:
 
     serverPID : int = findServerPID()
 
     serverPort : int = getAgentServerRunningPort()
 
     serverPort = serverPort if serverPort and serverPort != -1 else 8000
+
+    response.status_code = status.HTTP_204_NO_CONTENT
 
     if serverPID and serverPID != -1:
 

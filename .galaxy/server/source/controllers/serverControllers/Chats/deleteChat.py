@@ -4,7 +4,10 @@ from source.models.serverModels.Chats.deleteChatModel import DeleteChatModel
 from source.memory.chatHistoryMemory import deleteChat
 from source.utils.logger import logger
 
-def deleteChatController(request : DeleteChatModel, response : Response) -> dict[str, str | int]:
+def deleteChatController(
+    request : DeleteChatModel, 
+    response : Response
+) -> dict[str, str | int]:
 
     userGivenChatId : int = int(str(request.chatId).strip())
 

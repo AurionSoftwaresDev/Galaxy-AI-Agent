@@ -3,7 +3,14 @@ from source.utils.logger import logger
 from source.models.serverModels.Chats.loadChat import LoadChatModel
 from source.memory.chatHistoryMemory import loadChat
 
-def loadChatController(request : LoadChatModel, response : Response) -> dict | None:
+def loadChatController(
+    request : LoadChatModel, 
+    response : Response
+) -> dict[
+        str, str | int | bool | list[str] 
+    ] | dict[
+            str, int | str | dict[str, str | int] | None
+        ] | None:
 
     chatId : int = int(str(object = request.chatId).strip())
 

@@ -4,7 +4,10 @@ from source.models.serverModels.Chats.createNewChatModel import CreateNewChatMod
 from source.memory.chatHistoryMemory import createNewChat
 from source.utils.logger import logger
 
-def createNewChatController(request : CreateNewChatModel, response : Response) -> dict[str, str | int]:
+def createNewChatController(
+    request : CreateNewChatModel, 
+    response : Response
+) -> dict[str, str | int]:
 
     inputTitle : str = request.title.strip()
     

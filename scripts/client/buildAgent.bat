@@ -204,7 +204,6 @@ if "%BUILD_REQUIRED%"=="0" (
 
 )
 
-
 REM ------------------------------------------------------------
 REM FIND RELEASE EXECUTABLE
 REM ------------------------------------------------------------
@@ -259,3 +258,9 @@ robocopy "%WINDOWS_BUILD%" "%WINDOWS_BUILD_MOVE%" /E /R:3 /W:5
 
 echo
 echo "[OK] Files Successfully Moved."
+
+echo "[INFO] Clean Up Build..."
+
+call flutter clean
+
+echo "[OK] Cleaned Up Build"

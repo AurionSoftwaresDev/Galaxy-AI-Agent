@@ -250,6 +250,12 @@ mkdir -p $MOVE_BUILD
 
 cp -r "$BUILD_SOURCE/"* "$MOVE_BUILD/"
 
+echo [INFO] Cleaning Up Build Temporary Data...
+
+flutter clean
+
+echo [OK] Cleaned Build Temporary Data
+
 echo "============================================================"
 echo "                 BUILD SUCCESSFUL"
 echo "============================================================"
