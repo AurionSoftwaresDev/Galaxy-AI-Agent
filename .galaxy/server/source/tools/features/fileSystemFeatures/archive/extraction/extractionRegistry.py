@@ -1,3 +1,4 @@
+from typing import Callable
 from source.tools.features.fileSystemFeatures.archive.extraction.extractors.extractorsFunctions import (
     zipExtractor,
     tarExtractor,
@@ -5,7 +6,7 @@ from source.tools.features.fileSystemFeatures.archive.extraction.extractors.extr
     rarExtractor,
 )
 
-EXTRACTORS_HANDLERS = {
+EXTRACTORS_HANDLERS : dict[str, Callable]= {
     ".zip": zipExtractor,
     ".tar": tarExtractor,
     ".7z": ZzExtractor,

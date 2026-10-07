@@ -2,7 +2,6 @@ agentVersion = "v1.2"
 agentName = "Galaxy AI Agent"
 
 agentinformations = f"""
-    
 Name: { agentName }
 Version: { agentVersion }
 Description:

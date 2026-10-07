@@ -115,3 +115,11 @@ rarfile==4.5
 # Create A Executable For Server 
 pyinstaller==6.22.3
 
+# ==============================
+# Agent System Prompt Formatting
+# ==============================
+# Create A Clean Table
+pandas==3.0.6
+
+# Pandas External Libary Dependency
+tabulate==0.10.0

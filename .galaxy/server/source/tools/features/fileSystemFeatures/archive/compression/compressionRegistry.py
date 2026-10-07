@@ -1,3 +1,4 @@
+from typing import Callable
 from source.tools.features.fileSystemFeatures.archive.compression.compressors.compressorsFunctions import (
     zipCompressor,
     tarCompressor,
@@ -5,7 +6,7 @@ from source.tools.features.fileSystemFeatures.archive.compression.compressors.co
     rarCompressor,
 )
 
-COMPRESSORS_HANDLERS = {
+COMPRESSORS_HANDLERS : dict[str, Callable] = {
     ".zip": zipCompressor,
     ".tar": tarCompressor,
     ".7z": ZzCompressor,

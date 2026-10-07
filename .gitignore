@@ -37,6 +37,7 @@ build
 *.pid
 logs
 /logs
+logs/
 
 ### AI Agent Memory ###
 memory.db

@@ -6,7 +6,7 @@ import 'assistant_state.dart';
 /// and `backend/source/routers/allRoutes.py`.
 @immutable
 class BackendConfig {
-    /// Matches `uvicorn server:agentServer --reload --port 8000` in `startGalaxy.py`.
+    /// Matches `uvicorn server:agentServer --port 8000` in `startGalaxy.py`.
     static const String defaultBaseUrl = 'http://127.0.0.1:8000';
 
     final String baseUrl;

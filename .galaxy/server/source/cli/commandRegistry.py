@@ -1,3 +1,5 @@
+from typing import Callable
+
 from source.cli.commands.help import help
 from source.cli.commands.status import status
 from source.cli.commands.tools import tools
@@ -7,7 +9,7 @@ from source.cli.commands.clear import clear
 from source.cli.commands.provider import provider
 from source.cli.commands.terminateServer import terminateServer
 
-COMMAND_REGISTRY = {
+COMMAND_REGISTRY : dict[str, Callable] = {
     "/help": help,
     "/status": status,
     "/tools": tools,
@@ -15,5 +17,5 @@ COMMAND_REGISTRY = {
     "/exit": exit,
     "/clear": clear,
     "/providers": provider,
-    "/terminateServer": terminateServer
+    "/terminate-server": terminateServer
 }
