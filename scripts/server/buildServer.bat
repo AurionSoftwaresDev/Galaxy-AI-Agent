@@ -17,17 +17,20 @@ setlocal enabledelayedexpansion
 
 set "CURRENT_SCRIPT_DIR=%~dp0"
 
-for %%I in ("%CURRENT_SCRIPT_DIR%..\..") do set "ROOT=%%~fI\.galaxy"
+for %%I in ("%CURRENT_SCRIPT_DIR%..\..") do set "ROOT=%%~fI"
 
 if "%ROOT:~-1%"=="\" set "ROOT=%ROOT:~0,-1%"
 
-set "BACKEND=%ROOT%\server"
+set "BACKEND=%ROOT%\.galaxy\server"
 set "VENV=%BACKEND%\.venv"
 set "VENV_PYTHON=%VENV%\Scripts\python.exe"
+set "ENV_VAR=%BACKEND%\.env"
 
 set "BACKEND_TEMP=%ROOT%\build\cache"
 set "BACKEND_BUILD=%ROOT%\build\"
 set "BACKEND_BUILD_TEMP_DATA=%ROOT%\build\data"
+
+set "ICON_PATH=%ROOT%\scripts\images\galaxyIcon.ico"
 
 echo [INFO] Project:
 echo        %ROOT%
@@ -201,6 +204,16 @@ echo        %VENV_PYTHON%
 echo.
 
 REM ------------------------------------------------------------
+REM Activate Virtual Environment
+REM ------------------------------------------------------------
+
+echo [INFO] Activating Virtual Environment...
+
+call %VENV%\Scripts\activate
+
+echo [OK] Virtual Environment Activated!
+
+REM ------------------------------------------------------------
 REM UPGRADE PIP
 REM ------------------------------------------------------------
 
@@ -263,12 +276,40 @@ if not defined REQUIREMENTS (
     echo.
 )
 
-echo [Info] Building Server Executable File...
+echo [Info] Moving Envrionment .env File To /build...
 
-if not exist "%ROOT%\build"
+if not exist "%ROOT%\build" (
     md "%ROOT%\build"
 )
 
-pyinstaller --onefile %BACKEND%\startGalaxy.py --distpath %ROOT%\build --workpath %BACKEND_TEMP% --specpath %BACKEND_BUILD_TEMP_DATA%\server
+copy /Y "%ENV_VAR%" "%ROOT%\build\"
+
+echo [OK] Successfully Moved Environment File
+
+echo [Info] Building Server Executables Files...
+
+pyinstaller --clean ^
+        --noconfirm ^
+        --onefile %BACKEND%\startGalaxy.py ^
+	    --distpath %ROOT%\build ^
+	    --workpath %BACKEND_TEMP% ^
+	    --specpath %BACKEND_BUILD_TEMP_DATA%\server ^
+        --icon %ICON_PATH%
+
+pyinstaller --clean ^
+        --noconfirm ^
+        --onefile %BACKEND%\server.py ^
+        --distpath %ROOT%\build\server ^
+        --workpath %BACKEND_TEMP% ^
+        --specpath %BACKEND_BUILD_TEMP_DATA%\server ^
+        --icon %ICON_PATH%
+
+pyinstaller --clean ^
+        --noconfirm ^
+        --onefile %BACKEND%\main.py ^
+        --distpath %ROOT%\build\server ^
+        --workpath %BACKEND_TEMP% ^
+        --specpath %BACKEND_BUILD_TEMP_DATA%\server ^
+        --icon %ICON_PATH%
 
 echo [OK] Server Executable Created.

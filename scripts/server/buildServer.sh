@@ -27,6 +27,8 @@ BACKEND_TEMP=$ROOT/build/cache
 BACKEND_BUILD=$ROOT/build
 BACKEND_BUILD_TEMP_DATA=$ROOT/build/data
 
+ICON_PATH=$ROOT/scripts/images/galaxyIcon.ico
+
 echo "[INFO] Project:"
 echo "       $ROOT"
 echo
@@ -224,6 +226,16 @@ else
 fi
 
 # ------------------------------------------------------------ 
+# MOVE ENVIRONMENT FILE .env
+# ------------------------------------------------------------ 
+
+echo [Info] Moving Envrionment .env File To /build...
+
+cp $BACKEND "$ROOT\build"
+
+echo [OK] Successfully Moved Environment File
+
+# ------------------------------------------------------------ 
 # BUILD BACKEND EXECUTABLE
 # ------------------------------------------------------------ 
 
@@ -231,12 +243,29 @@ echo [INFO] Building Server Executable File...
 
 mkdir -p "$ROOT\build"
 
-cp -r "$BUILD_SOURCE/"* "$MOVE_BUILD/"
+pyinstaller --clean \
+        --noconfirm \
+        --onefile $BACKEND/startGalaxy.py \
+	    --distpath $ROOT/build \
+	    --workpath $BACKEND_TEMP \
+	    --specpath $BACKEND_BUILD_TEMP_DATA/server \
+        --icon $ICON_PATH
 
-pyinstaller --onefile $BACKEND/startGalaxy.py \
-    --distpath $ROOT/build \
-    --workpath $BACKEND_TEMP \
-    --specpath $BACKEND_BUILD_TEMP_DATA/server
+pyinstaller --clean \
+        --noconfirm \
+        --onefile $BACKEND/server.py \
+        --distpath $ROOT/build/server \
+        --workpath $BACKEND_TEMP \
+        --specpath $BACKEND_BUILD_TEMP_DATA/server \
+        --icon $ICON_PATH
+
+pyinstaller --clean \
+        --noconfirm \
+        --onefile $BACKEND/main.py \
+        --distpath $ROOT/build/server \
+        --workpath $BACKEND_TEMP \
+        --specpath $BACKEND_BUILD_TEMP_DATA/server \
+        --icon $ICON_PATH
 
 if [[ $? -ne 0 ]]; then
     echo
