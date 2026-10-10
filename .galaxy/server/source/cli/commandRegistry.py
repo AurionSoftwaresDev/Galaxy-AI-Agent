@@ -8,6 +8,8 @@ from source.cli.commands.exit import exit
 from source.cli.commands.clear import clear
 from source.cli.commands.provider import provider
 from source.cli.commands.terminateServer import terminateServer
+from source.cli.commands.startServer import startAgentServer
+from source.cli.commands.cleanUpLogs import cleanUpLogs
 
 COMMAND_REGISTRY : dict[str, Callable] = {
     "/help": help,
@@ -17,5 +19,7 @@ COMMAND_REGISTRY : dict[str, Callable] = {
     "/exit": exit,
     "/clear": clear,
     "/providers": provider,
-    "/terminate-server": terminateServer
+    "/terminate-server": terminateServer,
+    "/start-server": startAgentServer,
+    "/cleanup-logs": cleanUpLogs
 }

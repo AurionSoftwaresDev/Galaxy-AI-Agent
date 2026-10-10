@@ -1,4 +1,4 @@
-import os
+import os, warnings
 from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
 from source.agent.agent import agent
 from source.memory.agentMemory import (
@@ -14,6 +14,12 @@ from langchain.messages import (
 from source.utils.Terminal.TerminalContextShared import terminalUI
 from rich.console import Console
 from source.cli.cli import CLI
+
+warnings.filterwarnings(
+    action = "ignore",
+    message = "Model .* uses fixed sampling defaults.*",
+    category = UserWarning
+)
 
 console : Console           =   Console()
 cli : CLI                   =   CLI()

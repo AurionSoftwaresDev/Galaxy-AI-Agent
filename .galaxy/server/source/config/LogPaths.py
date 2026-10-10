@@ -4,3 +4,4 @@ AGENT_LOGS_PATH : Path = (Path(__file__).resolve().parents[2] / "logs" / "agentL
 SERVER_LOGS_PATH : Path = (Path(__file__).resolve().parents[2] / "logs" / "serverLogs" )
 SERVER_PID_STORE_FILE_NAME : str = "server.pid"
 EXECUTABLE_PATH : Path = (Path(__file__).resolve().parents[4] / "build" / "server" )
+LOGS_PATH : Path = (Path(__file__).resolve().parents[2] / "logs")

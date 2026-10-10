@@ -18,9 +18,9 @@ def terminateServer(response : Response) -> None:
 
         try:
 
-            if psutil.pid_exists(serverPID):
+            if psutil.pid_exists(pid = serverPID):
 
-                serverProcess = psutil.Process(serverPID)
+                serverProcess = psutil.Process(pid = serverPID)
 
                 if "python" in serverProcess.name().lower() or "uvicorn" in serverProcess.name().lower():
 
@@ -36,7 +36,9 @@ def terminateServer(response : Response) -> None:
 
         logger.exception("PID Was Wrong!")
 
-    for serverProcess in psutil.process_iter(["name", "pid"]):
+    logger.info("Killing Server In Hardcore Mode All Process Killing...")
+
+    for serverProcess in psutil.process_iter(attrs = ["name", "pid"]):
 
         try:
 

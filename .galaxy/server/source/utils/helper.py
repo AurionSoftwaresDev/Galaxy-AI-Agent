@@ -170,8 +170,6 @@ def getExecutableExtension(executable : str) -> Path:
 
     return EXECUTABLE_PATH / f"{ executable }"
 
-
-
 def startServer():
 
     logger.info("Starting Agent Server And Routers...")
@@ -223,4 +221,3 @@ def startServer():
         serverPIDFile.write(str(serverPID))
 
     logger.info("Uvicorn Galaxy AI Agent Server Started In The Background")
-

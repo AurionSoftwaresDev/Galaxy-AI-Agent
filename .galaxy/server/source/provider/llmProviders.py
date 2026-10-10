@@ -1,9 +1,16 @@
+import warnings
 from source.config.configs import getGeminiAPIKey, getMistralAPIKey
 from langchain_ollama import ChatOllama
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_mistralai import ChatMistralAI
 from source.provider.models import models
 from source.provider.llmTemperatures import llmTemperature
+
+warnings.filterwarnings(
+    action = "ignore",
+    message = "Model .* uses fixed sampling defaults.*",
+    category = UserWarning
+)
 
 # All LLM Providers
 class llmProviders:

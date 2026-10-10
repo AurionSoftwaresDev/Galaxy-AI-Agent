@@ -40,8 +40,14 @@ COMMANDS_LIST : list[tuple[str, str, str, str]] = [
     (
         "/terminate-server",
         "Server",
-        "Send shutdown sequence to stop the background FastAPI daemon server",
-        "/terminateServer"
+        "Send shutdown sequence to stop the background FastAPI daemon Agent server",
+        "/terminate-server"
+    ),
+    (
+        "/start-server",
+        "Server",
+        "Send start squence to start background FastAPI deamon Agent Server",
+        "/start-server"
     ),
     (
         "/exit",
