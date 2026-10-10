@@ -1,11 +1,28 @@
-import sys, ctypes
-from PyQt6.QtWidgets import QApplication, QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QGraphicsDropShadowEffect
+import platform
+import ctypes
+from PyQt6.QtWidgets import (
+    QDialog,
+    QVBoxLayout, 
+    QHBoxLayout, 
+    QLabel, 
+    QPushButton, 
+    QGraphicsDropShadowEffect 
+)
 from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import QColor, QFont, QPainter, QRadialGradient, QBrush, QPen, QIcon
+from PyQt6.QtGui import ( 
+    QColor, 
+    QPainter, 
+    QRadialGradient, 
+    QBrush, 
+    QPen,
+    QIcon
+)
 
 myappid = "Aurion.GalaxyAIAgent.Backend.Diloag.Version1.0"
 
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
+if platform.system().lower() == "windows":
+
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
 
 class NeonPremiumDialog(QDialog):
     def __init__(self, title_text="Window", error_text="An unexpected system error occurred."):

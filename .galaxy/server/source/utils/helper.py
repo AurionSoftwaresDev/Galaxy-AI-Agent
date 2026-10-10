@@ -1,3 +1,4 @@
+from pathlib import Path
 import platform
 import time, random, os, sys
 from source.utils.logger import logger
@@ -6,8 +7,11 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtCore import QLoggingCategory
 from source.gui.widgets.DialogBox import NeonPremiumDialog
 from source.constants.agentHelpingMenu import HELPING_MENU
-from source.config.LogPaths import SERVER_LOGS_PATH, SERVER_PID_STORE_FILE_NAME
-
+from source.config.LogPaths import (
+    SERVER_LOGS_PATH, 
+    SERVER_PID_STORE_FILE_NAME,
+    EXECUTABLE_PATH
+)
 def sleep(startRange : int, endRange : int) -> int:
     
     try:
@@ -68,8 +72,8 @@ def validateUserEnviromentVariables():
             print("[Exception] Providers Keys Not Found Check Logs.")
 
             dialog = NeonPremiumDialog(
-                title_text="CRTICAL AI Agent Error", 
-                error_text="Your Environment Variables Are Missing Both \"GOOGLE_API_KEY\" And \"MISTRAL_API_KEY\". At Least One Of These API Keys Must Be Configured To Continue"
+                title_text = "CRTICAL AI Agent Error", 
+                error_text = "Your Environment Variables Are Missing Both \"GOOGLE_API_KEY\" And \"MISTRAL_API_KEY\". At Least One Of These API Keys Must Be Configured To Continue"
             )
 
             dialog.show()
@@ -152,3 +156,11 @@ def findServerPID() -> int:
         return -1
 
     return serverPID
+
+def getExecutableExtension(executable : str) -> Path:
+
+    if sys.platform == "win32":
+
+        return EXECUTABLE_PATH / f"{ executable }.exe"
+
+    return EXECUTABLE_PATH / f"{ executable }"

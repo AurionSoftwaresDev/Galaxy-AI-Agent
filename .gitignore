@@ -30,6 +30,7 @@ __pycache__
 .temp 
 .tmp
 build
+build.*
 .dart_tool
 .flutter-plugins
 .flutter-plugins-dependencies

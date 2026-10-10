@@ -256,7 +256,6 @@ if not exist %WINDOWS_BUILD_MOVE% (
 
 robocopy "%WINDOWS_BUILD%" "%WINDOWS_BUILD_MOVE%" /E /R:3 /W:5
 
-echo
 echo "[OK] Files Successfully Moved."
 
 echo "[INFO] Clean Up Build..."
