@@ -1,6 +1,5 @@
 from pathlib import Path
-import platform
-import time, random, os, sys
+import time, random, os, sys, platform, subprocess
 from source.utils.logger import logger
 from source.config.EnviromentKeys import ENVRIOMENTAL_KEYS
 from PyQt6.QtWidgets import QApplication
@@ -12,6 +11,12 @@ from source.config.LogPaths import (
     SERVER_PID_STORE_FILE_NAME,
     EXECUTABLE_PATH
 )
+from source.utils.getCurrentDateTime import getCurrentDate
+from source.gui.widgets.DialogBox import NeonPremiumDialog
+from source.config.RootPaths import BACKEND_PATH
+from source.config.configs import getAgentServerRunningPort
+
+
 def sleep(startRange : int, endRange : int) -> int:
     
     try:
@@ -164,3 +169,58 @@ def getExecutableExtension(executable : str) -> Path:
         return EXECUTABLE_PATH / f"{ executable }.exe"
 
     return EXECUTABLE_PATH / f"{ executable }"
+
+
+
+def startServer():
+
+    logger.info("Starting Agent Server And Routers...")
+        
+    logger.info("Creating Server Logs File And Folder Or Configure...")
+
+    SERVER_LOGS_PATH.mkdir(parents = True, exist_ok = True)
+
+    serverLogsFile = open(
+        file = SERVER_LOGS_PATH / f"Server_{getCurrentDate()}.log",
+        encoding = "utf-8",
+        mode = "a"
+    )
+
+    serverErrorLogsFile = open(
+        file = SERVER_LOGS_PATH / f"ServerErrors_{getCurrentDate()}.log",
+        encoding = "utf-8",
+        mode = "a"
+    )
+
+    agentServerProcess = subprocess.Popen(
+        args = [
+            sys.executable,
+            "-m",
+            "uvicorn",
+            "server:agentServer",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            f"{ getAgentServerRunningPort() }",
+            "--log-level",
+            "info"
+        ],
+        cwd = BACKEND_PATH,
+        stdin = subprocess.DEVNULL,
+        stdout = serverLogsFile,
+        stderr = serverErrorLogsFile,
+        creationflags = subprocess.CREATE_NO_WINDOW
+    )
+
+    serverPID = agentServerProcess.pid
+
+    logger.debug(f"AI Agent Server Run At PID : { serverPID }")
+
+    SERVER_LOGS_PATH.mkdir(exist_ok = True, parents = True)
+
+    with open(file = f"{ SERVER_LOGS_PATH }/{ SERVER_PID_STORE_FILE_NAME }", mode = "w") as serverPIDFile:
+
+        serverPIDFile.write(str(serverPID))
+
+    logger.info("Uvicorn Galaxy AI Agent Server Started In The Background")
+

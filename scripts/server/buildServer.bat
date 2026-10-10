@@ -288,28 +288,69 @@ echo [OK] Successfully Moved Environment File
 
 echo [Info] Building Server Executables Files...
 
-pyinstaller --clean ^
-        --noconfirm ^
-        --onefile %BACKEND%\startGalaxy.py ^
-	    --distpath %ROOT%\build ^
-	    --workpath %BACKEND_TEMP% ^
-	    --specpath %BACKEND_BUILD_TEMP_DATA%\server ^
-        --icon %ICON_PATH%
+echo [INFO] Building Galaxy executables...
 
-pyinstaller --clean ^
-        --noconfirm ^
-        --onefile %BACKEND%\server.py ^
-        --distpath %ROOT%\build\server ^
-        --workpath %BACKEND_TEMP% ^
-        --specpath %BACKEND_BUILD_TEMP_DATA%\server ^
-        --icon %ICON_PATH%
+REM Use the exact Python from the project virtual environment.
+set "PYI=%VENV_PYTHON%"
 
-pyinstaller --clean ^
-        --noconfirm ^
-        --onefile %BACKEND%\main.py ^
-        --distpath %ROOT%\build\server ^
-        --workpath %BACKEND_TEMP% ^
-        --specpath %BACKEND_BUILD_TEMP_DATA%\server ^
-        --icon %ICON_PATH%
+REM Build launcher
+"%PYI%" -m PyInstaller ^
+    --clean --noconfirm --onefile ^
+    --name startGalaxy ^
+    --paths "%BACKEND%" ^
+    --collect-submodules source ^
+    --copy-metadata pandas ^
+    --copy-metadata tabulate ^
+    --hidden-import tabulate ^
+    --icon "%ICON_PATH%" ^
+    --distpath "%ROOT%\build" ^
+    --workpath "%BACKEND_TEMP%\startGalaxy" ^
+    --specpath "%BACKEND_BUILD_TEMP_DATA%\server" ^
+    "%BACKEND%\startGalaxy.py"
 
-echo [OK] Server Executable Created.
+if errorlevel 1 goto :BUILD_FAILED
+
+REM Build API server
+"%PYI%" -m PyInstaller ^
+    --clean --noconfirm --onefile ^
+    --name server ^
+    --paths "%BACKEND%" ^
+    --collect-submodules source ^
+    --copy-metadata pandas ^
+    --copy-metadata tabulate ^
+    --hidden-import tabulate ^
+    --icon "%ICON_PATH%" ^
+    --distpath "%ROOT%\build\server" ^
+    --workpath "%BACKEND_TEMP%\server" ^
+    --specpath "%BACKEND_BUILD_TEMP_DATA%\server" ^
+    "%BACKEND%\server.py"
+
+if errorlevel 1 goto :BUILD_FAILED
+
+REM Build interactive agent
+"%PYI%" -m PyInstaller ^
+    --clean --noconfirm --onefile ^
+    --name main ^
+    --paths "%BACKEND%" ^
+    --collect-submodules source ^
+    --copy-metadata pandas ^
+    --copy-metadata tabulate ^
+    --hidden-import tabulate ^
+    --icon "%ICON_PATH%" ^
+    --distpath "%ROOT%\build\server" ^
+    --workpath "%BACKEND_TEMP%\main" ^
+    --specpath "%BACKEND_BUILD_TEMP_DATA%\server" ^
+    "%BACKEND%\main.py"
+
+if errorlevel 1 goto :BUILD_FAILED
+
+echo.
+echo [OK] All executables built successfully.
+goto :BUILD_END
+
+:BUILD_FAILED
+echo.
+echo [ERROR] PyInstaller build failed.
+exit /b 1
+
+:BUILD_END

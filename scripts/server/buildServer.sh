@@ -249,6 +249,10 @@ pyinstaller --clean \
 	    --distpath $ROOT/build \
 	    --workpath $BACKEND_TEMP \
 	    --specpath $BACKEND_BUILD_TEMP_DATA/server \
+        --collect-submodules source \
+        --collect-all tabulate \
+        --copy-metadata pandas \
+        --copy-metadata tabulate \
         --icon $ICON_PATH
 
 pyinstaller --clean \
@@ -257,6 +261,10 @@ pyinstaller --clean \
         --distpath $ROOT/build/server \
         --workpath $BACKEND_TEMP \
         --specpath $BACKEND_BUILD_TEMP_DATA/server \
+        --collect-submodules source \
+        --collect-all tabulate  \
+        --copy-metadata pandas \
+        --copy-metadata tabulate \
         --icon $ICON_PATH
 
 pyinstaller --clean \
@@ -265,6 +273,10 @@ pyinstaller --clean \
         --distpath $ROOT/build/server \
         --workpath $BACKEND_TEMP \
         --specpath $BACKEND_BUILD_TEMP_DATA/server \
+        --collect-submodules source \
+        --collect-all tabulate \
+        --copy-metadata pandas \
+        --copy-metadata tabulate \
         --icon $ICON_PATH
 
 if [[ $? -ne 0 ]]; then
