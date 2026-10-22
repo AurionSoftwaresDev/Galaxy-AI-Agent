@@ -10,7 +10,7 @@ console : Console = Console()
 
 with console.capture() as capture:
 
-    console.print(f"You Are Pressed CTRL + C AI Agent Stoped.")
+    console.print(f"You Are Pressed CTRL + C AI Agent Stopped.")
 
 keyboardInterruptErrorMessage = capture.get()
 
@@ -45,7 +45,6 @@ def mainAgentHandler() -> None:
             typingTextOnTerminal(keyboardInterruptErrorMessage, speed = 0.05)
 
             os._exit(0)
-    
 if __name__ == "__main__":
      
     clearTerminalScreen(operatingSystem = platform.system())

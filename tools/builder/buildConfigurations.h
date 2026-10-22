@@ -1,6 +1,6 @@
-namespace buildPaths {
+# pragma once
 
-    const std::string SCRIPTSPATH = "scripts/";
+namespace buildPaths {
 
     const std::string AGENT_FILE_PATH = "client";
 

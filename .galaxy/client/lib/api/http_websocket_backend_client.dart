@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 import '../models/assistant_state.dart';
-import 'backend_client.dart';
+import 'backend_client.dart'
 
 /// Production HTTP + WebSocket implementation wired to the exact routes in `backend/`:
 /// - `GET /health`

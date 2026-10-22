@@ -84,6 +84,9 @@ gnews==0.8.2
 # Qt6 framework for the desktop GUI
 PyQt6==6.11.0
 
+# Qt6 web-engine for the render web into desktop gui
+PyQt6-WebEngine==6.11.0
+
 # Global keyboard event handling
 keyboard==0.13.5
 
