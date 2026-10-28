@@ -1,21 +1,15 @@
-import platform
 import ctypes
+import platform
+
+from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtGui import QBrush, QColor, QIcon, QPainter, QPen, QRadialGradient
 from PyQt6.QtWidgets import (
     QDialog,
-    QVBoxLayout, 
-    QHBoxLayout, 
-    QLabel, 
-    QPushButton, 
-    QGraphicsDropShadowEffect 
-)
-from PyQt6.QtCore import Qt, QPoint
-from PyQt6.QtGui import ( 
-    QColor, 
-    QPainter, 
-    QRadialGradient, 
-    QBrush, 
-    QPen,
-    QIcon
+    QGraphicsDropShadowEffect,
+    QHBoxLayout,
+    QLabel,
+    QPushButton,
+    QVBoxLayout,
 )
 
 myappid = "Aurion.GalaxyAIAgent.Backend.Diloag.Version1.0"

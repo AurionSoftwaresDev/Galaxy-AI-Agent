@@ -1,7 +1,8 @@
-from typing import Callable
+from collections.abc import Callable
+
 from source.agent.agent import agent
-from source.utils.extractProvider import extractProvider
 from source.provider.llmProviders import llmProviders
+from source.utils.extractProvider import extractProvider
 
 providers : list[str] = []
 

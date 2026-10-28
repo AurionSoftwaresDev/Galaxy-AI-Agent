@@ -4,9 +4,10 @@ import subprocess
 import threading
 import uuid
 
-from source.utils.logger import logger
 from source.security.permissionManager import PermissionManager
+from source.utils.logger import logger
 from source.utils.Terminal.TerminalContextShared import terminalUI
+
 
 class CommandExecutor:
 

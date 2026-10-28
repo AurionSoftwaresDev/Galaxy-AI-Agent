@@ -1,11 +1,14 @@
 import json
-import os
 from pathlib import Path
-from source.utils.logger import logger
-from source.constants.archiveCompressorAllowedFormats import ARCHIVE_SUPPORTED_FORMATS
-from source.tools.features.fileSystemFeatures.archive.compression.compressionRegistry import COMPRESSORS_HANDLERS
 
-class ArchiveCompressor():
+from source.constants.archiveCompressorAllowedFormats import ARCHIVE_SUPPORTED_FORMATS
+from source.tools.features.fileSystemFeatures.archive.compression.compressionRegistry import (
+    COMPRESSORS_HANDLERS,
+)
+from source.utils.logger import logger
+
+
+class ArchiveCompressor:
 
     def __init__(self) -> None:
 
@@ -52,15 +55,9 @@ class ArchiveCompressor():
 
                         return "Output File Name Is Empty!"
 
-                elif extractedPassoword == None or extractedPassoword == "":
+                elif extractedPassoword == None or extractedPassoword == "" and usePassoword or len(outputName) > 1:
 
-                    if usePassoword:
-
-                        return True
-
-                    elif len(outputName) > 1:
-
-                        return True
+                    return True
 
                 return True
                 
@@ -74,11 +71,13 @@ class ArchiveCompressor():
             self, 
             sources : list[Path], 
             format: str = ".zip", 
-            passwordProtected : dict[str, bool] = { "Password": None, "Protected": False },
+            passwordProtected : dict[str, bool] | None = None,
             outputName : str = "archive.zip",
-            outputPath : Path = None
+            outputPath : Path | None = None
         ) -> str:
 
+        if passwordProtected is None:
+            passwordProtected = {"Password": None, "Protected": False}
         archiveValidationData = self.__validateArchiveGivenData(
             sources     =       sources,
             format      =       format,

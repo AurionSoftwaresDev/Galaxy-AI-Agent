@@ -1,15 +1,21 @@
 from pathlib import Path
+
+from source.tools.features.fileSystemFeatures.archive.compression.compressor import (
+    ArchiveCompressor,
+)
 from source.utils.logger import logger
-from source.tools.features.fileSystemFeatures.archive.compression.compressor import ArchiveCompressor
+
 
 def archiveCompressor(
         sources : list[Path], 
         format : str = ".zip", 
-        passwordProtected : dict[str, bool] = { "Password": None, "Protected": False },
+        passwordProtected : dict[str, bool] | None = None,
         outputName : str = "archive.zip",
-        outputPath : Path = None
+        outputPath : Path | None = None
     ) -> str:
 
+    if passwordProtected is None:
+        passwordProtected = {"Password": None, "Protected": False}
     logger.info("AI Agent Called archive_compressor Tool...")
 
     archiveCompressor = ArchiveCompressor()

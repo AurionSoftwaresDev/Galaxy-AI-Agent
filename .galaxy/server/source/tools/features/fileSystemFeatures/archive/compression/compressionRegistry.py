@@ -1,9 +1,10 @@
-from typing import Callable
+from collections.abc import Callable
+
 from source.tools.features.fileSystemFeatures.archive.compression.compressors.compressorsFunctions import (
-    zipCompressor,
-    tarCompressor,
     ZzCompressor,
     rarCompressor,
+    tarCompressor,
+    zipCompressor,
 )
 
 COMPRESSORS_HANDLERS : dict[str, Callable] = {

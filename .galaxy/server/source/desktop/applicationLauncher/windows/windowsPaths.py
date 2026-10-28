@@ -1,4 +1,5 @@
-import winreg, os
+import os
+import winreg
 
 REGISTRY_LOCATIONS = [
     (

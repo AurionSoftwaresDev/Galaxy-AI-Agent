@@ -3,6 +3,7 @@ import sqlite3
 from source.config.databasePaths import CHAT_STORE_PATH
 from source.utils.logger import logger
 
+
 def initializeChatAgentMemory() -> None:
 
     logger.info("Initializing Agent Chat History")
@@ -207,7 +208,7 @@ def validateChatMemory() -> None:
 
         initializeChatAgentMemory()
 
-def loadChat(chatId : int = None, title : str = None) -> dict[str, str | int | list[dict[str, str | int]]] | None:
+def loadChat(chatId : int | None = None, title : str | None = None) -> dict[str, str | int | list[dict[str, str | int]]] | None:
 
     with sqlite3.connect(database = CHAT_STORE_PATH) as connection:
     

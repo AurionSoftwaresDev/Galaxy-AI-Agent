@@ -1,5 +1,7 @@
 import platform
+
 from source.utils.helper import clearTerminalScreen
+
 
 def clear():
 

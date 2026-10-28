@@ -1,8 +1,10 @@
 import json
 from pathlib import Path
-from source.utils.logger import logger
+
 from source.security.permissionManager import PermissionManager
+from source.utils.logger import logger
 from source.utils.Terminal.TerminalContextShared import terminalUI
+
 
 def deleteFile(filePath : str, fileName : str) -> str:
 
@@ -20,14 +22,12 @@ def deleteFile(filePath : str, fileName : str) -> str:
 
     userPermission : bool | dict[str, str | bool] = permissionManager.askPermission()
 
-    if isinstance(userPermission, dict):
+    if isinstance(userPermission, dict) and not userPermission["Success"]:
 
-        if not userPermission["Success"]:
-
-            return json.dumps(
-                obj = userPermission,
-                indent = 4
-            )
+        return json.dumps(
+            obj = userPermission,
+            indent = 4
+        )
 
     try:
 

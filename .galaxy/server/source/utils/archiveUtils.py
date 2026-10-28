@@ -1,6 +1,11 @@
-import sys, os, shutil, subprocess
+import os
+import shutil
+import subprocess
+import sys
 from pathlib import Path
+
 from source.utils.logger import logger
+
 
 def findCompressorRarEngine():
 
@@ -30,39 +35,35 @@ def findCompressorRarEngine():
 
     os.makedirs(name = localRarPath, exist_ok = True)
 
-    try:
-        if currentPlatform == "linux" or currentPlatform == "linux2":
+    if currentPlatform == "linux" or currentPlatform == "linux2":
+
+        subprocess.run(
+            args = ["sudo", "apt-get", "-y", "update"], 
+            stdout = subprocess.DEVNULL, 
+            stderr = subprocess.DEVNULL,
+            check = False
+        )
+
+        subprocess.run(
+            args = ["sudo", "apt-get", "-y", "install", "rar"], 
+            check = False, 
+            stdout = subprocess.DEVNULL
+        )
+
+        return "rar"
+        
+    elif currentPlatform == "darwin": 
+
+        if shutil.which("brew"):
 
             subprocess.run(
-                args = ["sudo", "apt-get", "-y", "update"], 
-                stdout = subprocess.DEVNULL, 
-                stderr = subprocess.DEVNULL
-            )
-            subprocess.run(
-                args = ["sudo", "apt-get", "-y", "install", "rar"], 
-                check = True, 
+                args = ["brew", "install", "cask", "rar"], 
+                check = False, 
                 stdout = subprocess.DEVNULL
             )
 
             return "rar"
-            
-        elif currentPlatform == "darwin": 
-
-            if shutil.which("brew"):
-
-                subprocess.run(
-                    args = ["brew", "install", "cask", "rar"], 
-                    check = True, 
-                    stdout = subprocess.DEVNULL
-                )
-
-                return "rar"
                 
-        
-    except Exception:
-        
-        return None  
-
 def validatePathLastName(outputPath : str, outputName : str) -> str:
 
     outputPathNameIndex = len(outputPath.split("/")) - 1
@@ -83,7 +84,7 @@ def validatePathLastName(outputPath : str, outputName : str) -> str:
 
 def extractPasswordData(passwordProtectedObject : dict[str, bool]) -> list[str | bool]:
 
-    useEncryption = ((True if len(passwordProtectedObject["Password"]) > 1 else False) if passwordProtectedObject["Protected"] == True else False)
+    useEncryption = ((len(passwordProtectedObject["Password"]) > 1) if passwordProtectedObject["Protected"] == True else False)
 
     userArchivePassword = passwordProtectedObject["Password"]
 
@@ -141,12 +142,15 @@ def findExtractorRarEngine():
             subprocess.run(
                 args = ["sudo", "apt-get", "-y", "update"], 
                 stdout = subprocess.DEVNULL, 
-                stderr = subprocess.DEVNULL)
+                stderr = subprocess.DEVNULL,
+                check = True
+            )
             
             process = subprocess.run(
                 args = ["sudo", "apt-get", "-y", "install", "unrar"], 
                 stdout = subprocess.DEVNULL, 
-                stderr = subprocess.DEVNULL
+                stderr = subprocess.DEVNULL,
+                check = True
             )
 
             if process.returncode != 0:
@@ -166,8 +170,7 @@ def findExtractorRarEngine():
                 subprocess.run(
                     args = ["brew", "install", "unrar"], 
                     check = True, 
-                    stdout = 
-                    subprocess.DEVNULL
+                    stdout = subprocess.DEVNULL
                 )
 
                 return "unrar"

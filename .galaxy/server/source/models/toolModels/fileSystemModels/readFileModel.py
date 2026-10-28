@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class ReadFileModel(BaseModel):
 
     filePath: str = Field(

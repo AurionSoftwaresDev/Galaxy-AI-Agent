@@ -1,9 +1,12 @@
 import json
-import subprocess, shutil
+import shutil
+import subprocess
 from pathlib import Path
 from venv import logger
+
 from source.desktop.core.baseLauncher import BaseApplicationLauncher
 from source.desktop.core.utils.commonUtils import matchScore
+
 
 # ============================================================
 # MacOS Application Launcher

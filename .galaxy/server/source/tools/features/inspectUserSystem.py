@@ -1,8 +1,16 @@
-import platform, psutil, getpass, os, subprocess, json
+import getpass
+import json
+import os
+import platform
+import subprocess
 from datetime import datetime
-from source.utils.logger import logger
+
+import psutil
+
 from source.utils.agentUtils.core.getHardwareInformation import getHardwareInformation
 from source.utils.agentUtils.core.getKernalInformation import KernelMetricsEngine
+from source.utils.logger import logger
+
 
 def inspectUserSystem() -> str:
 
@@ -24,13 +32,7 @@ def inspectUserSystem() -> str:
 
     for user in users:
 
-        try:
-
-            log_time = datetime.fromtimestamp(user.started).strftime("%Y-%m-%d %H:%M:%S")
-
-        except:
-
-            log_time = "Unknown"
+        log_time = datetime.fromtimestamp(user.started).strftime('%Y-%m-%d %H:%M:%S')
 
         activeSessions.append({
             "Username": user.name,

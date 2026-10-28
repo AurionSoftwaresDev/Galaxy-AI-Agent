@@ -1,8 +1,10 @@
 import os
+
 from source.agent.runAgent import startAgentAsChatMode, startAgentAsSpeakMode
 from source.constants.keyboardShortcuts import KEY_MODIFIER
-from source.utils.logger import logger
 from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
+from source.utils.logger import logger
+
 
 def handleAgentShortcuts(shortcut):
 

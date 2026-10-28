@@ -1,16 +1,24 @@
-import platform, time, os
+import os
+import platform
+import time
+
 from rich.console import Console
+
+from source.controllers.keyboardThread.startKeyboardMapping import (
+    startKeyboardMappingThread,
+)
+from source.utils.agentUtils.startupUtils.agentStartupTerminal import (
+    galaxyAIAgentStartupTerminal,
+)
 from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
+from source.utils.helper import clearTerminalScreen, sleep
 from source.utils.logger import logger
-from source.utils.helper import sleep, clearTerminalScreen
-from source.controllers.keyboardThread.startKeyboardMapping import startKeyboardMappingThread
-from source.utils.agentUtils.startupUtils.agentStartupTerminal import galaxyAIAgentStartupTerminal
 
 console : Console = Console()
 
 with console.capture() as capture:
 
-    console.print(f"You Are Pressed CTRL + C AI Agent Stopped.")
+    console.print("You Are Pressed CTRL + C AI Agent Stopped.")
 
 keyboardInterruptErrorMessage = capture.get()
 

@@ -1,10 +1,12 @@
 from fastapi import Response, status
 
-from source.provider.providers import providers
-from source.agent.agent import setNewAgentProvider, llmProviderModel, agent
+from source.agent.agent import agent, llmProviderModel, setNewAgentProvider
+from source.models.serverModels.Settings.changeAgentProviderModel import (
+    ChangeAgentProviderModel,
+)
+from source.provider.providers import providerFunctions, providers
 from source.utils.extractProvider import extractProvider
-from source.models.serverModels.Settings.changeAgentProviderModel import ChangeAgentProviderModel
-from source.provider.providers import providerFunctions
+
 
 def changeAgentProvider(request : ChangeAgentProviderModel, response : Response) -> dict[str, str | int | list[str]]:
 

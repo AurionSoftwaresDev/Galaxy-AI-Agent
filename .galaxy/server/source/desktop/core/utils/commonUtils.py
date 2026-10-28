@@ -1,6 +1,7 @@
 import re
-from pathlib import Path
 from difflib import SequenceMatcher
+from pathlib import Path
+
 
 def normalizeName(name : str) -> str:
     """

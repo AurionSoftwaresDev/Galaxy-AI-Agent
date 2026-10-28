@@ -1,10 +1,14 @@
-import asyncio, threading
-from rich.console import Console
+import asyncio
+import threading
 from typing import Literal
+
+from rich.console import Console
+
 from source.chat.agentChat import chat
-from source.utils.logger import logger
 from source.constants.styles.richFontColors import RICH_COLORS
 from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
+from source.utils.logger import logger
+
 
 async def main(mode : Literal["chatMode", "speakMode"]) -> None:
 
@@ -55,14 +59,13 @@ def startAgentAsChatMode() -> bool:
         
         return True
         
-    except Exception as exception:
+    except (KeyboardInterrupt, threading.ThreadError) as exception:
         
         if type(exception) is KeyboardInterrupt:
             
             print("[+] Agent Shutdown...")
                     
             logger.info("User Shutdown The AI Agent With Press CTRL + C")
-        
         
         print("[!] Error Exception: " , exception)
         
@@ -83,7 +86,7 @@ def startAgentAsSpeakMode() -> bool:
         
         return True
         
-    except Exception as exception:
+    except (KeyboardInterrupt, threading.ThreadError) as exception:
         
         if type(exception) is KeyboardInterrupt:
             

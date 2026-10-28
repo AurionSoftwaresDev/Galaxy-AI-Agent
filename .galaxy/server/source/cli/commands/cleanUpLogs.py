@@ -1,18 +1,23 @@
+import logging
+import shutil
 import time
-import shutil, logging
+
 import requests
-from rich.console import Console
-from rich.panel import Panel
-from rich.console import Group
-from rich.table import Table
 from rich.align import Align
+from rich.console import Console, Group
 from rich.live import Live
+from rich.panel import Panel
 from rich.progress_bar import ProgressBar
-from source.utils.helper import startServer
-from source.config.LogPaths import AGENT_LOGS_PATH, SERVER_LOGS_PATH
-from source.utils.logger import logger, LOG_LOCK, configureLogger
+from rich.table import Table
+
 from source.config.configs import getServerURL
-from source.constants.animation.cli.commands.cleanupLogsAnimationData import CLEAN_UP_ANIMATION_QUEUE
+from source.config.LogPaths import AGENT_LOGS_PATH, SERVER_LOGS_PATH
+from source.constants.animation.cli.commands.cleanupLogsAnimationData import (
+    CLEAN_UP_ANIMATION_QUEUE,
+)
+from source.utils.helper import startServer
+from source.utils.logger import LOG_LOCK, configureLogger, logger
+
 
 def cleanUpLogs() -> None:
     

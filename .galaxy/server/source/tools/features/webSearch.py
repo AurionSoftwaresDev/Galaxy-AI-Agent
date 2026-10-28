@@ -1,6 +1,7 @@
 from gnews import GNews
-from langchain.tools import tool
+
 from source.utils.logger import logger
+
 
 def webSearch(query : str, language : str, country : str, max_results : int = 10) -> str:
 

@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class LaunchApplicationInputModel(BaseModel):
     """
         Input model for launching a desktop application.

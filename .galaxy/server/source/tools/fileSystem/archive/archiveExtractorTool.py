@@ -1,6 +1,9 @@
-from source.models.toolModels.fileSystemModels.archiveExtractorsModel import ArchiveExtractorInputModel
-from source.tools.features.archiveExtractor import archiveExtractor
 from langchain_core.tools import StructuredTool
+
+from source.models.toolModels.fileSystemModels.archiveExtractorsModel import (
+    ArchiveExtractorInputModel,
+)
+from source.tools.features.archiveExtractor import archiveExtractor
 
 archiveExtractorTool : StructuredTool = StructuredTool.from_function(
     args_schema = ArchiveExtractorInputModel,

@@ -2,9 +2,11 @@ import questionary
 from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
+
 from source.utils.logger import logger
 
-class PermissionManager():
+
+class PermissionManager:
 
     def __init__(
             self, data : dict[str, str],

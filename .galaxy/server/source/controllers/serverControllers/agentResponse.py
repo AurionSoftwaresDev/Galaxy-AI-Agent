@@ -1,14 +1,13 @@
-from fastapi import (
-    Response,
-    status
-)
+from fastapi import Response, status
 from langchain.messages import HumanMessage
+
+from source.agent.agent import agent
 from source.memory.agentMemory import (
     loadMessagesFromAgentMemory,
-    saveMessagesInAgentMemory
+    saveMessagesInAgentMemory,
 )
 from source.models.serverModels.agentRequestModel import AgentRequestModel
-from source.agent.agent import agent
+
 
 async def agentRequestResponse(userRequest : AgentRequestModel, response : Response) -> str | dict[str, str | int]:
     

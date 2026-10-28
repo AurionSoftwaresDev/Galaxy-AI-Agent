@@ -1,9 +1,12 @@
 import json
-import subprocess, shutil
+import shutil
+import subprocess
 from pathlib import Path
-from source.utils.logger import logger 
+
 from source.desktop.core.baseLauncher import BaseApplicationLauncher
 from source.desktop.core.utils.commonUtils import matchScore
+from source.utils.logger import logger
+
 
 # ============================================================
 #  Linux Application Launcher
@@ -17,11 +20,6 @@ class LinuxApplicationLauncher(BaseApplicationLauncher):
             1. PATH
             2. .desktop application files
     """
-
-    DESKTOP_LOCATIONS = [
-        Path("/usr/share/applications"),
-        Path("/usr/local/share/applications"),
-    ]
 
     def __init__(self):
 

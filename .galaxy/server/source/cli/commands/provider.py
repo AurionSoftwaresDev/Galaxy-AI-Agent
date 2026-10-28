@@ -1,12 +1,15 @@
 import time
-from rich.console import Console
-from rich.table import Table
+
 from rich.align import Align
+from rich.console import Console
 from rich.live import Live
+from rich.table import Table
+
 from source.agent.agent import agent, llmProviderModel
-from source.utils.extractProvider import extractProvider
 from source.provider.models import models
 from source.provider.providers import providers
+from source.utils.extractProvider import extractProvider
+
 
 def provider() -> Align:
 

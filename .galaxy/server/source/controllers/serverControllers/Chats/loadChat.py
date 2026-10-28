@@ -1,7 +1,9 @@
 from fastapi import Response, status
-from source.utils.logger import logger
-from source.models.serverModels.Chats.loadChat import LoadChatModel
+
 from source.memory.chatHistoryMemory import loadChat
+from source.models.serverModels.Chats.loadChat import LoadChatModel
+from source.utils.logger import logger
+
 
 def loadChatController(
     request : LoadChatModel, 

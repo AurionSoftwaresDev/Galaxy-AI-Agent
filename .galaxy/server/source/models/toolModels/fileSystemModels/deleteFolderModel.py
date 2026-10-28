@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class DeleteFolderModel(BaseModel):
 
     folderPath : str = Field(

@@ -70,6 +70,13 @@ ollama==0.6.2
 # Google Gemini / Generative AI SDK
 google-genai==2.22.0
 
+# Official Mistral Python Client
+mistralai==3.4.0
+
+# google-api-core is the exact package that contains the google.api_core.exceptions module for error handle and more.
+google-api-core==2.43.0
+
+
 # ==============================
 # News / Internet Data
 # ==============================

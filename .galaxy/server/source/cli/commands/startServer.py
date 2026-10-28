@@ -1,11 +1,16 @@
 import time
+
+from rich.align import Align
 from rich.console import Console
+from rich.live import Live
 from rich.panel import Panel
 from rich.table import Table
-from rich.align import Align
-from rich.live import Live
+
+from source.constants.animation.cli.commands.startServerAnimationData import (
+    ANIMATION_STEPS_QUEUE,
+)
 from source.utils.helper import startServer
-from source.constants.animation.cli.commands.startServerAnimationData import ANIMATION_STEPS_QUEUE
+
 
 def startAgentServer() -> Table:
 

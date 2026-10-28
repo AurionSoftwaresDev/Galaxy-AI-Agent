@@ -1,9 +1,8 @@
-import source.agent.prompts.systemPrompt as systemPrompt
-
-from source.provider.llmProviders import llmProviders
 from langchain.agents import create_agent
 
 from source.agent.agentTools import AGENT_TOOLS
+from source.agent.prompts import systemPrompt
+
 
 ### Creating AI Agent Use Locally Ollama LLM Model 'llmProviderModel' Variable ###
 def createNewAgent(llmProviderModel):

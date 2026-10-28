@@ -1,7 +1,10 @@
-from langchain_core.tools import tool
 import webbrowser
+
+from langchain_core.tools import tool
+
 from source.models.toolModels.openBrowserModel import OpenBrowserModel
 from source.utils.logger import logger
+
 
 @tool(
         name_or_callable = "open_browser",

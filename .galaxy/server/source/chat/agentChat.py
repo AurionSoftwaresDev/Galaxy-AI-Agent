@@ -1,19 +1,22 @@
-import os, warnings
-from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
+import os
+import warnings
+
+import google.api_core.exceptions as google_exceptions
+import ollama
+from langchain.messages import AIMessageChunk, HumanMessage, ToolMessage
+from langchain_core.exceptions import OutputParserException
+from mistralai.models.exceptions import MistralAPIException
+from rich.console import Console
+
 from source.agent.agent import agent
+from source.cli.cli import CLI
 from source.memory.agentMemory import (
     loadMessagesFromAgentMemory,
-    saveMessagesInAgentMemory
+    saveMessagesInAgentMemory,
 )
+from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
 from source.utils.logger import logger
-from langchain.messages import (
-    HumanMessage,
-    AIMessageChunk,
-    ToolMessage
-)
 from source.utils.Terminal.TerminalContextShared import terminalUI
-from rich.console import Console
-from source.cli.cli import CLI
 
 warnings.filterwarnings(
     action = "ignore",
@@ -186,13 +189,22 @@ async def chat() -> bool:
 
             terminalUI.finishResponse()
 
-        except Exception as Error:
+    
+
+        except (
+            OutputParserException,
+            google_exceptions.ResourceExhausted,
+            google_exceptions.GoogleAPICallError,
+            ollama.ResponseError,
+            MistralAPIException,
+            ConnectionError
+        ) as Error:
 
             terminalUI.error()
 
             logger.exception(f"AI Agent Streaming Failed. Exception : { Error }")
 
-            console.print(f"Error: { str(object = Error) }")
+            console.print(f"Error: { Error !s}")
 
             return False
 

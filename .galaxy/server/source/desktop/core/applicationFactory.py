@@ -1,8 +1,15 @@
 import sys
+
+from source.desktop.applicationLauncher.linux.linuxLauncher import (
+    LinuxApplicationLauncher,
+)
+from source.desktop.applicationLauncher.macOS.macOSLauncher import (
+    MacOSApplicationLauncher,
+)
+from source.desktop.applicationLauncher.windows.windowsLauncher import (
+    WindowsApplicationLauncher,
+)
 from source.desktop.core.baseLauncher import BaseApplicationLauncher
-from source.desktop.applicationLauncher.linux.linuxLauncher import LinuxApplicationLauncher
-from source.desktop.applicationLauncher.windows.windowsLauncher import WindowsApplicationLauncher
-from source.desktop.applicationLauncher.macOS.macOSLauncher import MacOSApplicationLauncher
 
 # ============================================================
 # FACTORY

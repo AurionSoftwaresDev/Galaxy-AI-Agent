@@ -1,8 +1,11 @@
 import sqlite3
+
 from fastapi import Response, status
-from source.models.serverModels.Chats.createNewChatModel import CreateNewChatModel
+
 from source.memory.chatHistoryMemory import createNewChat
+from source.models.serverModels.Chats.createNewChatModel import CreateNewChatModel
 from source.utils.logger import logger
+
 
 def createNewChatController(
     request : CreateNewChatModel, 

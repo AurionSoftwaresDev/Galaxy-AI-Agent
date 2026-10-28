@@ -1,6 +1,9 @@
-from source.models.toolModels.fileSystemModels.archiveCompressorModel import ArchiveCompressInputModel
-from source.tools.features.archiveCompressors import archiveCompressor
 from langchain_core.tools import StructuredTool
+
+from source.models.toolModels.fileSystemModels.archiveCompressorModel import (
+    ArchiveCompressInputModel,
+)
+from source.tools.features.archiveCompressors import archiveCompressor
 
 archiveCompressorTool : StructuredTool = StructuredTool.from_function(
     args_schema = ArchiveCompressInputModel,

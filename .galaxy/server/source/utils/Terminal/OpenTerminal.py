@@ -1,6 +1,11 @@
-import sys, subprocess, shutil, shlex
-from source.utils.logger import logger
+import shlex
+import shutil
+import subprocess
+import sys
+
 from source.config.RootPaths import BACKEND_PATH
+from source.utils.logger import logger
+
 
 def startWindowsTerminal(command, title):
 

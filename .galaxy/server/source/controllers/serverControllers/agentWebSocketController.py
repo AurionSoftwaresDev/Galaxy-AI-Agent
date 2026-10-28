@@ -1,11 +1,17 @@
+import google.api_core.exceptions as google_exceptions
+import ollama
 from fastapi import WebSocket, WebSocketDisconnect
 from langchain.messages import AIMessageChunk, ToolMessage
+from langchain_core.exceptions import OutputParserException
+from mistralai.models.exceptions import MistralAPIException
+
 from source.agent.agent import agent
 from source.memory.agentMemory import (
     loadMessagesFromAgentMemory,
-    saveMessagesInAgentMemory
+    saveMessagesInAgentMemory,
 )
 from source.utils.logger import logger
+
 
 async def agentWebSocketController(webSocket : WebSocket) -> None:
 
@@ -124,7 +130,14 @@ async def agentWebSocketController(webSocket : WebSocket) -> None:
 
                 logger.info("AI Agent Streaming Response Sended To Frontend Completly")
 
-            except Exception as exception:
+            except (
+                OutputParserException,
+                google_exceptions.ResourceExhausted,
+                google_exceptions.GoogleAPICallError,
+                ollama.ResponseError,
+                MistralAPIException,
+                ConnectionError,
+            ) as exception:
 
                 logger.exception(f"AI Agent Streaming Failed. Exception : { exception }")
 
@@ -145,7 +158,3 @@ async def agentWebSocketController(webSocket : WebSocket) -> None:
     except WebSocketDisconnect:
 
         logger.info("AI Agent Frontend To Backend WebSocket Client Disconnected")
-
-    except Exception as unexpectedException:
-
-        logger.exception(f"Unexpected Exception : { unexpectedException }")

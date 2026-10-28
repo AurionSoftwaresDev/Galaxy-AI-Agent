@@ -1,4 +1,3 @@
-from typing import Literal
 
 from source.config.globeConfigurations import MAPLIBRE_VERSION
 

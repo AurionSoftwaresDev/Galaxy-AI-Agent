@@ -1,8 +1,12 @@
 import json
+import os
+import subprocess
+import sys
 from pathlib import Path
-import sys, os, subprocess
 from typing import Literal
+
 from source.utils.logger import logger
+
 
 def _createDictTree(
         path: str,
@@ -89,15 +93,14 @@ def _createRealTree(path : Path):
         
     else:
 
-        cmd = ["tree", os.path.abspath(target_dir)]
+        cmd = ["tree", os.path.abspath(rootPath)]
         useShell = False
 
     try:
 
         process = subprocess.run(
             args = cmd, 
-            stdout = subprocess.PIPE, 
-            stderr = subprocess.PIPE, 
+            capture_output=True, 
             text = True, 
             shell = useShell,
             check = True,
@@ -122,14 +125,14 @@ def _createRealTree(path : Path):
 
     except Exception as unexpectedException:
 
-        tree = f"Unexpected automation error: {str(unexpectedException)}"
+        tree = f"Unexpected automation error: {unexpectedException!s}"
 
     return tree
 
 def buildTree(
         depth: int = 0,
         counter: list[int] | None = None,
-        path: Path = Path.home(),
+        path: Path | None = None,
         type : Literal["COMMAND", "JSON"] = "JSON"
     ) -> str:
 
@@ -167,7 +170,7 @@ def buildTree(
     return json.dumps(
         obj = [
             {
-                f"Error": "You Are Choose Wrong Mode!",
+                "Error": "You Are Choose Wrong Mode!",
                 "Modes": [
                     "COMMAND",
                     "JSON(Default Selected)"

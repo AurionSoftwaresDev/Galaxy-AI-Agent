@@ -1,5 +1,6 @@
-from typing import Optional
+
 from pydantic import BaseModel, Field
+
 
 class ArchiveExtractorInputModel(BaseModel):
 
@@ -39,7 +40,7 @@ class ArchiveExtractorInputModel(BaseModel):
         """
     )
 
-    archiveOutputNameFolder : Optional[str] = Field(
+    archiveOutputNameFolder : str | None = Field(
         default = None,
         description = """
             Optional name of the folder that will contain the extracted
@@ -53,7 +54,7 @@ class ArchiveExtractorInputModel(BaseModel):
         """
     )
 
-    archivePassword : Optional[str] = Field(
+    archivePassword : str | None = Field(
         default = None,
         description = """
             Optional password required to extract the archive.

@@ -1,4 +1,6 @@
-import time, sys
+import sys
+import time
+
 
 def typingTextOnTerminal(text : str, speed : float = 0.09) -> str:
 

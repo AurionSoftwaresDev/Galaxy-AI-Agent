@@ -1,6 +1,9 @@
 import time
+
 import pyautogui
+
 from source.utils.logger import logger
+
 
 def waitForImage(imagePath : str, timeout : float = 10.0) -> bool:
 

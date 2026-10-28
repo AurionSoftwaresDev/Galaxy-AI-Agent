@@ -1,17 +1,22 @@
 import base64
 import json
-import os, subprocess
-import pyzipper, py7zr 
+import os
+import subprocess
 import tarfile
 from pathlib import Path
-from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
+import py7zr
+import pyzipper
 from cryptography.fernet import Fernet
-from source.utils.logger import logger
+from cryptography.hazmat.primitives.kdf.scrypt import Scrypt
+
 from source.utils.archiveUtils import (
     extractPasswordData,
+    findCompressorRarEngine,
     validatePathLastName,
-    findCompressorRarEngine
 )
+from source.utils.logger import logger
+
 
 def zipCompressor(
         sources : list[Path], 
@@ -93,12 +98,8 @@ def tarCompressor(
     
             sourcePath = os.path.abspath(source)
     
-            if os.path.isdir(sourcePath):
+            if os.path.isdir(sourcePath) or os.path.isfile(sourcePath):
     
-                tarArchiveFolder.add(sourcePath, arcname=os.path.basename(sourcePath))
-
-            elif os.path.isfile(sourcePath):
-
                 tarArchiveFolder.add(sourcePath, arcname=os.path.basename(sourcePath))
 
      if useEncryption:
@@ -216,7 +217,7 @@ def rarCompressor(
         cmd.append(outputPath)
         cmd.extend(absoluteSources)
 
-        process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        process = subprocess.run(cmd, check = False, capture_output = True, text = True)
 
         if process.returncode != 0:
 

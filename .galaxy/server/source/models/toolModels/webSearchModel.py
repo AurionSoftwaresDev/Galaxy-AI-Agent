@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class WebSearchSchema(BaseModel):
     
     query : str = Field(description = "Fetch Latest News And Specific Date News")

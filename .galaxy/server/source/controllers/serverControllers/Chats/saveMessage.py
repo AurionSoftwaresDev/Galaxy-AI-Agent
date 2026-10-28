@@ -1,6 +1,10 @@
+import sqlite3
+
 from fastapi import Response, status
+
+from source.memory.chatHistoryMemory import loadChat, saveMessage
 from source.models.serverModels.Chats.saveMessageModel import SaveMessageModel
-from source.memory.chatHistoryMemory import saveMessage, loadChat
+
 
 def saveMessageController(
     request : SaveMessageModel, 
@@ -45,7 +49,9 @@ def saveMessageController(
             "Message": "Failed To Save Message Because Your Message Is Empty!"
         }
 
-    chatIsExists : dict[str, str | int] | None = loadChat(chatId = chatId)
+    chatIsExists : (dict[str, str | int | list[dict[str, str | int]]] | None) = loadChat(
+        chatId = chatId
+    )
 
     if not chatIsExists:
 
@@ -78,7 +84,10 @@ def saveMessageController(
             "Message": "Successfully Message Saved!",
         }
 
-    except Exception as unexpectedException:
+    except (
+        sqlite3.InternalError,
+        sqlite3.DataError
+    ) as unexpectedException:
 
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 

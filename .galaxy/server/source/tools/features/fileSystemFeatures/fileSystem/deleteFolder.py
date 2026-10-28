@@ -1,9 +1,11 @@
 import json
 import shutil
 from pathlib import Path
-from source.utils.logger import logger
+
 from source.security.permissionManager import PermissionManager
+from source.utils.logger import logger
 from source.utils.Terminal.TerminalContextShared import terminalUI
+
 
 def deleteFolder(
     folderPath: str,

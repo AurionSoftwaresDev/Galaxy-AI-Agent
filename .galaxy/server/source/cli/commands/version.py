@@ -1,5 +1,7 @@
 from rich.console import Console
+
 from source.constants.agentInformations import agentVersion
+
 
 def version() -> None:
 

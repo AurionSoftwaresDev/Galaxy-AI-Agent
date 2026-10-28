@@ -1,17 +1,22 @@
-import os, sys, subprocess
-from PyQt6.QtWidgets import QApplication
+import os
+import subprocess
+import sys
+
 from PyQt6.QtCore import QLoggingCategory
-from source.utils.logger import logger
-from source.utils.helper import validateUserEnviromentVariables
+from PyQt6.QtWidgets import QApplication
+
+from source.config.LogPaths import EXECUTABLE_PATH
+from source.gui.widgets.DialogBox import NeonPremiumDialog
 from source.memory.agentMemory import initializeAgentMemory
 from source.memory.chatHistoryMemory import initializeChatAgentMemory
-from source.config.LogPaths import ( 
-    EXECUTABLE_PATH
+from source.utils.helper import (
+    getArguments,
+    getExecutableExtension,
+    startServer,
+    validateUserEnviromentVariables,
 )
+from source.utils.logger import logger
 from source.utils.Terminal.OpenTerminal import startNewTerminal
-from source.utils.helper import getArguments, getExecutableExtension
-from source.gui.widgets.DialogBox import NeonPremiumDialog
-from source.utils.helper import startServer
 
 serverPID : int
 
@@ -49,7 +54,7 @@ def mainExecutableHandler(arguments : dict[str, bool]) -> bool:
 
     QLoggingCategory.setFilterRules("*debug=false\n*.info=false\n*.warning=false")
     
-    initializeDialogApp = QApplication(sys.argv)
+    QApplication(sys.argv)
 
     if not EXECUTABLE_PATH.exists():
 

@@ -1,5 +1,9 @@
 import threading
-from source.controllers.keyboardMapping.keyboardController import handleAllShortcutsAndKeyBinds
+
+from source.controllers.keyboardMapping.keyboardController import (
+    handleAllShortcutsAndKeyBinds,
+)
+
 
 def startKeyboardMappingThread():
     

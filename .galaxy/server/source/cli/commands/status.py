@@ -1,11 +1,14 @@
 import time
+
 import requests
-from rich.console import Console
-from rich.table import Table
 from rich.align import Align
+from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
-from source.config.configs import getServerURL, getAgentServerRunningPort
+from rich.table import Table
+
+from source.config.configs import getAgentServerRunningPort, getServerURL
+
 
 def status() -> Table:
 
@@ -53,7 +56,11 @@ def status() -> Table:
 
             isServerActive = True
 
-    except Exception:
+    except (
+        requests.Timeout, 
+        requests.ConnectTimeout, 
+        requests.TooManyRedirects
+    ):
         
         isServerActive = False
 
@@ -208,8 +215,8 @@ def status() -> Table:
             f"[bold green]{ agentChatModuleProperties['Status'] } ●[/bold green]"
         ),
         (
-            "agent", ""
-            "Chat Engine Interface", 
+            "agent", (""
+            "Chat Engine Interface"), 
             f"[bold green]{ agentChatModuleProperties['Modes']['Chat'] } ●[/bold green]"
         ),
         (

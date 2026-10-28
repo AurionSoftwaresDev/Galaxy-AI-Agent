@@ -1,8 +1,12 @@
-import os, psutil
+import os
+
+import psutil
 from fastapi import Response, status
-from source.utils.logger import logger
+
+from source.config.configs import getAgentServerRunningPort
 from source.utils.helper import findServerPID
-from source.config.configs import getAgentServerRunningPort 
+from source.utils.logger import logger
+
 
 def terminateServer(response : Response) -> None:
 
@@ -26,7 +30,12 @@ def terminateServer(response : Response) -> None:
 
                     serverProcess.terminate()
 
-        except Exception:
+        except (
+            psutil.AccessDenied,
+            psutil.ProcessLookupError,
+            psutil.RuntimeError,
+            KeyboardInterrupt
+        ):
 
             logger.exception("Failed To Terminate Agent Server(It-Self)")
 

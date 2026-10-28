@@ -3,6 +3,7 @@ from rich.live import Live
 from rich.spinner import Spinner
 from rich.text import Text
 
+
 class TerminalUI:
 
     def __init__(self) -> None:

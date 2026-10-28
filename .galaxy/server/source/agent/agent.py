@@ -1,5 +1,5 @@
-from source.provider.llmProviders import llmProviders
 from source.agent.createNewAgent import createNewAgent
+from source.provider.llmProviders import llmProviders
 
 ### LLM Provider Model ###
 provider = llmProviders()

@@ -1,14 +1,15 @@
-import smtplib
 import json
-from source.config.configs import(
-     getSMTPPORT, 
-     getSMTPSenderEmail,
-     getSMTPSenderPassword,
-     getSMTPServerHost
-
-)
+import smtplib
 from email.message import EmailMessage
+
+from source.config.configs import (
+    getSMTPPORT,
+    getSMTPSenderEmail,
+    getSMTPSenderPassword,
+    getSMTPServerHost,
+)
 from source.utils.logger import logger
+
 
 def sendEmail(to : str, subject : str, html : str) -> str:
 

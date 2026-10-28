@@ -3,19 +3,21 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
-from source.utils.logger import logger
-from source.desktop.core.baseLauncher import BaseApplicationLauncher
+
 from source.desktop.applicationLauncher.windows.windowsPaths import (
-    REGISTRY_LOCATIONS,
-    PROGRAM_DATA,
     APP_DATA,
+    PROGRAM_DATA,
     PUBLIC,
-    USER_PROFILE
+    REGISTRY_LOCATIONS,
+    USER_PROFILE,
 )
 from source.desktop.applicationLauncher.windows.windowsShortcuts import (
-    WINDOWS_SHORTCUTS
+    WINDOWS_SHORTCUTS,
 )
+from source.desktop.core.baseLauncher import BaseApplicationLauncher
 from source.desktop.core.utils.commonUtils import matchScore
+from source.utils.logger import logger
+
 
 # ============================================================
 # Windows Application Launcher

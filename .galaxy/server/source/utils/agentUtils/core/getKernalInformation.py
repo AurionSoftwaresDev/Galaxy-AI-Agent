@@ -1,7 +1,8 @@
-import sys
 import ctypes
+import sys
 from ctypes import wintypes
-from typing import Dict, Any
+from typing import Any
+
 
 class KernelMetricsEngine:
     """
@@ -13,7 +14,7 @@ class KernelMetricsEngine:
 
         self.os_type = sys.platform
 
-    def collect(self) -> Dict[str, Any]:
+    def collect(self) -> dict[str, Any]:
         """Routes to the correct OS collector and packages data with metadata."""
 
         metrics = {
@@ -39,7 +40,7 @@ class KernelMetricsEngine:
             
         return metrics
 
-    def _get_windows_kernel(self) -> Dict[str, Any]:
+    def _get_windows_kernel(self) -> dict[str, Any]:
 
         class PERFORMANCE_INFORMATION(ctypes.Structure):
 
@@ -88,7 +89,7 @@ class KernelMetricsEngine:
 
             return {"Status": "Error", "Error": str(e)}
 
-    def _get_linux_kernel(self) -> Dict[str, Any]:
+    def _get_linux_kernel(self) -> dict[str, Any]:
 
         data = {"status": "success", "slab_allocations": {}}
         
@@ -144,7 +145,7 @@ class KernelMetricsEngine:
             
         return data
 
-    def _get_macos_kernel(self) -> Dict[str, Any]:
+    def _get_macos_kernel(self) -> dict[str, Any]:
 
         data = {"status": "success"}
 

@@ -1,8 +1,10 @@
 import re
-from source.utils.logger import logger
-from source.cli.commandRegistry import COMMAND_REGISTRY
 
-class CLI():
+from source.cli.commandRegistry import COMMAND_REGISTRY
+from source.utils.logger import logger
+
+
+class CLI:
 
     def __init__(self):
 

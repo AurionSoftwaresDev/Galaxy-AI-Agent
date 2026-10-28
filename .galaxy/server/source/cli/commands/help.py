@@ -1,10 +1,12 @@
-from rich.console import Console
-from rich.table import Table
-from rich.panel import Panel
-from rich.align import Align
 from rich import box
-from source.constants.agentInformations import agentVersion, agentName
+from rich.align import Align
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+from source.constants.agentInformations import agentName, agentVersion
 from source.constants.cliConstants import COMMANDS_LIST, SHORTCUTS_LIST
+
 
 def help() -> Panel:
     

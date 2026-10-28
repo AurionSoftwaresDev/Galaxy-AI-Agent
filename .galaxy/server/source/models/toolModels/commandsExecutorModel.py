@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 
+
 class CommandExecutorInputModel(BaseModel):
 
     commands : list[str] = Field(

@@ -1,7 +1,11 @@
-from source.models.toolModels.fileSystemModels.deleteFolderModel import DeleteFolderModel
-from source.tools.features.fileSystemFeatures.fileSystem.deleteFolder import deleteFolder
 from langchain_core.tools import StructuredTool
 
+from source.models.toolModels.fileSystemModels.deleteFolderModel import (
+    DeleteFolderModel,
+)
+from source.tools.features.fileSystemFeatures.fileSystem.deleteFolder import (
+    deleteFolder,
+)
 
 deleteFolderTool : StructuredTool = StructuredTool.from_function(
     args_schema = DeleteFolderModel,

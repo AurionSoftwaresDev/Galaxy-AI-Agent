@@ -1,9 +1,17 @@
-import pyfiglet, platform
+import platform
+
+import pyfiglet
 from rich.console import Console
-from source.constants.agentInformations import agentVersion, agentinformations, agentTerminalModeShorcuts
+
+from source.constants.agentInformations import (
+    agentinformations,
+    agentTerminalModeShorcuts,
+    agentVersion,
+)
+from source.constants.styles.richFontColors import RICH_COLOR_PALETTE, RICH_COLORS
 from source.utils.agentUtils.startupUtils.typingAnimation import typingTextOnTerminal
 from source.utils.helper import clearTerminalScreen
-from source.constants.styles.richFontColors import RICH_COLOR_PALETTE, RICH_COLORS
+
 
 def galaxyAIAgentStartupTerminal(font: str = "slant", style: str = "bold bright_cyan", speed : float = 0.002):
 

@@ -1,13 +1,16 @@
-from typing import Optional
+
+from source.tools.features.fileSystemFeatures.archive.extraction.extractor import (
+    ArchiveExtractor,
+)
 from source.utils.logger import logger
-from source.tools.features.fileSystemFeatures.archive.extraction.extractor import ArchiveExtractor
+
 
 def archiveExtractor(
         format : str,
         archiveSourceFullPath : str,
         archiveExtractOutputPath : str,
-        archiveOutputNameFolder : Optional[str] = None,
-        archivePassword : Optional[str] = None,
+        archiveOutputNameFolder : str | None = None,
+        archivePassword : str | None = None,
     ) -> str:
 
     logger.info("AI Agent Called archive_extractor Tool...")

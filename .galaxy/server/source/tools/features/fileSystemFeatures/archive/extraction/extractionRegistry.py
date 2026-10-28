@@ -1,9 +1,10 @@
-from typing import Callable
+from collections.abc import Callable
+
 from source.tools.features.fileSystemFeatures.archive.extraction.extractors.extractorsFunctions import (
-    zipExtractor,
-    tarExtractor,
     ZzExtractor,
     rarExtractor,
+    tarExtractor,
+    zipExtractor,
 )
 
 EXTRACTORS_HANDLERS : dict[str, Callable]= {

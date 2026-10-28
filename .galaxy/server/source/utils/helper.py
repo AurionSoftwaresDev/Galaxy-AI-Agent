@@ -1,20 +1,25 @@
+import os
+import platform
+import random
+import subprocess
+import sys
+import time
 from pathlib import Path
-import time, random, os, sys, platform, subprocess
-from source.utils.logger import logger
-from source.config.EnviromentKeys import ENVRIOMENTAL_KEYS
-from PyQt6.QtWidgets import QApplication
+
 from PyQt6.QtCore import QLoggingCategory
-from source.gui.widgets.DialogBox import NeonPremiumDialog
-from source.constants.agentHelpingMenu import HELPING_MENU
-from source.config.LogPaths import (
-    SERVER_LOGS_PATH, 
-    SERVER_PID_STORE_FILE_NAME,
-    EXECUTABLE_PATH
-)
-from source.utils.getCurrentDateTime import getCurrentDate
-from source.gui.widgets.DialogBox import NeonPremiumDialog
-from source.config.RootPaths import BACKEND_PATH
+from PyQt6.QtWidgets import QApplication
+
 from source.config.configs import getAgentServerRunningPort
+from source.config.EnviromentKeys import ENVRIOMENTAL_KEYS
+from source.config.LogPaths import (
+    EXECUTABLE_PATH,
+    SERVER_LOGS_PATH,
+    SERVER_PID_STORE_FILE_NAME,
+)
+from source.config.RootPaths import BACKEND_PATH
+from source.constants.agentHelpingMenu import HELPING_MENU
+from source.gui.widgets.DialogBox import NeonPremiumDialog
+from source.utils.logger import logger
 
 
 def sleep(startRange : int, endRange : int) -> int:
@@ -27,7 +32,7 @@ def sleep(startRange : int, endRange : int) -> int:
         
         return (-1 if sleepDelay == -1 else sleepDelay) 
     
-    except KeyboardInterrupt as exception:
+    except KeyboardInterrupt:
         
         print("[!] Error: Program Closed You Are Press CTRL + C")
         
@@ -51,7 +56,7 @@ def validateUserEnviromentVariables():
 
     QLoggingCategory.setFilterRules("*debug=false\n*.info=false\n*.warning=false")
 
-    app = QApplication(sys.argv)
+    QApplication(sys.argv)
 
     logger.info("AI Agent Checking Enviroment Variables Key...")
 
@@ -178,18 +183,6 @@ def startServer():
 
     SERVER_LOGS_PATH.mkdir(parents = True, exist_ok = True)
 
-    serverLogsFile = open(
-        file = SERVER_LOGS_PATH / f"Server_{getCurrentDate()}.log",
-        encoding = "utf-8",
-        mode = "a"
-    )
-
-    serverErrorLogsFile = open(
-        file = SERVER_LOGS_PATH / f"ServerErrors_{getCurrentDate()}.log",
-        encoding = "utf-8",
-        mode = "a"
-    )
-
     agentServerProcess = subprocess.Popen(
         args = [
             sys.executable,
@@ -205,8 +198,8 @@ def startServer():
         ],
         cwd = BACKEND_PATH,
         stdin = subprocess.DEVNULL,
-        stdout = serverLogsFile,
-        stderr = serverErrorLogsFile,
+        stdout = subprocess.DEVNULL,
+        stderr = subprocess.DEVNULL,
         creationflags = subprocess.CREATE_NO_WINDOW
     )
 

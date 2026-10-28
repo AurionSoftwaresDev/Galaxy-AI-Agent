@@ -1,8 +1,8 @@
 import sqlite3
 from typing import Any
 
-from source.utils.logger import logger
 from source.config.databasePaths import MEMORY_STORE_PATH
+from source.utils.logger import logger
 
 
 def checkMemoryIsNoCorrupted(connection : sqlite3.Connection) -> bool:

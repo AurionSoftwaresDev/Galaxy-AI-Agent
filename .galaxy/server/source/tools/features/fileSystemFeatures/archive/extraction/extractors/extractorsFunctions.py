@@ -1,18 +1,19 @@
-from encodings import johab
 import json
-import os
-from pathlib import Path
-import pyzipper, py7zr, rarfile
 import tarfile
-from typing import Optional
+
+import py7zr
+import pyzipper
+import rarfile
+
+from source.utils.archiveUtils import extractNameOrPath, findExtractorRarEngine
 from source.utils.logger import logger
-from source.utils.archiveUtils import findExtractorRarEngine, extractNameOrPath
+
 
 def zipExtractor(
         archiveSourceFullPath : str,
         archiveExtractOutputPath : str,
-        archiveOutputNameFolder : Optional[str] = None,
-        archivePassword : Optional[str] = None,
+        archiveOutputNameFolder : str | None = None,
+        archivePassword : str | None = None,
     ) -> str:
 
     archiveOutputNameFolder, archiveExtractOutputPath = extractNameOrPath(
@@ -97,8 +98,8 @@ def zipExtractor(
 def tarExtractor(
         archiveSourceFullPath : str,
         archiveExtractOutputPath : str,
-        archiveOutputNameFolder : Optional[str] = None,
-        archivePassword : Optional[str] = None,
+        archiveOutputNameFolder : str | None = None,
+        archivePassword : str | None = None,
     ) -> str:
 
     archiveOutputNameFolder, archiveExtractOutputPath = extractNameOrPath(
@@ -133,8 +134,8 @@ def tarExtractor(
 def ZzExtractor(
         archiveSourceFullPath : str,
         archiveExtractOutputPath : str,
-        archiveOutputNameFolder : Optional[str] = None,
-        archivePassword : Optional[str] = None,
+        archiveOutputNameFolder : str | None = None,
+        archivePassword : str | None = None,
     ) -> str:
 
     archiveOutputNameFolder, archiveExtractOutputPath = extractNameOrPath(
@@ -195,8 +196,8 @@ def ZzExtractor(
 def rarExtractor(
         archiveSourceFullPath : str,
         archiveExtractOutputPath : str,
-        archiveOutputNameFolder : Optional[str] = None,
-        archivePassword : Optional[str] = None,
+        archiveOutputNameFolder : str | None = None,
+        archivePassword : str | None = None,
     ) -> str:
 
 

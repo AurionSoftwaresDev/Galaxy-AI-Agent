@@ -3,7 +3,8 @@ from __future__ import annotations
 import os
 import sys
 
-from PyQt6.QtCore import QUrl, Qt, QTimer
+from PyQt6.QtCore import Qt, QTimer, QUrl
+from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import (
     QApplication,
     QFrame,
@@ -17,23 +18,23 @@ from PyQt6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from PyQt6.QtWebEngineWidgets import QWebEngineView
 
-from source.utils.globeUtils import verify_and_download, create_map_html
-from source.constants.gui.globe.globeColors import COLORS
-from source.constants.gui.globe.globeStyleSheet import GLOBE_STYLE_SHEET
-from source.config.Urls import (
-    JS_URL,
-    CSS_URL,
-)
 from source.config.globeConfigurations import (
     APP_TITLE,
     CSS_PATH,
-    JS_PATH,
     CURRENT_DIR,
+    JS_PATH,
+    MAP_APPEARANCE,
     MODES,
-    MAP_APPEARANCE
 )
+from source.config.Urls import (
+    CSS_URL,
+    JS_URL,
+)
+from source.constants.gui.globe.globeColors import COLORS
+from source.constants.gui.globe.globeStyleSheet import GLOBE_STYLE_SHEET
+from source.utils.globeUtils import create_map_html, verify_and_download
+
 
 class DesktopGlobeWindow(QMainWindow):
 
@@ -474,8 +475,7 @@ class DesktopGlobeWindow(QMainWindow):
         self.run_map_javascript("clearMarkers")
 
         self.distance_result.setText("Distance: —")
-
-
+        
 def start_map():
 
     app : QApplication = QApplication(sys.argv)

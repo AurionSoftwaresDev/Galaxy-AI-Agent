@@ -1,4 +1,12 @@
-import GPUtil, psutil, platform, subprocess
+import platform
+import subprocess
+from pathlib import Path
+
+import GPUtil
+import psutil
+
+from source.utils.logger import logger
+
 
 def getHardwareInformation() -> dict[str, str]:
 
@@ -92,13 +100,25 @@ def getHardwareInformation() -> dict[str, str]:
             
             try:
 
-                motherboard["Manufacturer"] = open("/sys/class/dmi/id/board_vendor").read().strip()
-                motherboard["Product"] = open("/sys/class/dmi/id/board_name").read().strip()
-                motherboard["Bios Version"] = open("/sys/class/dmi/id/bios_version").read().strip()
+                motherboard["Manufacturer"] = Path(
+                    "/sys/class/dmi/id/board_vendor"
+                ).read_text(encoding = "utf-8").strip()
 
-            except:
+                motherboard["Product"] = Path(
+                    "/sys/class/dmi/id/board_name"
+                ).read_text(encoding = "utf-8").strip()
+                
+                motherboard["Bios Version"] = Path(
+                    "/sys/class/dmi/id/bios_version"
+                ).read_text(encoding = "utf-8").strip()
 
-                pass
+            except (
+                KeyboardInterrupt,
+                SystemError,
+                SystemExit
+            ) as exception:
+
+                logger.exception(f"AI Agent Failed To Read Hardware Information! Exception : { exception }")
                 
         elif systemOS == "Darwin": 
 
@@ -118,7 +138,7 @@ def getHardwareInformation() -> dict[str, str]:
             
     except Exception as e:
 
-        motherboard["Error"] = f"Could not retrieve motherboard details: {str(e)}"
+        motherboard["Error"] = f"Could not retrieve motherboard details: {e!s}"
 
     hardwareInformation["CPU Informations"] = cpuInformations
     hardwareInformation["GPU Informations"] = gpuList

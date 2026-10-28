@@ -1,11 +1,14 @@
 import random
-import time   
-from rich.console import Console
-from rich.table import Table
+import time
+
 from rich.align import Align
-from rich.live import Live      
+from rich.console import Console
+from rich.live import Live
+from rich.table import Table
+
 from source.agent.agentTools import AGENT_TOOLS
 from source.constants.styles.richFontColors import RICH_COLORS
+
 
 def tools() -> Table:
 

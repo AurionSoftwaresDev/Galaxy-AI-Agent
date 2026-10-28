@@ -1,24 +1,25 @@
 import os
 import urllib.error
 import urllib.request
-
 from pathlib import Path
+
 from PyQt6.QtCore import QUrl
 
-from source.utils.logger import logger
-from source.config.globeConfigurations import STATIC_DIR
-from source.constants.gui.globe.globeHTMLTemplate import HTML_GLOBE_TEMPLATE
-from source.config.Urls import (
-    CARTO_STYLES,
-    LIBERTY_STYLE,
-    SATELLITE_TILE_URL,
-    DEM_TILE_URL,
-    OPENFREEMAP_VECTOR_URL    
-)
 from source.config.globeConfigurations import (
     CSS_PATH,
     JS_PATH,
+    STATIC_DIR,
 )
+from source.config.Urls import (
+    CARTO_STYLES,
+    DEM_TILE_URL,
+    LIBERTY_STYLE,
+    OPENFREEMAP_VECTOR_URL,
+    SATELLITE_TILE_URL,
+)
+from source.constants.gui.globe.globeHTMLTemplate import HTML_GLOBE_TEMPLATE
+from source.utils.logger import logger
+
 
 def is_html_content(content : bytes) -> bool:
 

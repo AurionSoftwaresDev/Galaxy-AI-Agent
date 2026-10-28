@@ -1,6 +1,7 @@
+from langchain_core.tools import StructuredTool
+
 from source.models.toolModels.commandsExecutorModel import CommandExecutorInputModel
 from source.tools.features.executeCommands import commandsExecutor
-from langchain_core.tools import StructuredTool
 
 commandsExecutorTool : StructuredTool = StructuredTool.from_function(
     args_schema = CommandExecutorInputModel,

@@ -1,11 +1,13 @@
-import os, platform, keyboard, threading
-from source.utils.helper import clearTerminalScreen
-from source.constants.keyboardShortcuts import ( 
-    clearScreenShortCut, 
-    agentShortCuts
-)
-from source.utils.logger import logger
+import os
+import platform
+import threading
+
+import keyboard
+
+from source.constants.keyboardShortcuts import agentShortCuts, clearScreenShortCut
 from source.utils.agentUtils.core.handleAgentShortcuts import handleAgentShortcuts
+from source.utils.helper import clearTerminalScreen
+from source.utils.logger import logger
 
 
 def handleAllShortcutsAndKeyBinds():
@@ -28,7 +30,11 @@ def handleAllShortcutsAndKeyBinds():
                 
                 keyboard.wait()
                 
-            except Exception as exception:
+            except (
+                KeyboardInterrupt,
+                OSError,
+                AttributeError
+            ) as exception:
                 
                 logger.exception(f"AI Agent Failed To Perform Keyboard Shortcut. Exception: { exception }")
 

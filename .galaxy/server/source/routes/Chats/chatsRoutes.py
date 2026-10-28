@@ -1,11 +1,17 @@
 from fastapi import APIRouter
 
-from source.controllers.serverControllers.Chats.createNewChat import createNewChatController
+from source.controllers.serverControllers.Chats.createNewChat import (
+    createNewChatController,
+)
 from source.controllers.serverControllers.Chats.deleteChat import deleteChatController
-from source.controllers.serverControllers.Chats.loadAllChats import loadAllChatsController
-from source.controllers.serverControllers.Chats.updateChatTitle import updateChatTitleController
-from source.controllers.serverControllers.Chats.saveMessage import saveMessageController
+from source.controllers.serverControllers.Chats.loadAllChats import (
+    loadAllChatsController,
+)
 from source.controllers.serverControllers.Chats.loadChat import loadChatController
+from source.controllers.serverControllers.Chats.saveMessage import saveMessageController
+from source.controllers.serverControllers.Chats.updateChatTitle import (
+    updateChatTitleController,
+)
 
 agentChatsRouter = APIRouter()
 

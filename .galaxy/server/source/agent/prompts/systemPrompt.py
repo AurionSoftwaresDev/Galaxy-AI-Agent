@@ -1,7 +1,10 @@
-import os, dotenv
+import os
+
+import dotenv
+
 from source.constants.agentInformations import agentinformations
-from source.constants.ownerInformations import ownerInformations
 from source.constants.cliConstants import COMMANDS_LIST_TABLE, SHORTCUTS_LIST_TABLE
+from source.constants.ownerInformations import ownerInformations
 
 dotenv.load_dotenv()
 

@@ -1,12 +1,17 @@
 import time
+
 import requests
+from rich.align import Align
 from rich.console import Console
+from rich.live import Live
 from rich.panel import Panel
 from rich.table import Table
-from rich.align import Align
-from rich.live import Live
+
 from source.config.configs import getServerURL
-from source.constants.animation.cli.commands.terminateServerAnimationData import ANIMATION_STEPS_QUEUE
+from source.constants.animation.cli.commands.terminateServerAnimationData import (
+    ANIMATION_STEPS_QUEUE,
+)
+
 
 def terminateServer() -> Table:
 
@@ -75,8 +80,4 @@ def terminateServer() -> Table:
 
         return serverStatusGridTable
     
-    except Exception:
-
-        return serverStatusGridTable
-
     return serverStatusGridTable

@@ -1,5 +1,7 @@
-from source.tools.features.datetimeFetching import getCurrentDateTime
 from langchain_core.tools import tool
+
+from source.tools.features.datetimeFetching import getCurrentDateTime
+
 
 @tool(
     name_or_callable = "fetch_datetime",

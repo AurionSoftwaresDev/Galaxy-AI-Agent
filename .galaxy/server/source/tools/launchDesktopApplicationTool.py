@@ -1,6 +1,9 @@
-from source.models.toolModels.launchDesktopApplicationModel import LaunchApplicationInputModel
-from source.tools.features.applicationLauncher import launchApplication
 from langchain_core.tools import StructuredTool
+
+from source.models.toolModels.launchDesktopApplicationModel import (
+    LaunchApplicationInputModel,
+)
+from source.tools.features.applicationLauncher import launchApplication
 
 launchApplicationTool = StructuredTool.from_function(
     args_schema = LaunchApplicationInputModel,

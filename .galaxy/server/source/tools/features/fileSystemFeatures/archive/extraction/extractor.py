@@ -1,8 +1,11 @@
-from typing import Optional
-from source.utils.logger import logger
-from source.tools.features.fileSystemFeatures.archive.extraction.extractionRegistry import EXTRACTORS_HANDLERS
 
-class ArchiveExtractor():
+from source.tools.features.fileSystemFeatures.archive.extraction.extractionRegistry import (
+    EXTRACTORS_HANDLERS,
+)
+from source.utils.logger import logger
+
+
+class ArchiveExtractor:
 
     def __init__(self):
 
@@ -13,8 +16,8 @@ class ArchiveExtractor():
             format : str,
             archiveSourceFullPath : str,
             archiveExtractOutputPath : str,
-            archiveOutputNameFolder : Optional[str] = None,
-            archivePassword : Optional[str] = None,
+            archiveOutputNameFolder : str | None = None,
+            archivePassword : str | None = None,
     ) -> str:
 
         archiveExtractor = EXTRACTORS_HANDLERS[format]

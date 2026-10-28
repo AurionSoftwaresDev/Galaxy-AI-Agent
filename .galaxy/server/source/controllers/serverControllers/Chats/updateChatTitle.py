@@ -1,17 +1,21 @@
+import sqlite3
+
 from fastapi import Response, status
+
+from source.memory.chatHistoryMemory import loadChat, updateChatTitle
 from source.models.serverModels.Chats.updateChatTitleModel import UpdateChatTitleModel
-from source.memory.chatHistoryMemory import updateChatTitle, loadChat
+
 
 def updateChatTitleController(
     request : UpdateChatTitleModel, 
     response : Response
-) -> dict[str, str | int | bool]:
+) -> dict[str, str | int | bool | list]:
 
     newChatTitle : str = request.title.strip()
 
     chatId : int = request.chatId
 
-    chatIsExists : dict[str, str | int] | None = loadChat(
+    chatIsExists : (dict[str, str | int | list[dict[str, str | int]]] | None) = loadChat(
         chatId = chatId, 
         title = newChatTitle if newChatTitle != "" else None
     )
@@ -60,7 +64,11 @@ def updateChatTitleController(
             "Message": "Successfully Chat Renamed Saved!",
         }
 
-    except Exception as unexpectedException:
+    except (
+        sqlite3.DataError,
+        sqlite3.InternalError,
+        sqlite3.DatabaseError
+    ) as unexpectedException:
 
         response.status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
