@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import os
-import sys
 
 from PyQt6.QtCore import Qt, QTimer, QUrl
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 from PyQt6.QtWidgets import (
-    QApplication,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -476,9 +474,7 @@ class DesktopGlobeWindow(QMainWindow):
 
         self.distance_result.setText("Distance: —")
         
-def start_map():
-
-    app : QApplication = QApplication(sys.argv)
+def map_ready() -> list[bool]:
 
     js_ready : bool = verify_and_download(
         file_path = JS_PATH, 
@@ -492,10 +488,7 @@ def start_map():
         name = "maplibre-gl.css"
     )
 
-    window : DesktopGlobeWindow = DesktopGlobeWindow(
-        libraries_ready = js_ready and css_ready
-    )
-
-    window.show()
-
-    sys.exit(app.exec())
+    return [
+        js_ready,
+        css_ready
+    ]

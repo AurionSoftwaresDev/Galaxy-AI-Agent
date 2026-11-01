@@ -4,7 +4,9 @@ import random
 import subprocess
 import sys
 import time
+from dataclasses import fields
 from pathlib import Path
+from typing import Any
 
 from PyQt6.QtCore import QLoggingCategory
 from PyQt6.QtWidgets import QApplication
@@ -214,3 +216,23 @@ def startServer():
         serverPIDFile.write(str(serverPID))
 
     logger.info("Uvicorn Galaxy AI Agent Server Started In The Background")
+
+'''
+    This Function Always Extract @dataclass class object keys
+    and object wrap in *args
+'''
+def extract_keys(*args) -> dict[str, Any]:
+
+    user_metadata = {} # Extract All Keys Here And Store And Return
+    
+    for obj in args:
+
+        for field in fields(obj):
+
+            key = field.name
+
+            value = getattr(obj, key)
+
+            user_metadata[key] = value
+
+    return user_metadata

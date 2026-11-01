@@ -1,4 +1,3 @@
-
 COLORS = {
     "background": "#07111F",
     "sidebar": "#0A1628",

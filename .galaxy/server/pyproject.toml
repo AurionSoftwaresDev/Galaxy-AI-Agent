@@ -2,3 +2,6 @@
 ignore = [
     "BLE001"
 ]
+extend-select = [
+    "I"
+]
