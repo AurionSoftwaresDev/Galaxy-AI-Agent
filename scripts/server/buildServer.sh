@@ -3,7 +3,7 @@
 set -Eeuo pipefail
 
 # ============================================================
-# AI AGENT - LINUX STARTUP
+# AI AGENT - LINUX/MACOS STARTUP
 # ============================================================
 
 echo
@@ -27,7 +27,8 @@ BACKEND_TEMP=$ROOT/build/cache
 BACKEND_BUILD=$ROOT/build
 BACKEND_BUILD_TEMP_DATA=$ROOT/build/data
 
-ICON_PATH=$ROOT/scripts/images/galaxyIcon.ico
+MACOS_ICON_PATH=$ROOT/scripts/icons/galaxyIcon.icns
+LINUX_ICON_PATH=$ROOT/scripts/icons/galaxyIcon.png
 
 echo "[INFO] Project:"
 echo "       $ROOT"
@@ -240,44 +241,59 @@ echo [OK] Successfully Moved Environment File
 # ------------------------------------------------------------ 
 
 echo [INFO] Building Server Executable File...
-
 mkdir -p "$ROOT\build"
 
-pyinstaller --clean \
-        --noconfirm \
-        --onefile $BACKEND/startGalaxy.py \
-	    --distpath $ROOT/build \
-	    --workpath $BACKEND_TEMP \
-	    --specpath $BACKEND_BUILD_TEMP_DATA/server \
-        --collect-submodules source \
-        --collect-all tabulate \
-        --copy-metadata pandas \
-        --copy-metadata tabulate \
-        --icon $ICON_PATH
 
-pyinstaller --clean \
-        --noconfirm \
-        --onefile $BACKEND/server.py \
-        --distpath $ROOT/build/server \
-        --workpath $BACKEND_TEMP \
-        --specpath $BACKEND_BUILD_TEMP_DATA/server \
-        --collect-submodules source \
-        --collect-all tabulate  \
-        --copy-metadata pandas \
-        --copy-metadata tabulate \
-        --icon $ICON_PATH
+if [[ "$OS" == "Linux" ]]; then
 
-pyinstaller --clean \
-        --noconfirm \
-        --onefile $BACKEND/main.py \
-        --distpath $ROOT/build/server \
-        --workpath $BACKEND_TEMP \
-        --specpath $BACKEND_BUILD_TEMP_DATA/server \
-        --collect-submodules source \
-        --collect-all tabulate \
-        --copy-metadata pandas \
-        --copy-metadata tabulate \
-        --icon $ICON_PATH
+    %VENV_PYTHON% -m nuitka --mode=onefile \
+    --follow-imports \
+    --include-package="$BACKEND/source" \
+    --include-package=fastapi \
+    --include-package=uvicorn \
+    --include-package=cryptography \
+    --include-package=langchain \
+    --output-dir="$BACKEND_BUILD" \
+    --output-filename=server_cli_launcher \
+    "$BACKEND/startGalaxy.py"
+
+    # Linux icon automation
+    mkdir -p "$HOME/.local/share/icons"
+    mkdir -p "$HOME/.local/share/applications"
+
+    cp "$LINUX_ICON_PATH" \
+    "$HOME/.local/share/icons/server_cli_launcher.png"
+
+    cat > "$HOME/.local/share/applications/server_cli_launcher.desktop" <<EOF
+[Desktop Entry]
+Name=Server CLI Launcher
+Exec=$BACKEND_BUILD/server_cli_launcher
+Icon=$HOME/.local/share/icons/server_cli_launcher.png
+Type=Application
+Terminal=true
+Categories=Utility;
+EOF
+
+    chmod +x "$HOME/.local/share/applications/server_cli_launcher.desktop"
+
+    echo "Linux build and icon setup completed."
+
+    exit 0
+
+fi
+
+%VENV_PYTHON% -m nuitka --mode=onefile \
+--follow-imports \
+--include-package=$BACKEND/source \
+--include-package=fastapi \
+--include-package=uvicorn \
+--include-package=cryptography \
+--include-package=langchain \
+--output-dir="$BACKEND_BUILD" \
+--output-filename=server_cli_launcher.exe \
+--macos-create-app-bundle \
+--macos-app-icon=$MACOS_ICON_PATH \
+"$BACKEND\startGalaxy.py"
 
 if [[ $? -ne 0 ]]; then
     echo

@@ -26,9 +26,7 @@ set "VENV=%BACKEND%\.venv"
 set "VENV_PYTHON=%VENV%\Scripts\python.exe"
 set "ENV_VAR=%BACKEND%\.env"
 
-set "BACKEND_TEMP=%ROOT%\build\cache"
-set "BACKEND_BUILD=%ROOT%\build\"
-set "BACKEND_BUILD_TEMP_DATA=%ROOT%\build\data"
+set "BACKEND_BUILD=%ROOT%\build"
 
 set "ICON_PATH=%ROOT%\scripts\images\galaxyIcon.ico"
 
@@ -286,61 +284,24 @@ copy /Y "%ENV_VAR%" "%ROOT%\build\"
 
 echo [OK] Successfully Moved Environment File
 
-echo [Info] Building Server Executables Files...
-
-echo [INFO] Building Galaxy executables...
+echo [Info] Building Server/CLI Executable Files...
 
 REM Use the exact Python from the project virtual environment.
 set "PYI=%VENV_PYTHON%"
 
-REM Build launcher
-"%PYI%" -m PyInstaller ^
-    --clean --noconfirm --onefile ^
-    --name startGalaxy ^
-    --paths "%BACKEND%" ^
-    --collect-submodules source ^
-    --copy-metadata pandas ^
-    --copy-metadata tabulate ^
-    --hidden-import tabulate ^
-    --icon "%ICON_PATH%" ^
-    --distpath "%ROOT%\build" ^
-    --workpath "%BACKEND_TEMP%\startGalaxy" ^
-    --specpath "%BACKEND_BUILD_TEMP_DATA%\server" ^
-    "%BACKEND%\startGalaxy.py"
+REM Build Server/CLI Launcher
+%VENV_PYTHON% -m nuitka --mode=onefile ^
+--follow-imports ^
+--include-package=%BACKEND\source% ^
+--include-package=fastapi ^
+--include-package=uvicorn ^
+--include-package=cryptography ^
+--include-package=langchain ^
+--output-dir="%BACKEND_BUILD%" ^
+--windows-icon-from-icon %ICON_PATH% ^
+--output-filename=server_cli_launcher.exe ^
+"%BACKEND%\startGalaxy.py"
 
-if errorlevel 1 goto :BUILD_FAILED
-
-REM Build API server
-"%PYI%" -m PyInstaller ^
-    --clean --noconfirm --onefile ^
-    --name server ^
-    --paths "%BACKEND%" ^
-    --collect-submodules source ^
-    --copy-metadata pandas ^
-    --copy-metadata tabulate ^
-    --hidden-import tabulate ^
-    --icon "%ICON_PATH%" ^
-    --distpath "%ROOT%\build\server" ^
-    --workpath "%BACKEND_TEMP%\server" ^
-    --specpath "%BACKEND_BUILD_TEMP_DATA%\server" ^
-    "%BACKEND%\server.py"
-
-if errorlevel 1 goto :BUILD_FAILED
-
-REM Build interactive agent
-"%PYI%" -m PyInstaller ^
-    --clean --noconfirm --onefile ^
-    --name main ^
-    --paths "%BACKEND%" ^
-    --collect-submodules source ^
-    --copy-metadata pandas ^
-    --copy-metadata tabulate ^
-    --hidden-import tabulate ^
-    --icon "%ICON_PATH%" ^
-    --distpath "%ROOT%\build\server" ^
-    --workpath "%BACKEND_TEMP%\main" ^
-    --specpath "%BACKEND_BUILD_TEMP_DATA%\server" ^
-    "%BACKEND%\main.py"
 
 if errorlevel 1 goto :BUILD_FAILED
 
@@ -350,7 +311,7 @@ goto :BUILD_END
 
 :BUILD_FAILED
 echo.
-echo [ERROR] PyInstaller build failed.
+echo [ERROR] Nuitka build failed.
 exit /b 1
 
 :BUILD_END

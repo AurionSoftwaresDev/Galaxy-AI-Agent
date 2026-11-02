@@ -17,13 +17,6 @@ def openMap():
 
     sys.exit(map_application_instance.exec())
 
-@dataclass
-class tempObj:
-
-    name: str
-    age: int
-    obj: object
-
 def actionOnMap(agentMapAction : MapActionModel, *action_functions_arguments) -> str: # action_functions_arguments (Optional) Depend On Action
 
     agentAction : str = agentMapAction.action
@@ -39,11 +32,3 @@ def actionOnMap(agentMapAction : MapActionModel, *action_functions_arguments) ->
     except TypeError: # If Action Functions Expected Arguments To Action
 
         return agentActionFunction(*action_functions_arguments)
-
-myObj : tempObj = tempObj(
-    "",
-    0,
-    {}
-)
-
-actionOnMap("write", myObj)
