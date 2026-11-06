@@ -1,6 +1,6 @@
 # Galaxy AI Agent Architecture
 
-> **Galaxy AI Documentation Hub**: [🏠 Root README / Master Index](../../README.md) • [📖 Galaxy Overview](../README.md) • [📂 Docs Directory](./)
+> **Galaxy AI Documentation Hub**: [🏠 Root README / Master Index](../README.md) • [📂 Docs Directory](./)
 
 This document provides a comprehensive technical overview of the software architecture of Galaxy AI Agent, including process models, communication boundaries, agent runtime loops, and state management.
 
@@ -21,20 +21,21 @@ graph TB
         FastAPIApp["FastAPI ASGI Application (server.py)"]
         Router["APIRouter (allRoutes.py)"]
         WSEndpoint["WebSocket Session Handler (/ws/assistant)"]
-        RESTEndpoints["REST Routers (/agent, /chats, /settings, /server)"]
+        RESTEndpoints["REST Routers (/generate, /create, /load-all, /settings, /disconnect)"]
     end
 
     subgraph Agent_Layer["LangChain Agentic Runtime"]
         AgentCore["Agent Executor (createNewAgent)"]
         SystemPrompt["System Prompt (prompts/systemPrompt.py)"]
         LLMProvider["Active LLM Model (Gemini / Ollama / Mistral)"]
-        ToolRegistry["Tool Registry (16 Structured Tools)"]
+        ToolRegistry["Tool Registry (20 Structured Tools)"]
         SecurityLayer["PermissionManager (Interactive CLI approval)"]
+        MapBridge["MapLibre GL JS Bridge (mapContextShared)"]
     end
 
     subgraph Storage_Layer["Local SQLite Storage"]
         MemDB[("memory.db<br/>(Flat Message Log)")]
-        ChatDB[("chats.db<br/>(Relational Session Store)")]
+        ChatDB[("chats.db<br/>(Relational Multi-Session Store)")]
     end
 
     CLI -->|In-Process Async Loop| AgentCore
@@ -48,6 +49,7 @@ graph TB
     AgentCore --> LLMProvider
     AgentCore --> ToolRegistry
     ToolRegistry --> SecurityLayer
+    ToolRegistry --> MapBridge
     AgentCore --> Storage_Layer
 ```
 
@@ -55,7 +57,7 @@ graph TB
 
 ## 2. Process Architecture
 
-When launched via `python startGalaxy.py`, two primary processes are instantiated depending on the provided arguments:
+When launched via `startGalaxy` (binary or `python startGalaxy.py`), two primary processes are instantiated depending on the provided arguments:
 
 1. **Uvicorn Server Daemon Process**:
    - Spawned as a background subprocess via `subprocess.Popen([sys.executable, "-m", "uvicorn", "server:agentServer", "--host", "127.0.0.1", "--port", ...])`.
@@ -64,7 +66,7 @@ When launched via `python startGalaxy.py`, two primary processes are instantiate
    - Stores the active process ID in `source/logs/server.pid` for graceful shutdown and process lifecycle management.
 
 2. **Interactive Terminal Agent Process**:
-   - Launched either in the current terminal or in a new terminal window via `startNewTerminal([sys.executable, "main.py"], "Galaxy AI - Agent")`.
+   - Launched in the terminal via `startNewTerminal([sys.executable, "main.py"], "Galaxy AI - Agent")`.
    - Spawns background worker threads:
      - `startKeyboardMappingThread()`: Listens for system-wide hotkeys using the `keyboard` library.
      - `AgentChatModeThread`: Runs the `asyncio` event loop driving the interactive chat prompt, Rich streaming output, and CLI slash-command executor.
@@ -90,7 +92,7 @@ sequenceDiagram
     participant Security as PermissionManager
 
     User->>CLI: Enters prompt or slash command
-    alt Prompt is a Slash Command (e.g. /help, /tools)
+    alt Prompt is a Slash Command (e.g. /help, /tools, /providers)
         CLI->>CLI: Execute registered command function
         CLI-->>User: Display command output in Rich console
     else Prompt is Agent Message
@@ -98,95 +100,55 @@ sequenceDiagram
         Memory-->>CLI: Return previous message history
         CLI->>Agent: agent.astream({"messages": [...]}, stream_mode="messages")
         loop Token / Tool Streaming
-            Agent->>LLM: Stream inference tokens
-            LLM-->>Agent: Token chunk
-            opt LLM calls tool (e.g. commands_executor)
-                Agent->>Tool: Invoke tool function
-                opt Dangerous Tool
-                    Tool->>Security: askPermission()
-                    Security-->>User: Prompt "Allow This Operation?" (Allow/Deny)
-                    User-->>Security: User chooses Allow
+            alt Token Chunk
+                Agent-->>CLI: Emits AIMessageChunk
+                CLI-->>User: Stream token to Rich terminal
+            else Tool Invocation
+                Agent->>Tool: Request tool execution
+                opt Tool is commands_executor
+                    Tool->>Security: Request interactive user permission
+                    Security->>User: Prompt [Allow execution? (y/N)]
+                    User-->>Security: Response (y / n)
                 end
-                Tool-->>Agent: Tool result string / JSON
+                Tool-->>Agent: Return tool execution payload
             end
-            Agent-->>CLI: AIMessageChunk / ToolMessage
-            CLI-->>User: Stream tokens to Rich terminal UI
         end
-        CLI->>Memory: saveMessagesInAgentMemory("user", userPrompt)
-        CLI->>Memory: saveMessagesInAgentMemory("assistant", finalResponse)
+        CLI->>Memory: saveMessageToAgentMemory(User Prompt & Agent Response)
     end
 ```
 
-### B. WebSocket Streaming Flow (Flutter / GUI Client)
+### B. Flutter GUI WebSocket Flow
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Client as Flutter Desktop Client
-    participant WS as WebSocket Controller (/ws/assistant)
-    participant Mem as SQLite (memory.db)
+    actor User
+    participant Flutter as Flutter Desktop Client
+    participant Server as FastAPI WebSocket (/ws/assistant)
+    participant ChatDB as SQLite (chats.db)
     participant Agent as LangChain Agent
-    participant LLM as LLM Provider
+    participant LLM as Active Model Provider
 
-    Client->>WS: Connect to ws://127.0.0.1:8000/ws/assistant
-    WS-->>Client: WebSocket Accept
-    Client->>WS: Send {"content": "Explain binary search"}
-    WS->>Mem: loadMessagesFromAgentMemory()
-    Mem-->>WS: Return history
-    WS-->>Client: {"type": "state_change", "payload": {"state": "thinking"}}
-    WS->>Agent: agent.astream({"messages": [...]})
-    loop Stream Tokens
-        Agent->>LLM: Stream tokens
-        LLM-->>Agent: Token chunk
-        Agent-->>WS: AIMessageChunk
-        WS-->>Client: {"type": "text_delta", "payload": {"content": token}}
+    User->>Flutter: Types prompt into UI chat bar
+    Flutter->>Server: Send JSON frame {"prompt": "...", "chat_id": 1}
+    Server->>ChatDB: Load previous messages for chat_id
+    Server->>Agent: Stream agent execution
+    loop Incremental Chunks
+        Agent-->>Server: Token / Tool Status
+        Server-->>Flutter: Stream JSON event {"type": "token", "content": "..."}
+        Flutter-->>User: Glow animation & incremental text update
     end
-    WS->>Mem: saveMessagesInAgentMemory("user", prompt)
-    WS->>Mem: saveMessagesInAgentMemory("assistant", fullText)
-    WS-->>Client: {"type": "state_change", "payload": {"state": "completed"}}
-    WS-->>Client: {"type": "done", "payload": {}}
+    Server->>ChatDB: Persist user & assistant messages
 ```
 
 ---
 
-## 4. State Management and Transitions
+## 4. SQLite Database Schemas
 
-The Flutter desktop application maintains state through the `AssistantController` and visualizes state via the animated `AiOrb` widget:
+Galaxy AI Agent utilizes dual local SQLite databases to balance unpartitioned CLI memory with structured multi-session chat history.
 
-```mermaid
-stateDiagram-v2
-    [*] --> Disconnected
-    Disconnected --> Connecting: connect() / Server Ping
-    Connecting --> Listening: Health check OK & WS open
-    Connecting --> Disconnected: Connection failed
-    
-    Listening --> Thinking: sendPrompt(text)
-    Thinking --> Speaking: Stream tokens received (audio active)
-    Thinking --> Listening: Stream completes (done event)
-    Speaking --> Listening: Speech playback finished / Cancelled
-    
-    Thinking --> Error: WebSocket / Backend error
-    Listening --> Disconnected: Server terminated / socket dropped
-    Error --> Listening: User retry / new prompt
-```
-
-| State | Orb Visual Behavior | Description |
-|---|---|---|
-| `disconnected` | Dim gray / pulsing red border | Server is unreachable or offline on port 8000. |
-| `connecting` | Cyan/purple gentle breathing pulse | Attempting handshake with backend. |
-| `listening` (idle) | Deep neon blue/indigo ambient wave | Ready for user audio or text input. |
-| `thinking` | High-frequency purple/magenta energy orbit | Agent is reasoning or invoking tools. |
-| `speaking` | Dynamic audio-reactive cyan/violet pulse | Assistant is streaming voice or completing output. |
-| `error` | Amber/red alert glow | Request failed, timeout, or invalid response. |
-
----
-
-## 5. Storage Architecture
-
-Galaxy AI maintains two decoupled SQLite databases in `Galaxy/.galaxy/server/databases/memory/`:
-
-### A. Agent Message Memory (`memory.db`)
-Used by `agentResponse.py`, `agentWebSocketController.py`, and `agentChat.py` for standard ongoing conversational memory.
+### Database 1: `memory.db` (Flat Agent Memory)
+Located at: `.galaxy/server/databases/memory/memory.db`
 
 ```sql
 CREATE TABLE messages (
@@ -197,18 +159,18 @@ CREATE TABLE messages (
 );
 ```
 
-### B. Session Chat Memory (`chats.db`)
-Used by the Flutter client and `/chats/*` endpoints to manage distinct titled conversations:
+### Database 2: `chats.db` (Multi-Session Structured Store)
+Located at: `.galaxy/server/databases/memory/chats.db`
 
 ```sql
-CREATE TABLE chats (
+CREATE TABLE IF NOT EXISTS chats (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     chat_id INTEGER NOT NULL,
     role TEXT NOT NULL,
@@ -217,37 +179,22 @@ CREATE TABLE messages (
     FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE
 );
 
-CREATE INDEX idx_messages_chat_id ON messages(chat_id);
+CREATE INDEX IF NOT EXISTS idx_messages_chat_id ON messages(chat_id);
 ```
 
 ---
 
-## 6. Process Shutdown Architecture
+## 5. Process Shutdown Architecture
 
-When the user triggers `/terminate-server` or `GET /server/disconnect`:
-1. The server reads `source/logs/server.pid`.
-2. Inspects process table using `psutil`.
-3. Verifies process name contains `python` or `uvicorn` and terminates the PID.
-4. Scans open sockets for processes listening on `AGENT_SERVER_RUNNING_PORT` (default 8000) and terminates matches.
-5. Returns `HTTP 204 No Content` to the calling client before completing shutdown.
+1. **CLI Termination**: Typing `/exit` or `quit-agent` safely closes open SQLite cursors and stops background listener threads.
+2. **Server Termination**:
+   - Calling `GET /disconnect` reads `server.pid` from `source/logs/server.pid` and terminates the Uvicorn process.
+   - Slash command `/terminate-server` terminates the background server directly from the terminal.
 
 ---
 
-## 📚 Central Documentation Hub
-
-All technical documentation is connected to and managed centrally from the root [**README.md**](../../README.md).
-
-| Document | Focus & Topic | Link |
-|---|---|:---:|
-| **Central Hub** | Root README, Master Index & One-Command Build | [README.md](../../README.md) |
-| **Project Overview** | Complete Ecosystem & Architecture Summary | [Galaxy/README.md](../README.md) |
-| **System Architecture** | Process Boundaries, Sequence Flows & Dataflow | [architecture.md](architecture.md) |
-| **Installation Guide** | Prerequisites & OS Packages (Linux, macOS, Windows) | [installation.md](installation.md) |
-| **Configuration Guide** | `.env` Variables, SQLite Stores & SMTP Settings | [configuration.md](configuration.md) |
-| **API & WebSocket** | REST Endpoints, Payloads & Streaming Events | [api.md](api.md) |
-| **CLI & Hotkeys** | Flags (`server=true`), Slash Commands & Hotkeys | [cli.md](cli.md) |
-| **Agent & LLM Engine** | LangChain ReAct Loop, Multi-Provider & Memory | [agent.md](agent.md) |
-| **16 Native Tools** | Tool Signatures, Parameters & Interactive Guard | [tools.md](tools.md) |
-| **Build & Packaging** | Unified C++ Builder (`build.cpp`) & Bundling | [build.md](build.md) |
-| **Troubleshooting** | API Key Errors, Port Conflicts & FAQs | [troubleshooting.md](troubleshooting.md) |
-
+## 🔗 Cross-Document Reference
+- [Configuration Guide](configuration.md) — Database file paths and logging conventions
+- [API Reference](api.md) — REST endpoints and WebSocket protocol
+- [Tools Reference](tools.md) — All 20 native tools and security permissions
+- [CLI Reference](cli.md) — Command-line interface and keyboard shortcuts

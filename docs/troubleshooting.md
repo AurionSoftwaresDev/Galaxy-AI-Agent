@@ -1,6 +1,6 @@
 # Troubleshooting & Frequently Asked Questions
 
-> **Galaxy AI Documentation Hub**: [🏠 Root README / Master Index](../../README.md) • [📖 Galaxy Overview](../README.md) • [📂 Docs Directory](./)
+> **Galaxy AI Documentation Hub**: [🏠 Root README / Master Index](../README.md) • [📂 Docs Directory](./)
 
 This guide addresses common setup errors, runtime exceptions, and platform limitations encountered in Galaxy AI Agent.
 
@@ -11,12 +11,12 @@ This guide addresses common setup errors, runtime exceptions, and platform limit
 ### Symptom: `[Exception] Providers Keys Not Found Check Logs` (Exit code 404)
 - **Cause**: Galaxy requires at least one configured LLM provider key at startup. The function `validateUserEnviromentVariables()` checks both `GOOGLE_API_KEY` and `MISTRAL_API_KEY`.
 - **Solution**:
-  1. Open `Galaxy/.galaxy/server/.env`.
+  1. Open `.galaxy/server/.env`.
   2. Ensure at least one API key is defined and not empty:
      ```dotenv
      GOOGLE_API_KEY="AIzaSy..."
      ```
-  3. Restart the server binary: `./Galaxy/build/startGalaxy` (or `python startGalaxy.py`).
+  3. Restart the server binary: `./build/startGalaxy` (or `python startGalaxy.py`).
 
 ---
 
@@ -25,7 +25,7 @@ This guide addresses common setup errors, runtime exceptions, and platform limit
 ### Symptom: `AttributeError: module 'ctypes' has no attribute 'windll'` on Linux/macOS
 - **Cause**: The module `source/gui/widgets/DialogBox.py` contains a top-level call to `ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(...)`, which is only available on Windows.
 - **Occurrence**: This occurs if `validateUserEnviromentVariables()` triggers the GUI error dialog because API keys are missing on a non-Windows OS.
-- **Solution**: Configure your `GOOGLE_API_KEY` in `.env` so that the dialog fallback is never invoked, or wrap the `ctypes.windll` call in an `if sys.platform.startswith("win"):` guard.
+- **Solution**: Configure your `GOOGLE_API_KEY` in `.env` so that the missing-key dialog is never invoked.
 
 ---
 
@@ -45,7 +45,7 @@ This guide addresses common setup errors, runtime exceptions, and platform limit
     netstat -ano | findstr :8000
     taskkill /PID <PID> /F
     ```
-  - **Alternative**: Change the server port in `.env`:
+  - **Alternative**: Change the server port in `.galaxy/server/.env`:
     ```dotenv
     AGENT_SERVER_RUNNING_PORT=8080
     ```
@@ -58,58 +58,43 @@ This guide addresses common setup errors, runtime exceptions, and platform limit
 ### Symptom: Glowing Orb shows red border with label `Disconnected`
 - **Cause**: The Flutter client cannot connect to `http://127.0.0.1:8000/health` or `ws://127.0.0.1:8000/ws/assistant`.
 - **Checklist**:
-  1. Confirm the backend server is running:
-     ```bash
-     curl -i http://127.0.0.1:8000/health
-     ```
-     Should return:
-     ```json
-     {"Status": 200, "Message": "AI Agent Server Health Is Good."}
-     ```
-  2. Check if a firewall is blocking local loopback WebSocket connections.
-  3. In the Flutter client, open Settings and verify the URL matches your backend (`http://127.0.0.1:8000`).
+  1. Verify the backend server is running: `curl http://127.0.0.1:8000/health`.
+  2. If using a custom port in `.env`, update the port in Flutter Settings.
+  3. Check `.galaxy/server/source/logs/` for traceback logs.
 
 ---
 
 ## 5. Local Ollama Provider Issues
 
-### Symptom: `Failed to invoke Ollama model 'qwen3:8b'`
-- **Cause**: Ollama is selected as active provider, but either the Ollama daemon is not running or the model has not been pulled.
-- **Solution**:
-  1. Start the Ollama server:
-     ```bash
-     ollama serve
-     ```
-  2. Pull the default Galaxy Ollama model:
-     ```bash
-     ollama pull qwen3:8b
-     ```
-  3. Verify availability via `ollama list`.
+### Symptom: `Connection refused` when invoking local model
+- **Cause**: The Ollama daemon is not running on `http://127.0.0.1:11434`.
+- **Resolution**:
+  1. Ensure Ollama is installed: `ollama --version`.
+  2. Start the daemon: `ollama serve`.
+  3. Pull the required model: `ollama pull qwen3:8b`.
 
 ---
 
 ## 6. Shell Command Execution Denied
 
-### Symptom: `commands_executor` returns `Permission Denied!`
-- **Explanation**: This is normal security behavior. The `commands_executor` tool prompts for user approval via the terminal before running any shell commands. If the user presses `Deny` or sends a break signal, the operation is halted safely.
+### Symptom: `ToolExecutionError: User denied permission to execute shell command`
+- **Cause**: The `commands_executor` tool requires explicit approval via `PermissionManager`.
+- **Resolution**:
+  - In the interactive terminal, press `y` and `Enter` when prompted.
+  - In automated/scripted environments, execute shell operations before invoking the agent.
 
 ---
 
-## 📚 Central Documentation Hub
+## 7. Map Tools Display Diagnostics
 
-All technical documentation is connected to and managed centrally from the root [**README.md**](../../README.md).
+### Symptom: Map window fails to initialize
+- **Cause**: System lacks a running window manager or display server (e.g. running in a headless SSH session).
+- **Resolution**: Run the agent in a standard desktop session (X11, Wayland, macOS Quartz, or Windows Desktop) to allow WebEngine window rendering.
 
-| Document | Focus & Topic | Link |
-|---|---|:---:|
-| **Central Hub** | Root README, Master Index & One-Command Build | [README.md](../../README.md) |
-| **Project Overview** | Complete Ecosystem & Architecture Summary | [Galaxy/README.md](../README.md) |
-| **System Architecture** | Process Boundaries, Sequence Flows & Dataflow | [architecture.md](architecture.md) |
-| **Installation Guide** | Prerequisites & OS Packages (Linux, macOS, Windows) | [installation.md](installation.md) |
-| **Configuration Guide** | `.env` Variables, SQLite Stores & SMTP Settings | [configuration.md](configuration.md) |
-| **API & WebSocket** | REST Endpoints, Payloads & Streaming Events | [api.md](api.md) |
-| **CLI & Hotkeys** | Flags (`server=true`), Slash Commands & Hotkeys | [cli.md](cli.md) |
-| **Agent & LLM Engine** | LangChain ReAct Loop, Multi-Provider & Memory | [agent.md](agent.md) |
-| **16 Native Tools** | Tool Signatures, Parameters & Interactive Guard | [tools.md](tools.md) |
-| **Build & Packaging** | Unified C++ Builder (`build.cpp`) & Bundling | [build.md](build.md) |
-| **Troubleshooting** | API Key Errors, Port Conflicts & FAQs | [troubleshooting.md](troubleshooting.md) |
+---
 
+## 🔗 Cross-Document Reference
+- [Configuration Guide](configuration.md) — Environment variables and port configurations
+- [Installation Guide](installation.md) — Dependencies and setup commands
+- [Architecture Guide](architecture.md) — Process model and logging flow
+- [Map Tools Guide](map_tools.md) — Geospatial tool usage

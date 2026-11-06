@@ -1,6 +1,6 @@
 # Installation & Setup Guide
 
-> **Galaxy AI Documentation Hub**: [🏠 Root README / Master Index](../../README.md) • [📖 Galaxy Overview](../README.md) • [📂 Docs Directory](./)
+> **Galaxy AI Documentation Hub**: [🏠 Root README / Master Index](../README.md) • [📂 Docs Directory](./)
 
 This guide walks you through setting up Galaxy AI Agent on Linux, macOS, and Windows.
 
@@ -16,8 +16,8 @@ This guide walks you through setting up Galaxy AI Agent on Linux, macOS, and Win
 ### Software Prerequisites
 - **Python**: Version `3.10` or higher (verify via `python3 --version`).
 - **Git**: Latest stable release.
-- **Flutter SDK** *(Optional, required for Flutter desktop app)*: Version `3.19.0` or higher.
-- **C++ Compiler** *(Optional, for tools/builder)*: `g++`, `clang++`, or `MSVC`.
+- **Flutter SDK** *(Optional, required only if compiling the Flutter desktop client)*: Version `3.19.0` or higher.
+- **C++ Compiler** *(For the one-command builder `tools/builder/build.cpp`)*: `g++` (GCC), `clang++`, or `MSVC`.
 
 ---
 
@@ -45,7 +45,7 @@ Ensure Xcode Command Line Tools are installed:
 ```bash
 xcode-select --install
 ```
-If using Flutter desktop on macOS:
+If building the Flutter desktop app on macOS:
 ```bash
 brew install cocoapods
 ```
@@ -65,9 +65,9 @@ Galaxy completely eliminates running multiple manual setup commands across diffe
 ```bash
 cp .galaxy/server/.env.example .galaxy/server/.env
 ```
-Add your `GOOGLE_API_KEY` or `MISTRAL_API_KEY` to `.galaxy/server/.env`.
+Open `.galaxy/server/.env` and add your `GOOGLE_API_KEY` (or `MISTRAL_API_KEY`).
 
-### Step 2: Compile `build.cpp` and Done!
+### Step 2: Compile `build.cpp` and Run!
 
 Navigate to `tools/builder`:
 ```bash
@@ -92,76 +92,61 @@ cd tools/builder
 
 ### What `build.cpp` Executes Automatically:
 1. Calls `scripts/server/buildServer.[sh|bat]`:
-   - Checks Python 3.10+ installation (and auto-installs via package manager on Linux if needed).
+   - Checks Python 3.10+ installation.
    - Automatically provisions `.galaxy/server/.venv`.
    - Upgrades `pip` and installs all packages from `requirements.txt`.
-   - Compiles standalone server executable into `Galaxy/build/`.
+   - Compiles standalone server executable into `build/startGalaxy`.
 2. Calls `scripts/client/buildAgent.[sh|bat]`:
    - Checks Flutter SDK installation and desktop engine support.
    - Runs `flutter pub get`.
-   - Compiles release desktop bundle into `Galaxy/build/`.
+   - Compiles release desktop bundle into `build/`.
 
 **Done!** No manual setup or dependency commands are required.
 
 ---
 
-## 4. Running the Project
+## 4. Running the Project Binaries
 
-Once the one-command build finishes, your production-ready binaries are waiting in `Galaxy/build/`:
+Once the one-command build finishes, your production-ready binaries are waiting in `build/`:
 
 ### Linux / macOS:
 ```bash
 # 1. Run backend server & interactive terminal agent:
-./Galaxy/build/startGalaxy
+./build/startGalaxy
 
 # 2. Or launch the Flutter desktop client:
-./Galaxy/build/galaxy
+./build/galaxy
 ```
 
 ### Windows:
 ```cmd
 :: 1. Run backend server & interactive terminal agent:
-Galaxy\build\startGalaxy.exe
+build\startGalaxy.exe
 
 :: 2. Or launch the Flutter desktop client:
-Galaxy\build\galaxy.exe
+build\galaxy.exe
 ```
 
 ---
 
 ## 5. Verification & Health Check
 
-After launching the server, verify operational health via the health endpoint:
+Verify that the backend server is operating properly:
 
 ```bash
+# Query health endpoint
 curl http://127.0.0.1:8000/health
 ```
 
-Expected response:
+Expected output:
 ```json
-{
-  "Status": 200,
-  "Message": "AI Agent Server Health Is Good."
-}
+{"Status": 200, "Message": "AI Agent Server Health Is Good."}
 ```
 
 ---
 
-## 📚 Central Documentation Hub
-
-All technical documentation is connected to and managed centrally from the root [**README.md**](../../README.md).
-
-| Document | Focus & Topic | Link |
-|---|---|:---:|
-| **Central Hub** | Root README, Master Index & One-Command Build | [README.md](../../README.md) |
-| **Project Overview** | Complete Ecosystem & Architecture Summary | [Galaxy/README.md](../README.md) |
-| **System Architecture** | Process Boundaries, Sequence Flows & Dataflow | [architecture.md](architecture.md) |
-| **Installation Guide** | Prerequisites & OS Packages (Linux, macOS, Windows) | [installation.md](installation.md) |
-| **Configuration Guide** | `.env` Variables, SQLite Stores & SMTP Settings | [configuration.md](configuration.md) |
-| **API & WebSocket** | REST Endpoints, Payloads & Streaming Events | [api.md](api.md) |
-| **CLI & Hotkeys** | Flags (`server=true`), Slash Commands & Hotkeys | [cli.md](cli.md) |
-| **Agent & LLM Engine** | LangChain ReAct Loop, Multi-Provider & Memory | [agent.md](agent.md) |
-| **16 Native Tools** | Tool Signatures, Parameters & Interactive Guard | [tools.md](tools.md) |
-| **Build & Packaging** | Unified C++ Builder (`build.cpp`) & Bundling | [build.md](build.md) |
-| **Troubleshooting** | API Key Errors, Port Conflicts & FAQs | [troubleshooting.md](troubleshooting.md) |
-
+## 🔗 Cross-Document Reference
+- [Configuration Guide](configuration.md) — Configuring environment variables and ports
+- [Build Guide](build.md) — Detailed build flags (`--server`, `--agent`)
+- [CLI Reference](cli.md) — Command line arguments for `startGalaxy`
+- [Troubleshooting](troubleshooting.md) — Resolving missing packages or compiler errors
