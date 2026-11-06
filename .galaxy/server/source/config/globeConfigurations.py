@@ -21,3 +21,10 @@ MAP_APPEARANCE : list[tuple[str, str]] = [
     ("light", "☼   Positron Light"),
     ("voyager", "◇   Voyager"),
 ]
+
+MAP_DEFAULT_LOCATIONS : list[tuple] = [
+    ("Point A longitude", "78.9629"),
+    ("Point A latitude", "20.5937"),
+    ("Point B longitude", "77.5946"),
+    ("Point B latitude", "12.9716"),
+]

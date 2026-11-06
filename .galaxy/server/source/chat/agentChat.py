@@ -5,7 +5,6 @@ import google.api_core.exceptions as google_exceptions
 import ollama
 from langchain.messages import AIMessageChunk, HumanMessage, ToolMessage
 from langchain_core.exceptions import OutputParserException
-from mistralai.models.exceptions import MistralAPIException
 from rich.console import Console
 
 from source.agent.agent import agent
@@ -196,8 +195,8 @@ async def chat() -> bool:
             google_exceptions.ResourceExhausted,
             google_exceptions.GoogleAPICallError,
             ollama.ResponseError,
-            MistralAPIException,
-            ConnectionError
+            ConnectionError,
+            Exception
         ) as Error:
 
             terminalUI.error()

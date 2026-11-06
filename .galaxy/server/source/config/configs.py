@@ -36,6 +36,3 @@ def getAgentServerRunningPort() -> int:
 def getServerURL() -> str:
 
     return str(os.getenv(key = "SERVER_URL")) if os.getenv("SERVER_URL") != None else f"http://localhost:{ getAgentServerRunningPort() }"
-
-
-

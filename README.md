@@ -1,4 +1,4 @@
-# Galaxy AI Agent — Master Documentation & Project Hub
+//# Galaxy AI Agent — Master Documentation & Project Hub
 
 An extensible, cross-platform personal AI desktop agent and local server ecosystem built with **FastAPI**, **LangChain**, and **Flutter Desktop**. Galaxy AI integrates a local agent runtime with multi-provider LLM support (Google Gemini, local Ollama, Mistral AI), 16 operating-system automation tools, interactive permission guards, persistent SQLite session memory, and real-time streaming WebSocket communication.
 

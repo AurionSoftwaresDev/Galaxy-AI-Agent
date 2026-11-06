@@ -1,17 +1,9 @@
-import os
-import subprocess
 import sys
 
-from PyQt6.QtCore import QLoggingCategory
-from PyQt6.QtWidgets import QApplication
-
-from source.config.LogPaths import EXECUTABLE_PATH
-from source.gui.widgets.DialogBox import NeonPremiumDialog
 from source.memory.agentMemory import initializeAgentMemory
 from source.memory.chatHistoryMemory import initializeChatAgentMemory
 from source.utils.helper import (
     getArguments,
-    getExecutableExtension,
     startServer,
     validateUserEnviromentVariables,
 )
@@ -57,5 +49,3 @@ if __name__ == "__main__":
     userArguments : dict[str, bool] = getArguments()
 
     mainHandler(arguments = userArguments)
-
- 

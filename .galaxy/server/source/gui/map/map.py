@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from typing import Literal
 
 from PyQt6.QtCore import Qt, QTimer, QUrl
 from PyQt6.QtWebEngineWidgets import QWebEngineView
@@ -341,7 +342,7 @@ class DesktopGlobeWindow(QMainWindow):
             + ");}else{console.warn('Map application is not ready yet.');}"
         )
 
-        self.browser.page().runJavaScript(code)
+        return self.browser.page().runJavaScript(code)
 
     def change_mode(self, mode):
 
@@ -371,14 +372,26 @@ class DesktopGlobeWindow(QMainWindow):
 
         self.run_map_javascript("setCamera", mode)
 
-    def fly_to_location(self):
+    def fly_to_location(
+        self,
+        mode : Literal["agent", "normal"] = "normal",
+        meta_data : dict[str, str] | None = None
+    ):
 
         try:
-            
-            longitude = float(self.lng_input.text().strip())
-            latitude = float(self.lat_input.text().strip())
-            zoom = float(self.zoom_input.text().strip())
-            
+
+            if mode == "normal":
+
+                longitude = float(self.lng_input.text().strip())
+                latitude = float(self.lat_input.text().strip())
+                zoom = float(self.zoom_input.text().strip())
+
+            else:
+
+                longitude = meta_data["longitude"]
+                latitude = meta_data["latitude"]
+                zoom = meta_data["zoom"]
+
             if not -180 <= longitude <= 180:
 
                 raise ValueError("Longitude must be between -180 and 180.")
@@ -399,17 +412,29 @@ class DesktopGlobeWindow(QMainWindow):
                 text = str(object = error)
             )
 
-            return
+            return None
 
-        self.run_map_javascript("flyToLocation", longitude, latitude, zoom)
+        return self.run_map_javascript("flyToLocation", longitude, latitude, zoom)
 
-    def add_coordinate_marker(self):
+    def add_coordinate_marker(
+        self,
+        mode : Literal["agent", "normal"] = "normal",
+        meta_data : dict[str, str] | None = None
+    ):
 
         try:
 
-            longitude : float = float(self.marker_lng_input.text().strip())
+            if mode == "normal":
 
-            latitude : float = float(self.marker_lat_input.text().strip())
+                longitude : float = float(self.marker_lng_input.text().strip())
+
+                latitude : float = float(self.marker_lat_input.text().strip())
+
+            else:
+
+                longitude : float  = float(meta_data["longitude"])
+
+                latitude : float = float(meta_data["latitude"])
 
             if not -180 <= longitude <= 180 or not -90 <= latitude <= 90:
 
@@ -423,18 +448,32 @@ class DesktopGlobeWindow(QMainWindow):
                 text = str(object = error)
             )
             
-            return
+            return None
 
-        self.run_map_javascript("addMarker", longitude, latitude)
         self.run_map_javascript("flyToLocation", longitude, latitude, 8)
 
-    def calculate_coordinate_distance(self):
+        return self.run_map_javascript("addMarker", longitude, latitude)
+
+    def calculate_coordinate_distance(
+        self,
+        mode : Literal["agent", "normal"] = "normal",
+        meta_data : dict[str, str] | None = None
+    ) -> None | str:
 
         try:
-            
-            lng_a, lat_a, lng_b, lat_b = [
-                float(field.text().strip()) for field in self.distance_inputs
-            ]
+
+            if mode == "normal":
+
+                lng_a, lat_a, lng_b, lat_b = [
+                    float(field.text().strip()) for field in self.distance_inputs
+                ]
+
+            else:
+
+                lng_a: float = meta_data["longitude_a"]
+                lng_b: float = meta_data["longitude_b"]
+                lat_a: float = meta_data["latitude_a"]
+                lat_b: float = meta_data["latitude_b"]
 
             if not (-180 <= lng_a <= 180 and -180 <= lng_b <= 180):
                 
@@ -452,7 +491,7 @@ class DesktopGlobeWindow(QMainWindow):
                 text = str(object = error)
             )
 
-            return
+            return None
 
         from math import atan2, cos, radians, sin, sqrt
 
@@ -467,6 +506,8 @@ class DesktopGlobeWindow(QMainWindow):
         self.distance_result.setText(
             f"Distance: {km:,.3f} km  ({km * 0.621371:,.3f} miles)\nStraight-line / great-circle distance"
         )
+
+        return f"Distance: {km:,.3f} km  ({km * 0.621371:,.3f} miles)\nStraight-line / great-circle distance"
 
     def clear_markers(self):
 

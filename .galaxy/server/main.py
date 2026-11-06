@@ -1,6 +1,5 @@
 import os
 import platform
-import time
 
 from rich.console import Console
 
@@ -36,7 +35,7 @@ def mainAgentHandler() -> None:
                 
         startKeyboardMappingThread()
         
-        sleep(1, 4)
+        sleep(startRange = 1, endRange = 4)
 
     except KeyboardInterrupt:
 
@@ -46,18 +45,19 @@ def mainAgentHandler() -> None:
 
         try:
 
-            time.sleep(1)
+            sleep(startRange = 1, endRange = 2)
 
         except KeyboardInterrupt:
 
             typingTextOnTerminal(keyboardInterruptErrorMessage, speed = 0.05)
 
             os._exit(0)
+
 if __name__ == "__main__":
      
     clearTerminalScreen(operatingSystem = platform.system())
     
-    logger.info("Agent Applicaion Starting...")
+    logger.info("Agent Application Starting...")
 
     sleep(1, 3)
 

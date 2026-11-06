@@ -1,34 +1,38 @@
-import sys
-from dataclasses import dataclass
+import json
 
+from source.config.globeConfigurations import MAP_DEFAULT_LOCATIONS
 from source.gui.map.mapContextShared import (
-    map_application_instance,
     map_window_instance,
 )
-from source.utils.helper import extract_keys
-from source.models.toolModels.mapModel import MapActionModel
-
-from source.gui.map.mapFeaturesHandlersFunctions import MAP_HANDLERS_FUNCTIONS
 
 
-def openMap():
+def openMap() -> str:
 
-    map_window_instance.show()
+    try:
 
-    sys.exit(map_application_instance.exec())
+        map_window_instance.show()
 
-def actionOnMap(agentMapAction : MapActionModel, *action_functions_arguments) -> str: # action_functions_arguments (Optional) Depend On Action
+    except Exception as unexpected_exception:
 
-    agentAction : str = agentMapAction.action
+        return json.dumps(
+            obj = [
+                {
+                    "Success": False,
+                    "Default Current Locations": "None. Map Not Open",
+                    "Map Open": False,
+                    "Exception": str(obj = unexpected_exception)
+                }
+            ],
+            indent = 4
+        )
 
-    agentActionFunction = MAP_HANDLERS_FUNCTIONS[agentAction]
-
-    try:    
-
-        JSONResponse : str = agentActionFunction()
-
-        return JSONResponse
-    
-    except TypeError: # If Action Functions Expected Arguments To Action
-
-        return agentActionFunction(*action_functions_arguments)
+    return json.dumps(
+        obj = [
+            {
+                "Success": True,
+                "Default Current Locations": MAP_DEFAULT_LOCATIONS,
+                "Map Open": True
+            }
+        ],
+        indent = 4
+    )

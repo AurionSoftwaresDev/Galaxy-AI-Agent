@@ -12,6 +12,12 @@ from source.tools.fileSystem.deleteFolderTool import deleteFolderTool
 from source.tools.fileSystem.readFileTool import readFileTool
 from source.tools.inspectUserSystemTool import inspectUserSystemTool
 from source.tools.launchDesktopApplicationTool import launchApplicationTool
+from source.tools.mapTools import (
+    addMarkerOnCoordinateTool,
+    calculateCoordinateDistanceTool,
+    flyToLocationTool,
+    openMap,
+)
 from source.tools.openBrowserTool import openBrowserTool
 from source.tools.sendEmaillTool import sendEmailTool
 from source.tools.TypingTool import typingTool
@@ -35,5 +41,10 @@ AGENT_TOOLS : list[BaseTool | StructuredTool] = [
     archiveExtractorTool,
     
     launchApplicationTool,
-    commandsExecutorTool
+    commandsExecutorTool,
+
+    openMap,
+    flyToLocationTool,
+    addMarkerOnCoordinateTool,
+    calculateCoordinateDistanceTool
 ]
