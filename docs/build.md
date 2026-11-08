@@ -126,4 +126,4 @@ build\galaxy.exe
 ## 🔗 Cross-Document Reference
 - [Installation Guide](installation.md) — System requirements and compiler setup
 - [CLI Reference](cli.md) — Runtime arguments for `startGalaxy`
-- [Troubleshooting](troubleshooting.md) — Compiler or PyInstaller errors
+- [Troubleshooting](troubleshooting.md) — Compiler or Nuitka errors
