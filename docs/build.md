@@ -77,7 +77,7 @@ Located at `scripts/server/`:
 2. **Virtual Environment**:
    - Provisions `.galaxy/server/.venv` if not already present.
    - Upgrades `pip` and installs all packages from `.galaxy/server/requirements.txt`.
-3. **PyInstaller Execution**:
+3. **Nuitka Execution**:
    - Packages `.galaxy/server/startGalaxy.py` into a single standalone binary.
    - Bundles icons from `scripts/icons/`.
    - Moves the compiled binary into the project root `build/` directory (`build/startGalaxy` or `build/startGalaxy.exe`).
