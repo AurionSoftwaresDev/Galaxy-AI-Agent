@@ -3,4 +3,4 @@ from pydantic import BaseModel, Field
 
 class OpenBrowserModel(BaseModel):
 
-    url : str = Field(description = "Website URL")   
+    url : str | None = Field(description = "Website URL(Optional)")    

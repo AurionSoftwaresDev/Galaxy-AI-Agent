@@ -1,5 +1,10 @@
 from langchain_core.tools import BaseTool, StructuredTool
 
+from source.tools.BrowserTool import (
+    close_own_galaxy_custom_browser,
+    open_own_galaxy_custom_browser,
+    openDefaultBrower,
+)
 from source.tools.commandsExecutorTool import commandsExecutorTool
 from source.tools.datetimeFetchingTool import fetchCurrentDateTimeTool
 from source.tools.fileSystem.archive.archiveCompressorTool import archiveCompressorTool
@@ -16,9 +21,8 @@ from source.tools.mapTools import (
     addMarkerOnCoordinateTool,
     calculateCoordinateDistanceTool,
     flyToLocationTool,
-    openMap,
+    openMapTool,
 )
-from source.tools.openBrowserTool import openBrowserTool
 from source.tools.sendEmaillTool import sendEmailTool
 from source.tools.TypingTool import typingTool
 from source.tools.webSearchTool import webSearchTool
@@ -27,7 +31,6 @@ AGENT_TOOLS : list[BaseTool | StructuredTool] = [
     fetchCurrentDateTimeTool,
     webSearchTool,
     sendEmailTool,
-    openBrowserTool,
     typingTool,
     inspectUserSystemTool,
 
@@ -43,8 +46,12 @@ AGENT_TOOLS : list[BaseTool | StructuredTool] = [
     launchApplicationTool,
     commandsExecutorTool,
 
-    openMap,
+    openMapTool,
     flyToLocationTool,
     addMarkerOnCoordinateTool,
-    calculateCoordinateDistanceTool
+    calculateCoordinateDistanceTool,
+
+    open_own_galaxy_custom_browser,
+    close_own_galaxy_custom_browser,
+    openDefaultBrower
 ]

@@ -56,7 +56,7 @@ class BaseApplicationLauncher(ABC):
             logger.warning("Application launch failed: empty application name.")
 
             return json.dumps(
-                obj=[
+                obj = [
                     {
                         "Status": "Failed",
                         "Message": "Application Name Cannot Be Empty.",

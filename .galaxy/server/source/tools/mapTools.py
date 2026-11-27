@@ -1,4 +1,4 @@
-from langchain.core.StructuredTool import StructuredTool
+from langchain_core.tools import StructuredTool
 
 from source.gui.map.mapContextShared import mapFunctions
 from source.models.toolModels.map.addCoordinateMarkerModel import (
